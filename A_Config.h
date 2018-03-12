@@ -1,0 +1,88 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// Runtime config
+#define DEBUG_SERIAL
+//#define TEST_PALETTES
+#ifdef DEBUG_SERIAL
+  #define MANUAL_PARAMS
+  #define DEBUG_ERRORS
+  #define DEBUG_BUTTONS
+  //#define DEBUG_TIMING
+#endif
+
+
+
+// Refresh rates and timers
+#define REFRESH_RATE 99 // This starts flickering dim colors at 100FPS, no idea why
+#define ONE_SECOND 1000000
+#define US_BETWEEN_DRAWS (ONE_SECOND / REFRESH_RATE)
+
+
+// Initial animation values
+#define INIT_BASE_ANIMATION 1
+#define INIT_BASE_BRIGHTNESS_SPEED 8
+#define INIT_BASE_COLOR_SPEED 4
+#define INIT_BASE_SPACING 128
+#define INIT_BASE_COLOR_THICKNESS_1 128
+#define INIT_BASE_BRIGHT_LENGTH 128
+#define INIT_BASE_TRANS_THICKNESS 128
+#define INIT_BASE_NUM_COLORS 255
+#define INIT_BASE_DISPLAY_MODE 16
+
+#define INIT_TOP_ANIMATION 0
+#define INIT_TOP_PORTION 128
+#define INIT_TOP_SPEED 64
+
+// Initial software values
+#define INIT_BASE_PAUSE_LENGTH  3600 * ONE_SECOND
+#define INIT_BASE_TRANS_OUT_LENGTH  3 * ONE_SECOND
+#define INIT_BASE_TRANS_IN_LENGTH  3 * ONE_SECOND
+#define INIT_TOP_PAUSE_LENGTH   3600 * ONE_SECOND
+#define INIT_TOP_TRANS_OUT_LENGTH   3 * ONE_SECOND
+#define INIT_TOP_TRANS_IN_LENGTH   3 * ONE_SECOND
+
+#define INIT_BASE_PARAM_WALK  3600 * ONE_SECOND
+#define INIT_TOP_PARAM_WALK   3600 * ONE_SECOND
+
+#define INIT_PM_WALK_LENGTH   5 * ONE_SECOND
+#define INIT_PM_PAUSE_LENGTH  5 * ONE_SECOND
+
+
+// Hardware config
+#define COLOR_CORRECTION 0xF7FFF5
+#define BRIGHTNESS 255
+#define STARTUP_DELAY_MS 1000
+#define LED_DATA_RATE_MHZ 24
+#define SERIAL_DATA_RATE_HZ 115200
+#define CLOCK_PIN 13
+#define LED_PIN 12
+#define NUM_LEDS 210
+#define BTN1_PIN 14
+#define BTN2_PIN 15
+#define NUM_BTNS 2
+
+
+
+// Animation indexes
+#define NONE 0
+
+#define SCROLLER 1
+#define FIRE 2
+#define DISCO_FIRE 3
+#define COLOR_EXPLOSION 5
+#define ORBS 6
+#define GLIMMER_BANDS 7
+#define CENTER_SPAWN 8
+#define NUM_BASE_ANIMATIONS 1
+
+#define GLITTER 1
+#define RAIN 2
+#define TWINKLE 3
+#define BOUNCE 4
+#define COMETS 5
+#define COLLISION 6
+#define NUM_TOP_ANIMATIONS 2
+
+#endif
+
