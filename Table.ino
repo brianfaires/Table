@@ -10,7 +10,6 @@
  *    Sets values to 0 to signal off; this will error out 1us every 71 hours
  *    
  *  Patterns:
- *    Make dim patterns all the same length; blend from one to the other
  *    Things that change/twinkle as they scroll
  *    Sync'ing color and brightness patterns; make colorSpeed a factor of brightSpeed
  *    Patterns that set the color of their pixels
@@ -22,8 +21,8 @@
  *    Make standard snake work with blackness; overlayed with dimming pattern too maybe
  *    
  *  Bugs:
- *    WriteColorPattern_Gradient, 2 colors, 1-2 dark pixels in gradient, (blue on blue mostly but not only time)
- *    Dim colors flicker in pattern scrolling
+ *    HSV blending SHORTEST_HUES direction flips when blending from one palette to next
+ *    Flickering happens at 100FPS and greater. No idea why.
  */
 
 #include <FastLED.h>
