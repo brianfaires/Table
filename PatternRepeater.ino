@@ -7,6 +7,7 @@ PatternRepeater::PatternRepeater() {
   transLength = 0;
   brightLength = 0;
   numColors = 1;
+  brightnessPatternBlendTime = ONE_SECOND;
 
   for(uint8_t i = 0; i < GetPeriod(); i++) {
     brightnessPattern[i] = 255;
@@ -42,7 +43,7 @@ void PatternRepeater::SetColorPattern(PRGB* newPattern, uint8_t newColorPatternL
   //Serial.println("TEST: SetColorPattern()");
 }
 
-void PatternRepeater::SetBrightnessPattern(uint8_t* newPattern) {
+void PatternRepeater::SetBrightnessPattern(uint8_t* newPattern, uint32_t curTime) {
   if(brightnessSpeed > 0) {
     brightnessIndexFirst = 0;
     brightnessIndexLast = (NUM_LEDS-1) % GetPeriod();
@@ -52,7 +53,9 @@ void PatternRepeater::SetBrightnessPattern(uint8_t* newPattern) {
     brightnessIndexLast = GetPeriod() - 1;
   }
 
-  memcpy(brightnessPattern, newPattern, GetPeriod());
+  memcpy(lastBrightnessPattern, brightnessPattern, GetPeriod());
+  memcpy(nextBrightnessPattern, newPattern, GetPeriod());
+  lastBrightnessPatternChange = curTime;
   //for(uint8_t i = 0; i < GetPeriod(); i++)
     //Serial.println(String(i) + ": " + brightnessPattern[i]);
 }
@@ -71,6 +74,21 @@ void PatternRepeater::Init(uint32_t curTime) {
 }
 
 void PatternRepeater::Update(uint32_t& currentTime) {
+  // Blend brightness pattern
+  uint8_t blendAmount;
+  uint32_t blendTime = currentTime - lastBrightnessPatternChange;
+  if(blendTime >= brightnessPatternBlendTime) {
+    blendAmount = 255;
+  }
+  else {
+    blendAmount = 255 * blendTime / brightnessPatternBlendTime;
+  }
+  uint8_t period = GetPeriod();
+  for(uint8_t i = 0; i < period; i++) {
+    brightnessPattern[i] = (blendAmount * nextBrightnessPattern[i] + (255 - blendAmount) * lastBrightnessPattern[i]) / 255;
+  }
+
+  // Move brightness pattern
   bool brightnessMoved = false;
   if(brightnessSpeed == 0) {
     lastBrightnessMove = currentTime;
@@ -78,30 +96,28 @@ void PatternRepeater::Update(uint32_t& currentTime) {
   else {
     uint32_t stepSize = ONE_SECOND / abs(brightnessSpeed);
     if(currentTime - lastBrightnessMove >= stepSize) {
-      ScrollBrightness(brightnessSpeed > 0);
+      ScrollBrightnessPattern(brightnessSpeed > 0);
       lastBrightnessMove += stepSize;
       brightnessMoved = true;
     }
   }
 
-  // If color is moving into the brightness, sync up the movement frames to avoid flicker
-  //bool mustMoveColor = brightnessMoved && (((brightnessSpeed > 0) && (colorSpeed > brightnessSpeed)) || ((brightnessSpeed < 0) && (colorSpeed < brightnessSpeed)));
+  // Move color pattern
   if(colorSpeed == 0) {
     lastColorMove = currentTime;
   }
   else {
     uint32_t stepSize = ONE_SECOND / abs(colorSpeed);
-    if(/*mustMoveColor ||*/ ((currentTime > lastColorMove) && (currentTime - lastColorMove >= stepSize))) {
-      ScrollPattern(colorSpeed > 0);
+    if((currentTime > lastColorMove) && (currentTime - lastColorMove >= stepSize)) {
+      ScrollColorPattern(colorSpeed > 0);
       lastColorMove += stepSize;
-      //Serial.println("mustMove: " + String(mustMoveColor));
     }
   }
 
   //Serial.println("TEST: lastColorMove: " + String(lastColorMove));
 }
 
-void PatternRepeater::ScrollPattern(bool scrollForward) {
+void PatternRepeater::ScrollColorPattern(bool scrollForward) {
   if(scrollForward) {
     // Scroll colors forward
     if(colorParamWaitCounter < 2*PATTERN_PARAM_CHANGE_DISTANCE) { colorParamWaitCounter++; }
@@ -120,7 +136,7 @@ void PatternRepeater::ScrollPattern(bool scrollForward) {
   }
 }
 
-void PatternRepeater::ScrollBrightness(bool scrollForward) {
+void PatternRepeater::ScrollBrightnessPattern(bool scrollForward) {
   if(scrollForward) {
     // Scroll brightnesses forward
     if(brightnessParamWaitCounter < 2*BRIGHTNESS_PARAM_CHANGE_DISTANCE) { brightnessParamWaitCounter++; }
@@ -140,13 +156,10 @@ void PatternRepeater::ScrollBrightness(bool scrollForward) {
 }
 
 bool PatternRepeater::IsReadyForBrightnessChange() {
-  if(brightnessParamWaitCounter > 0 && brightnessParamWaitCounter < 2*BRIGHTNESS_PARAM_CHANGE_DISTANCE) { return false; }
-  if(brightnessSpeed == 0) { return brightnessIndexFirst == 0 || brightnessIndexLast == GetPeriod() - 1; }
-  else if(brightnessSpeed >= 0) { return brightnessIndexFirst == 0; }
-  else { return brightnessIndexLast == GetPeriod() - 1; }
+  return true;
 }
 
-bool PatternRepeater::IsReadyForPatternChange() {
+bool PatternRepeater::IsReadyForColorPatternChange() {
   if(colorParamWaitCounter > 0 && colorParamWaitCounter < 2*PATTERN_PARAM_CHANGE_DISTANCE) { return false; }
   if(colorSpeed == 0) { return colorIndexFirst == 0 || colorIndexLast == colorPatternLength - 1; }
   else if(colorSpeed > 0) { return colorIndexFirst == 0; }
@@ -171,7 +184,7 @@ void PatternRepeater::BrightnessParametersChanged() {
   brightnessParamWaitCounter = BRIGHTNESS_PARAM_CHANGE_DISTANCE;
 }
 
-void PatternRepeater::PatternParametersChanged() {
+void PatternRepeater::ColorPatternParametersChanged() {
   colorParamWaitCounter = PATTERN_PARAM_CHANGE_DISTANCE;
 }
 

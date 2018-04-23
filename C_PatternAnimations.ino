@@ -70,7 +70,7 @@ void WriteDimPattern_Comet(PatternHandler& ph) {
     pattern[i] = 255;
   }
 
-  ph.SetBrightnessPattern(pattern);
+  ph.SetBrightnessPattern(pattern, timing.now);
 }
 
 void WriteDimPattern_BackwardComet(PatternHandler& ph) {
@@ -91,7 +91,7 @@ void WriteDimPattern_BackwardComet(PatternHandler& ph) {
     pattern[i] = fadeStepSize * (limit - i);
   }
 
-  ph.SetBrightnessPattern(pattern);
+  ph.SetBrightnessPattern(pattern, timing.now);
 }
 
 void WriteDimPattern_TwoSided(PatternHandler& ph) {
@@ -118,7 +118,7 @@ void WriteDimPattern_TwoSided(PatternHandler& ph) {
     pattern[i] = fadeStepSize * (limit - i);
   }
 
-  ph.SetBrightnessPattern(pattern);
+  ph.SetBrightnessPattern(pattern, timing.now);
 }
 
 void WriteDimPattern_Barbell(PatternHandler& ph) {
@@ -154,7 +154,7 @@ void WriteDimPattern_Barbell(PatternHandler& ph) {
     pattern[i] = 255;
   }
 
-  ph.SetBrightnessPattern(pattern);
+  ph.SetBrightnessPattern(pattern, timing.now);
 }
 
 void WriteDimPattern_StepBarbell(PatternHandler& ph) {
@@ -184,7 +184,7 @@ void WriteDimPattern_StepBarbell(PatternHandler& ph) {
     pattern[i] = 255;
   }
 
-  ph.SetBrightnessPattern(pattern);
+  ph.SetBrightnessPattern(pattern, timing.now);
 }
 
 void WriteDimPattern_BrokenBarbell(PatternHandler& ph) {
@@ -224,7 +224,7 @@ void WriteDimPattern_BrokenBarbell(PatternHandler& ph) {
     pattern[i] = 255;
   }
 
-  ph.SetBrightnessPattern(pattern);
+  ph.SetBrightnessPattern(pattern, timing.now);
 }
 
 void WriteDimPattern_BrokenStepBarbell(PatternHandler& ph) {
@@ -262,7 +262,7 @@ void WriteDimPattern_BrokenStepBarbell(PatternHandler& ph) {
     pattern[i] = 255;
   }
 
-  ph.SetBrightnessPattern(pattern);
+  ph.SetBrightnessPattern(pattern, timing.now);
 }
 
 void WriteDimPattern_InverseStepBarbell(PatternHandler& ph) {
@@ -286,7 +286,7 @@ void WriteDimPattern_InverseStepBarbell(PatternHandler& ph) {
     pattern[i] = 64;
   }
 
-  ph.SetBrightnessPattern(pattern);
+  ph.SetBrightnessPattern(pattern, timing.now);
 }
 
 void WriteDimPattern_Towers(PatternHandler& ph) {
@@ -318,7 +318,7 @@ void WriteDimPattern_Towers(PatternHandler& ph) {
     pattern[i] = 64;
   }
 
-  ph.SetBrightnessPattern(pattern);
+  ph.SetBrightnessPattern(pattern, timing.now);
 }
 
 void WriteDimPattern_StepsUp(PatternHandler& ph) {
@@ -350,7 +350,7 @@ void WriteDimPattern_StepsUp(PatternHandler& ph) {
     pattern[i] = 255;
   }
 
-  ph.SetBrightnessPattern(pattern);
+  ph.SetBrightnessPattern(pattern, timing.now);
 }
 
 void WriteDimPattern_StepsDown(PatternHandler& ph) {
@@ -382,7 +382,7 @@ void WriteDimPattern_StepsDown(PatternHandler& ph) {
     pattern[i] = 80;
   }
 
-  ph.SetBrightnessPattern(pattern);
+  ph.SetBrightnessPattern(pattern, timing.now);
 }
 
 void WriteDimPattern_SlopedHighTowers(PatternHandler& ph) {
@@ -417,7 +417,7 @@ void WriteDimPattern_SlopedHighTowers(PatternHandler& ph) {
     pattern[i] = fadeStepSize * (limit - i);
   }
 
-  ph.SetBrightnessPattern(pattern);
+  ph.SetBrightnessPattern(pattern, timing.now);
 }
 
 void WriteDimPattern_SlopedLowTowers(PatternHandler& ph) {
@@ -451,7 +451,7 @@ void WriteDimPattern_SlopedLowTowers(PatternHandler& ph) {
     pattern[i] = fadeStepSize * (limit - i);
   }
 
-  ph.SetBrightnessPattern(pattern);
+  ph.SetBrightnessPattern(pattern, timing.now);
 }
 
 void WriteDimPattern_SlideHigh(PatternHandler& ph) {
@@ -485,7 +485,7 @@ void WriteDimPattern_SlideHigh(PatternHandler& ph) {
     pattern[i] = fadeStepSize * (i - lastLimitMinusOne);
   }
 
-  ph.SetBrightnessPattern(pattern);
+  ph.SetBrightnessPattern(pattern, timing.now);
 }
 
 void WriteDimPattern_SlideLow(PatternHandler& ph) {
@@ -520,7 +520,7 @@ void WriteDimPattern_SlideLow(PatternHandler& ph) {
     pattern[i] = fadeStepSize * (limit - i);
   }
   
-  ph.SetBrightnessPattern(pattern);
+  ph.SetBrightnessPattern(pattern, timing.now);
 }
 
 void WriteDimPattern_None(PatternHandler& ph) {
@@ -530,7 +530,7 @@ void WriteDimPattern_None(PatternHandler& ph) {
     pattern[i] = 80;
   }
   
-  ph.SetBrightnessPattern(pattern);
+  ph.SetBrightnessPattern(pattern, timing.now);
 
 }
 
@@ -583,41 +583,41 @@ void BaseLayerScroller(bool initDisplay, PatternHandler& ph) {
   
   BaseLayerScroller_SlowWalkSpeeds(brightnessSpeed, colorSpeed, ph);
 
-  if(ph.IsReadyForPatternChange() || initDisplay) {
+  if(ph.IsReadyForColorPatternChange() || initDisplay) {
     if(!alreadyUpdatedPatternParams) {
       // Gradually update params
       if(ph.colorThickness < colorThickness) {
         ph.colorThickness++;
         alreadyUpdatedPatternParams = true;
-        ph.PatternParametersChanged();
+        ph.ColorPatternParametersChanged();
       }
       else if(ph.colorThickness > colorThickness) {
         ph.colorThickness--;
         alreadyUpdatedPatternParams = true;
-        ph.PatternParametersChanged();
+        ph.ColorPatternParametersChanged();
       }
   
       if(ph.numColors < numColors) {
         ph.numColors++;
         alreadyUpdatedPatternParams = true;
-        ph.PatternParametersChanged();
+        ph.ColorPatternParametersChanged();
       }
       else if(ph.numColors > numColors) {
         ph.numColors--;
         alreadyUpdatedPatternParams = true;
-        ph.PatternParametersChanged();
+        ph.ColorPatternParametersChanged();
       }
 
       // Write color pattern
       if(colorMode == 0) {
         WriteColorPattern_Gradient(ph);
         alreadyUpdatedPatternParams = true;
-        ph.PatternParametersChanged();
+        ph.ColorPatternParametersChanged();
       }
       else if(colorMode == 1) {
         WriteColorPattern_Blocks(ph);
         alreadyUpdatedPatternParams = true;
-        ph.PatternParametersChanged();
+        ph.ColorPatternParametersChanged();
       }
     }
   }

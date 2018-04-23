@@ -57,14 +57,14 @@ class PatternHandler {
   public:
     virtual void SetCRGBs(CRGB* target, uint8_t numLEDs, PaletteManager& pm) = 0;
     virtual void SetColorPattern(PRGB* newPattern, uint8_t newColorPatternLength) = 0;
-    virtual void SetBrightnessPattern(uint8_t* newPattern) = 0;
+    virtual void SetBrightnessPattern(uint8_t* newPattern, uint32_t curTime) = 0;
     virtual void Init(uint32_t curTime) = 0;
     virtual void Update(uint32_t& newTime) = 0;
-    virtual bool IsReadyForPatternChange() = 0;
+    virtual bool IsReadyForColorPatternChange() = 0;
     virtual bool IsReadyForBrightnessChange() = 0;
     virtual void SkipTime(uint32_t amount) = 0;
     virtual void BrightnessParametersChanged() = 0;
-    virtual void PatternParametersChanged() = 0;
+    virtual void ColorPatternParametersChanged() = 0;
     virtual uint8_t GetPeriod() = 0;
     
     virtual ~PatternHandler() {}

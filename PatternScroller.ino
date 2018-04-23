@@ -42,7 +42,7 @@ void PatternScroller::SetColorPattern(PRGB* newPattern, uint8_t newColorPatternL
   //Serial.println("TEST: SetColorPattern()");
 }
 
-void PatternScroller::SetBrightnessPattern(uint8_t* newPattern) {
+void PatternScroller::SetBrightnessPattern(uint8_t* newPattern, uint32_t curTime) {
   if(brightnessSpeed > 0) {
     brightnessIndexFirst = 0;
     brightnessIndexLast = (NUM_LEDS-1) % GetPeriod();
@@ -86,7 +86,7 @@ void PatternScroller::Update(uint32_t& currentTime) {
   else {
     uint32_t stepSize = ONE_SECOND / abs(brightnessSpeed);
     if(currentTime - lastBrightnessMove >= stepSize) {
-      ScrollBrightness(brightnessSpeed > 0);
+      ScrollBrightnessPattern(brightnessSpeed > 0);
       lastBrightnessMove += stepSize;
       brightnessMoved = true;
     }
@@ -100,7 +100,7 @@ void PatternScroller::Update(uint32_t& currentTime) {
   else {
     uint32_t stepSize = ONE_SECOND / abs(colorSpeed);
     if(/*mustMoveColor ||*/ ((currentTime > lastColorMove) && (currentTime - lastColorMove >= stepSize))) {
-      ScrollPattern(colorSpeed > 0);
+      ScrollColorPattern(colorSpeed > 0);
       lastColorMove += stepSize;
       //Serial.println("mustMove: " + String(mustMoveColor));
     }
@@ -109,7 +109,7 @@ void PatternScroller::Update(uint32_t& currentTime) {
   //Serial.println("TEST: lastColorMove: " + String(lastColorMove));
 }
 
-void PatternScroller::ScrollPattern(bool scrollForward) {
+void PatternScroller::ScrollColorPattern(bool scrollForward) {
   if(scrollForward) {
     // Scroll colors forward
     if(colorParamWaitCounter < 2*PATTERN_PARAM_CHANGE_DISTANCE) { colorParamWaitCounter++; }
@@ -140,7 +140,7 @@ void PatternScroller::ScrollPattern(bool scrollForward) {
   }
 }
 
-void PatternScroller::ScrollBrightness(bool scrollForward) {
+void PatternScroller::ScrollBrightnessPattern(bool scrollForward) {
   if(scrollForward) {
     // Scroll brightnesses forward
     if(brightnessParamWaitCounter < 2*BRIGHTNESS_PARAM_CHANGE_DISTANCE) { brightnessParamWaitCounter++; }
@@ -177,7 +177,7 @@ bool PatternScroller::IsReadyForBrightnessChange() {
   else { return brightnessIndexLast == GetPeriod() - 1; }
 }
 
-bool PatternScroller::IsReadyForPatternChange() {
+bool PatternScroller::IsReadyForColorPatternChange() {
   if(colorParamWaitCounter > 0 && colorParamWaitCounter < 2*PATTERN_PARAM_CHANGE_DISTANCE) { return false; }
   if(colorSpeed == 0) { return colorIndexFirst == 0 || colorIndexLast == colorPatternLength - 1; }
   else if(colorSpeed > 0) { return colorIndexFirst == 0; }
@@ -197,7 +197,7 @@ void PatternScroller::BrightnessParametersChanged() {
   brightnessParamWaitCounter = BRIGHTNESS_PARAM_CHANGE_DISTANCE;
 }
 
-void PatternScroller::PatternParametersChanged() {
+void PatternScroller::ColorPatternParametersChanged() {
   colorParamWaitCounter = PATTERN_PARAM_CHANGE_DISTANCE;
 }
 
