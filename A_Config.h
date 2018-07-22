@@ -4,6 +4,7 @@
 // Runtime config
 #define DEBUG_SERIAL
 //#define TEST_PALETTES
+#define USE_SIMPLE_PALETTE
 #ifdef DEBUG_SERIAL
   #define MANUAL_PARAMS
   #define DEBUG_ERRORS
@@ -11,17 +12,20 @@
   //#define DEBUG_TIMING
 #endif
 
+// Software settings
+#define PATTERN_PARAM_CHANGE_DISTANCE    0// NUM_LEDS
+#define BRIGHTNESS_PARAM_CHANGE_DISTANCE 0// NUM_LEDS
 
 
 // Refresh rates and timers
-#define REFRESH_RATE 99 // This starts flickering dim colors at 100FPS, no idea why
+#define REFRESH_RATE 20 // This starts flickering dim colors at 100FPS, no idea why
 #define ONE_SECOND 1000000
 #define US_BETWEEN_DRAWS (ONE_SECOND / REFRESH_RATE)
 
 
 // Initial animation values
 #define INIT_BASE_ANIMATION 1
-#define INIT_BASE_BRIGHTNESS_SPEED 8
+#define INIT_BASE_BRIGHTNESS_SPEED 0
 #define INIT_BASE_COLOR_SPEED 4
 #define INIT_BASE_SPACING 128
 #define INIT_BASE_COLOR_THICKNESS_1 128
@@ -48,16 +52,17 @@
 #define INIT_PM_WALK_LENGTH   5 * ONE_SECOND
 #define INIT_PM_PAUSE_LENGTH  5 * ONE_SECOND
 
+#define INIT_PATTERN_REPEATER_BRIGHTNESS 64
+#define INIT_PATTERN_SCROLLER_BRIGHTNESS 64
 
 // Hardware config
-#define COLOR_CORRECTION 0xF7FFF5
-#define BRIGHTNESS 255
+#define COLOR_CORRECTION 0xFFFFFF //0xF7FFF5
 #define STARTUP_DELAY_MS 1000
 #define LED_DATA_RATE_MHZ 24
 #define SERIAL_DATA_RATE_HZ 115200
 #define CLOCK_PIN 13
 #define LED_PIN 12
-#define NUM_LEDS 210
+#define NUM_LEDS 420
 #define BTN1_PIN 14
 #define BTN2_PIN 15
 #define NUM_BTNS 2

@@ -2,12 +2,12 @@ void Glitter() {
   static uint32_t lastGlitter = 0;
 
   int8_t refreshRate = scaleParam(topParams.speed, 9, 13);
-  uint8_t numLitLEDs = scaleParam(topParams.portion, 3, 16);
+  uint16_t numLitLEDs = scaleParam(topParams.portion, 3, 16);
   
   if(timing.now - lastGlitter > ONE_SECOND / refreshRate) {
     leds_top = CRGB::Black;
     lastGlitter = timing.now;
-    for(uint8_t i = 0; i < numLitLEDs; i++) {
+    for(uint16_t i = 0; i < numLitLEDs; i++) {
       leds_top[random8(NUM_LEDS)] = pm.palette[5];
     }
   }
@@ -26,7 +26,7 @@ void Rain() {
     lastMove = timing.now;
     
     if(refreshRate > 0) {
-      for(uint8_t i = NUM_LEDS-1; i > 0; i--) {
+      for(uint16_t i = NUM_LEDS-1; i > 0; i--) {
         leds_top[i] = leds_top[i-1];
       }
       if(random8(portion) == 0) {
@@ -37,7 +37,7 @@ void Rain() {
       }
     }
     else {
-      for(uint8_t i = 0; i < NUM_LEDS-1; i++) {
+      for(uint16_t i = 0; i < NUM_LEDS-1; i++) {
         leds_top[i] = leds_top[i+1];
       }
       if(random8(portion) == 0) {
@@ -58,7 +58,7 @@ void ScrollingTwinkle() {
 //--------------------- Bounce ---------------------
 #define SERIAL_DEBUG_BOUNCY
 typedef struct {
-  uint8_t loc;
+  uint16_t loc;
   int8_t vel;
   CRGB color;
 } Bouncy;

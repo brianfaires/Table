@@ -174,7 +174,7 @@ void NextTopAnimation(uint32_t curTime) {
 }
 
 void OverlayLayers() {
-  for(uint8_t i = 0; i < NUM_LEDS; i++) {
+  for(uint16_t i = 0; i < NUM_LEDS; i++) {
     uint16_t topBrightness = leds_top[i].r + leds_top[i].g + leds_top[i].b;
     if(topBrightness > 0) {
       uint16_t baseBrightness = leds[i].r + leds[i].g + leds[i].b;

@@ -108,9 +108,9 @@ void ScrollingSaturation(uint8_t nWhite, uint8_t nTrans, uint8_t nPure) {
   //const uint8_t whiteBrightness = 210;
 
   uint8_t period = nWhite + nPure + 2*nTrans;
-  uint8_t extendedLEDCount = ((NUM_LEDS-1)/period+1)*period;
+  uint16_t extendedLEDCount = ((NUM_LEDS-1)/period+1)*period;
   //CRGB myWhite = CRGB(whiteBrightness, whiteBrightness, whiteBrightness);
-  uint8_t i = 0;
+  uint16_t i = 0;
   while(i < extendedLEDCount) {
     // progressively blend the LEDs toward white
     for(uint16_t j = 0; j < period - nPure; j++) {
@@ -187,7 +187,7 @@ void ScrollingGlimmerBands() {
   uint8_t period = baseParams.numColors * (baseParams.colorThickness + baseParams.spacing);
   CRGB colorPattern[period];
 
-  uint8_t curPixel = 0;
+  uint16_t curPixel = 0;
   for(uint8_t i = 0; i < baseParams.numColors; i++) {
     for(uint8_t j = 0; j < baseParams.colorThickness; j++) {
       colorPattern[curPixel] = pm.palette[2 + i];
@@ -204,7 +204,7 @@ void ScrollingGlimmerBands() {
 
 void CenterSpawn() {
   // Propogate out
-  for(uint8_t i = 0; i < NUM_LEDS/2; i++) {
+  for(uint16_t i = 0; i < NUM_LEDS/2; i++) {
     leds[i] = leds[i+1];
     leds[NUM_LEDS-1 - i] = leds[NUM_LEDS-2 - i];
   }

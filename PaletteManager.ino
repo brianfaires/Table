@@ -72,6 +72,12 @@ void PaletteManager::Update(uint32_t curTime) {
   // TODO: Alternatively, directly access the pointer and get rid of target
   //targetPalette += sizeof(CHSV);
   //if(targetPalette == allPalettes[sizeof(CHSV)*NUM_PALETTES]) { targetPalette -= sizeof(CHSV)*NUM_PALETTES; }
+
+  #ifdef USE_SIMPLE_PALETTE
+    memcpy(palette, test_palette, sizeof(CHSV)*PALETTE_SIZE);
+    memcpy(oldPalette, test_palette, sizeof(CHSV)*PALETTE_SIZE);
+    memcpy(targetPalette, test_palette, sizeof(CHSV)*PALETTE_SIZE);
+  #endif
 }
 
 void PaletteManager::NextPalette(uint32_t curTime) {

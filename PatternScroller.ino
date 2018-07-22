@@ -7,6 +7,7 @@ PatternScroller::PatternScroller() {
   transLength = 0;
   brightLength = 0;
   numColors = 1;
+  myBrightness = 255;
 
   for(uint8_t i = 0; i < GetPeriod(); i++) {
     brightnessPattern[i] = 255;
@@ -42,7 +43,7 @@ void PatternScroller::SetColorPattern(PRGB* newPattern, uint8_t newColorPatternL
   //Serial.println("TEST: SetColorPattern()");
 }
 
-void PatternScroller::SetBrightnessPattern(uint8_t* newPattern, uint32_t curTime) {
+void PatternScroller::SetBrightnessPattern(uint8_t* newPattern, uint32_t curTime, bool isParamChange) {
   if(brightnessSpeed > 0) {
     brightnessIndexFirst = 0;
     brightnessIndexLast = (NUM_LEDS-1) % GetPeriod();
@@ -58,7 +59,7 @@ void PatternScroller::SetBrightnessPattern(uint8_t* newPattern, uint32_t curTime
 }
 
 void PatternScroller::Init(uint32_t curTime) {
-  for(uint8_t i = 0; i < NUM_LEDS; i++) {
+  for(uint16_t i = 0; i < NUM_LEDS; i++) {
     colors[i] = { colorPattern[i % colorPatternLength].a, colorPattern[i % colorPatternLength].b, colorPattern[i % colorPatternLength].blendAmount };
   }
 
@@ -66,7 +67,7 @@ void PatternScroller::Init(uint32_t curTime) {
   colorIndexLast = (NUM_LEDS-1) % colorPatternLength;
 
   if(BrightnessPatternIsInitialized()) {
-    for(uint8_t i = 0; i < NUM_LEDS; i++) {
+    for(uint16_t i = 0; i < NUM_LEDS; i++) {
       brightnesses[i] = brightnessPattern[i % GetPeriod()];
     }
 
@@ -78,7 +79,8 @@ void PatternScroller::Init(uint32_t curTime) {
   lastColorMove = curTime;
 }
 
-void PatternScroller::Update(uint32_t& currentTime) {
+uint8_t PatternScroller::Update(uint32_t& currentTime) {
+  uint8_t retVal = 0; // Return value reflects if color and/or brightness patterns moved
   bool brightnessMoved = false;
   if(brightnessSpeed == 0) {
     lastBrightnessMove = currentTime;
@@ -89,6 +91,7 @@ void PatternScroller::Update(uint32_t& currentTime) {
       ScrollBrightnessPattern(brightnessSpeed > 0);
       lastBrightnessMove += stepSize;
       brightnessMoved = true;
+      retVal |= BRIGHTNESS_PATTERN_MOVED;
     }
   }
 
@@ -103,10 +106,12 @@ void PatternScroller::Update(uint32_t& currentTime) {
       ScrollColorPattern(colorSpeed > 0);
       lastColorMove += stepSize;
       //Serial.println("mustMove: " + String(mustMoveColor));
+      retVal |= COLOR_PATTERN_MOVED;
     }
   }
 
   //Serial.println("TEST: lastColorMove: " + String(lastColorMove));
+  return retVal;
 }
 
 void PatternScroller::ScrollColorPattern(bool scrollForward) {
@@ -114,12 +119,12 @@ void PatternScroller::ScrollColorPattern(bool scrollForward) {
     // Scroll colors forward
     if(colorParamWaitCounter < 2*PATTERN_PARAM_CHANGE_DISTANCE) { colorParamWaitCounter++; }
     
-    for(uint8_t i = NUM_LEDS-1; i > 0; i--)
+    for(uint16_t i = NUM_LEDS-1; i > 0; i--)
       colors[i] = colors[i-1];
 
     // Adjust indexes
-    if(--colorIndexFirst == 255) { colorIndexFirst = colorPatternLength - 1; }
-    if(--colorIndexLast  == 255) { colorIndexLast  = colorPatternLength - 1; }
+    if(--colorIndexFirst == 65535) { colorIndexFirst = colorPatternLength - 1; }
+    if(--colorIndexLast  == 65535) { colorIndexLast  = colorPatternLength - 1; }
     
     // Write the new color
     colors[0] = colorPattern[colorIndexFirst];
@@ -128,7 +133,7 @@ void PatternScroller::ScrollColorPattern(bool scrollForward) {
     // Scroll colors backward
     if(colorParamWaitCounter > 0) { colorParamWaitCounter--; }
     
-    for(uint8_t i = 0; i < NUM_LEDS-1; i++)
+    for(uint16_t i = 0; i < NUM_LEDS-1; i++)
       colors[i] = colors[i+1];
 
     // Adjust indexes
@@ -145,12 +150,12 @@ void PatternScroller::ScrollBrightnessPattern(bool scrollForward) {
     // Scroll brightnesses forward
     if(brightnessParamWaitCounter < 2*BRIGHTNESS_PARAM_CHANGE_DISTANCE) { brightnessParamWaitCounter++; }
     
-    for(uint8_t i = NUM_LEDS-1; i > 0; i--)
+    for(uint16_t i = NUM_LEDS-1; i > 0; i--)
       brightnesses[i] = brightnesses[i-1];
 
     // Adjust indexes
-    if(--brightnessIndexFirst == 255) { brightnessIndexFirst = GetPeriod() - 1; }
-    if(--brightnessIndexLast  == 255) { brightnessIndexLast  = GetPeriod() - 1; }
+    if(--brightnessIndexFirst == 65535) { brightnessIndexFirst = GetPeriod() - 1; }
+    if(--brightnessIndexLast  == 65535) { brightnessIndexLast  = GetPeriod() - 1; }
     
     // Write the new brightness
     brightnesses[0] = brightnessPattern[brightnessIndexFirst];
@@ -159,7 +164,7 @@ void PatternScroller::ScrollBrightnessPattern(bool scrollForward) {
     // Scroll pixels backward
     if(brightnessParamWaitCounter > 0) { brightnessParamWaitCounter--; }
     
-    for(uint8_t i = 0; i < NUM_LEDS-1; i++)
+    for(uint16_t i = 0; i < NUM_LEDS-1; i++)
       brightnesses[i] = brightnesses[i+1];
 
     // Adjust indexes
@@ -170,25 +175,31 @@ void PatternScroller::ScrollBrightnessPattern(bool scrollForward) {
   }
 }
 
-bool PatternScroller::IsReadyForBrightnessChange() {
+bool PatternScroller::IsReadyForBrightnessChange(uint32_t currentTime) {
+  uint32_t stepSize = ONE_SECOND / abs(brightnessSpeed);
+  if(currentTime - lastBrightnessMove < stepSize) { return false; }
+  
   if(brightnessParamWaitCounter > 0 && brightnessParamWaitCounter < 2*BRIGHTNESS_PARAM_CHANGE_DISTANCE) { return false; }
   if(brightnessSpeed == 0) { return brightnessIndexFirst == 0 || brightnessIndexLast == GetPeriod() - 1; }
   else if(brightnessSpeed >= 0) { return brightnessIndexFirst == 0; }
   else { return brightnessIndexLast == GetPeriod() - 1; }
 }
 
-bool PatternScroller::IsReadyForColorPatternChange() {
+bool PatternScroller::IsReadyForColorPatternChange(uint32_t currentTime) {
+  uint32_t stepSize = ONE_SECOND / abs(colorSpeed);
+  if(currentTime - lastColorMove < stepSize) { return false; }
+  
   if(colorParamWaitCounter > 0 && colorParamWaitCounter < 2*PATTERN_PARAM_CHANGE_DISTANCE) { return false; }
   if(colorSpeed == 0) { return colorIndexFirst == 0 || colorIndexLast == colorPatternLength - 1; }
   else if(colorSpeed > 0) { return colorIndexFirst == 0; }
   else { return colorIndexLast == colorPatternLength - 1; }
 }
 
-void PatternScroller::SetCRGBs(CRGB* target, uint8_t numLEDs, PaletteManager& pm) {
+void PatternScroller::SetCRGBs(CRGB* target, uint16_t numLEDs, PaletteManager& pm) {
   CHSV temp;
-  for(uint8_t i = 0; i < numLEDs; i++) {
+  for(uint16_t i = 0; i < numLEDs; i++) {
     temp = blend(pm.palette[colors[i].a], pm.palette[colors[i].b], colors[i].blendAmount, SHORTEST_HUES);
-    temp.v = brightnesses[i];
+    temp.v = brightnesses[i] * myBrightness / 255;
     target[i] = temp;
   }
 }

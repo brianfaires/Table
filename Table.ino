@@ -19,10 +19,21 @@
  *    Base animations - based on time
  *    Top animations - based on time
  *    Make standard snake work with blackness; overlayed with dimming pattern too maybe
+ *    Serial output: buffer large outputs to avoid one big delay
+ *    PatternHandler: Replace ___ParametersChanged() logic with a function for setting the params; pass in an enum as the param and automatically call ParamChanged() from within
  *    
  *  Bugs:
  *    HSV blending SHORTEST_HUES direction flips when blending from one palette to next
  *    Flickering happens at 100FPS and greater. No idea why.
+ *    
+ *    
+ *  Testing/development milestones:
+ *    PaletteManager 
+ *      - w/gradients; blending between all palette pairs
+ *      - timing of all params
+ *    PatternRepeaters
+ *      - Repeater
+ *      - Scroller
  */
 
 #include <FastLED.h>
@@ -47,15 +58,19 @@ void setup() {
   pinMode(BTN1_PIN, INPUT_PULLUP);
   FastLED.addLeds<APA102, LED_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(leds, NUM_LEDS).setCorrection(COLOR_CORRECTION);
   //FastLED.addLeds<WS2811, LED_PIN, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
-  FastLED.setBrightness(BRIGHTNESS);
+  //FastLED.setBrightness(BRIGHTNESS);
   leds = CRGB::Black;
   FastLED.show();
-  
+  #ifdef DEBUG_SERIAL
+    Serial.println("LEDs defined and cleared.");
+  #endif
   
   //--------------------Initialize software--------------------
   pm.Init(INIT_PM_WALK_LENGTH, INIT_PM_PAUSE_LENGTH, timing.now);
   InitBaseLayer();
   InitTopLayer();
+  pr.myBrightness = INIT_PATTERN_REPEATER_BRIGHTNESS;
+  ps.myBrightness = INIT_PATTERN_SCROLLER_BRIGHTNESS;
 
   
   #ifdef DEBUG_SERIAL
@@ -107,7 +122,8 @@ void loop() {
       leds = CRGB::Black;
       uint8_t pixelsPerPalette = NUM_LEDS / PALETTE_SIZE;
       for(uint8_t i = 0; i < PALETTE_SIZE; i++) {
-        leds(pixelsPerPalette*i + 1, pixelsPerPalette*(i+1) - 2) = pm.palette[i];
+        //leds(pixelsPerPalette*i + 1, pixelsPerPalette*(i+1) - 2) = pm.palette[i]; // With spaces
+        leds(pixelsPerPalette*i, pixelsPerPalette*(i+1) - 1) = pm.palette[i];
       }
     #else
       TransitionBaseAnimation(timing.now);
