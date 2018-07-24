@@ -12,7 +12,7 @@ void WriteColorPattern_Gradient(PatternHandler& ph) {
     }
   #endif
 
-  uint8_t period = ph.numColors * ph.colorThickness;
+  uint16_t period = ph.numColors * ph.colorThickness;
   PRGB pattern[period];
   
   for(uint8_t i = 0; i < ph.numColors; i++) {
@@ -37,7 +37,7 @@ void WriteColorPattern_Blocks(PatternHandler& ph) {
   #endif
 
   uint8_t bandThickness = (ph.colorThickness + 1) / 2;
-  uint8_t period = ph.numColors * bandThickness;
+  uint16_t period = ph.numColors * bandThickness;
   PRGB pattern[period];
   uint16_t pixel = 0;
   for(uint8_t col = 0; col < ph.numColors; col++) {
@@ -63,7 +63,7 @@ void WriteDimPattern_Comet(PatternHandler& ph, bool isParamChange) {
   uint8_t lastLimitMinusOne = limit - 1;
   
   for(limit += 2*ph.transLength + 1; i < limit; i++) {
-    pattern[i] = fadeStepSize * (i - lastLimitMinusOne);
+    pattern[i] = fadeStepSize * (uint8_t)(i - lastLimitMinusOne);
   }
 
   for(limit += ph.brightLength + 1; i < limit; i++) {
@@ -148,7 +148,7 @@ void WriteDimPattern_Barbell(PatternHandler& ph, bool isParamChange) {
 
   uint8_t lastLimitMinusOne = limit - 1;
   for(limit += adjTransLength; i < limit; i++) {
-    pattern[i] = fadeStepSize * (i - lastLimitMinusOne);
+    pattern[i] = fadeStepSize * (uint8_t)(i - lastLimitMinusOne);
   }
 
   for(limit += adjBrightLength; i < limit; i++) {
@@ -218,7 +218,7 @@ void WriteDimPattern_BrokenBarbell(PatternHandler& ph, bool isParamChange) {
 
   uint8_t lastLimitMinusOne = limit - 1;
   for(limit += adjTransLength; i < limit; i++) {
-    pattern[i] = fadeStepSize * (i - lastLimitMinusOne);
+    pattern[i] = fadeStepSize * (uint8_t)(i - lastLimitMinusOne);
   }
 
   for(limit += adjBrightLength; i < limit; i++) {
@@ -399,7 +399,7 @@ void WriteDimPattern_SlopedHighTowers(PatternHandler& ph, bool isParamChange) {
   uint8_t lastLimitMinusOne = limit - 1;
 
   for(limit += ph.transLength; i < limit; i++) {
-    pattern[i] = fadeStepSize * (i - lastLimitMinusOne);
+    pattern[i] = fadeStepSize * (uint8_t)(i - lastLimitMinusOne);
   }
 
   pattern[i] = 0;
@@ -433,7 +433,7 @@ void WriteDimPattern_SlopedLowTowers(PatternHandler& ph, bool isParamChange) {
 
   uint8_t lastLimitMinusOne = limit - 1;
   for(limit += ph.transLength; i < limit; i++) {
-    pattern[i] = fadeStepSize * (i - lastLimitMinusOne);
+    pattern[i] = fadeStepSize * (uint8_t)(i - lastLimitMinusOne);
   }
 
   pattern[i] = 0;
@@ -483,7 +483,7 @@ void WriteDimPattern_SlideHigh(PatternHandler& ph, bool isParamChange) {
 
   uint8_t lastLimitMinusOne = limit - 1;
   for(limit += ph.transLength; i < limit; i++) {
-    pattern[i] = fadeStepSize * (i - lastLimitMinusOne);
+    pattern[i] = fadeStepSize * (uint8_t)(i - lastLimitMinusOne);
   }
 
   ph.SetBrightnessPattern(pattern, timing.now, isParamChange);
@@ -502,7 +502,7 @@ void WriteDimPattern_SlideLow(PatternHandler& ph, bool isParamChange) {
 
   uint8_t lastLimitMinusOne = limit - 1;
   for(limit += ph.transLength; i < limit; i++) {
-    pattern[i] = fadeStepSize * (i - lastLimitMinusOne);
+    pattern[i] = fadeStepSize * (uint8_t)(i - lastLimitMinusOne);
   }
 
   pattern[i] = 0;
@@ -528,7 +528,7 @@ void WriteDimPattern_None(PatternHandler& ph, bool isParamChange) {
   const uint8_t period = ph.GetPeriod();
   uint8_t pattern[period];
   for(uint8_t i = 0; i < period; i++) {
-    pattern[i] = 80;
+    pattern[i] = 255;
   }
   
   ph.SetBrightnessPattern(pattern, timing.now, isParamChange);
@@ -547,7 +547,7 @@ void BaseLayerScroller(bool initDisplay, PatternHandler& ph) {
   dimmingMode = displayMode % BLS_NUM_DIMMING_MODES;
   colorMode = displayMode / BLS_NUM_DIMMING_MODES;
 
-  uint8_t abs_brightnessSpeed = scaleParam((uint8_t)abs(baseParams.brightnessSpeed), 1, 63);
+  uint8_t abs_brightnessSpeed = scaleParam((uint8_t)abs(baseParams.brightnessSpeed), 0, 63);
   int8_t brightnessSpeed = abs_brightnessSpeed * (baseParams.brightnessSpeed >= 0 ? 1 : -1);
   
   // Bound colorSpeed based on brightnessSpeed
@@ -562,9 +562,9 @@ void BaseLayerScroller(bool initDisplay, PatternHandler& ph) {
   }
   
   int8_t colorSpeed = brightnessSpeed/2;//scaleParam(baseParams.colorSpeed, colorSpeed_lower, colorSpeed_upper);
-  if(colorSpeed == 0) { colorSpeed = 1; }
-  uint8_t numColors = scaleParam(baseParams.numColors, 1, 5);
-  uint8_t colorThickness = scaleParam(baseParams.colorThickness, 3, 10);
+  //if(colorSpeed == 0) { colorSpeed = 1; }
+  uint8_t numColors = scaleParam(baseParams.numColors, 1, PALETTE_SIZE);
+  uint8_t colorThickness = scaleParam(baseParams.colorThickness, 8, NUM_LEDS/PALETTE_SIZE);
 
   const uint8_t fixedPeriod = 21;
   uint8_t transLength = scaleParam(baseParams.transLength, 4, 8);

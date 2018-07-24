@@ -28,7 +28,7 @@ void PatternRepeater::SkipTime(uint32_t amount) {
   lastBrightnessMove += amount;
 }
 
-void PatternRepeater::SetColorPattern(PRGB* newPattern, uint8_t newColorPatternLength) {
+void PatternRepeater::SetColorPattern(PRGB* newPattern, uint16_t newColorPatternLength) {
   colorPatternLength = newColorPatternLength;
   /*
   if(colorSpeed > 0) {
@@ -76,8 +76,8 @@ void PatternRepeater::Init(uint32_t curTime) {
   lastColorMove = curTime;
 }
 
-uint8_t PatternRepeater::Update(uint32_t& currentTime) {
-  uint8_t retVal = 0; // Return value reflects if color and/or pattern moved on this update
+void PatternRepeater::Update(uint32_t& currentTime) {
+  //uint8_t retVal = 0; // Return value reflects if color and/or pattern moved on this update
   
   // Blend brightness pattern
   uint8_t blendAmount;
@@ -104,7 +104,7 @@ uint8_t PatternRepeater::Update(uint32_t& currentTime) {
       ScrollBrightnessPattern(brightnessSpeed > 0);
       lastBrightnessMove += stepSize;
       brightnessMoved = true;
-      retVal |= BRIGHTNESS_PATTERN_MOVED;
+      //retVal |= BRIGHTNESS_PATTERN_MOVED;
     }
   }
 
@@ -117,12 +117,12 @@ uint8_t PatternRepeater::Update(uint32_t& currentTime) {
     if(currentTime - lastColorMove >= stepSize) {
       ScrollColorPattern(colorSpeed > 0);
       lastColorMove += stepSize;
-      retVal |= COLOR_PATTERN_MOVED;
+      //retVal |= COLOR_PATTERN_MOVED;
     }
   }
 
   //Serial.println("TEST: lastColorMove: " + String(lastColorMove));
-  return retVal;
+  //return retVal;
 }
 
 void PatternRepeater::ScrollColorPattern(bool scrollForward) {
@@ -164,11 +164,15 @@ void PatternRepeater::ScrollBrightnessPattern(bool scrollForward) {
 }
 
 bool PatternRepeater::IsReadyForBrightnessChange(uint32_t currentTime) {
+  if(brightnessSpeed == 0) { return true; }
+  
   uint32_t stepSize = ONE_SECOND / abs(brightnessSpeed);
   return currentTime - lastBrightnessMove >= stepSize;
 }
 
 bool PatternRepeater::IsReadyForColorPatternChange(uint32_t currentTime) {
+  if(colorSpeed == 0) { return true; }
+  
   uint32_t stepSize = ONE_SECOND / abs(colorSpeed);
   if(currentTime - lastColorMove < stepSize) { return false; }
 
@@ -186,6 +190,8 @@ void PatternRepeater::SetCRGBs(CRGB* target, uint16_t numLEDs, PaletteManager& p
     CHSV temp = blend(pm.palette[colorPattern[curColorIndex].a], pm.palette[colorPattern[curColorIndex].b], colorPattern[curColorIndex].blendAmount, SHORTEST_HUES);
     temp.v = brightnessPattern[curBrightnessIndex] * myBrightness / 255;
     target[i] = temp;
+
+    //Serial.println(String(i) + ": " + String(colorPattern[curColorIndex].a));
 
     if(++curColorIndex == colorPatternLength) { curColorIndex = 0; }
     if(++curBrightnessIndex == GetPeriod()) { curBrightnessIndex = 0; }

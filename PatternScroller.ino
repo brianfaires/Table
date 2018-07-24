@@ -27,7 +27,7 @@ void PatternScroller::SkipTime(uint32_t amount) {
   lastBrightnessMove += amount;
 }
 
-void PatternScroller::SetColorPattern(PRGB* newPattern, uint8_t newColorPatternLength) {
+void PatternScroller::SetColorPattern(PRGB* newPattern, uint16_t newColorPatternLength) {
   colorPatternLength = newColorPatternLength;
   
   if(colorSpeed > 0) {
@@ -79,8 +79,9 @@ void PatternScroller::Init(uint32_t curTime) {
   lastColorMove = curTime;
 }
 
-uint8_t PatternScroller::Update(uint32_t& currentTime) {
-  uint8_t retVal = 0; // Return value reflects if color and/or brightness patterns moved
+void PatternScroller::Update(uint32_t& currentTime) {
+  //uint8_t retVal = 0; // Return value reflects if color and/or brightness patterns moved
+  
   bool brightnessMoved = false;
   if(brightnessSpeed == 0) {
     lastBrightnessMove = currentTime;
@@ -91,7 +92,7 @@ uint8_t PatternScroller::Update(uint32_t& currentTime) {
       ScrollBrightnessPattern(brightnessSpeed > 0);
       lastBrightnessMove += stepSize;
       brightnessMoved = true;
-      retVal |= BRIGHTNESS_PATTERN_MOVED;
+      //retVal |= BRIGHTNESS_PATTERN_MOVED;
     }
   }
 
@@ -106,12 +107,12 @@ uint8_t PatternScroller::Update(uint32_t& currentTime) {
       ScrollColorPattern(colorSpeed > 0);
       lastColorMove += stepSize;
       //Serial.println("mustMove: " + String(mustMoveColor));
-      retVal |= COLOR_PATTERN_MOVED;
+      //retVal |= COLOR_PATTERN_MOVED;
     }
   }
 
   //Serial.println("TEST: lastColorMove: " + String(lastColorMove));
-  return retVal;
+  //return retVal;
 }
 
 void PatternScroller::ScrollColorPattern(bool scrollForward) {

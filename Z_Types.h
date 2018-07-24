@@ -59,10 +59,10 @@ struct PRGB {
 class PatternHandler {
   public:
     virtual void SetCRGBs(CRGB* target, uint16_t numLEDs, PaletteManager& pm) = 0;
-    virtual void SetColorPattern(PRGB* newPattern, uint8_t newColorPatternLength) = 0;
+    virtual void SetColorPattern(PRGB* newPattern, uint16_t newColorPatternLength) = 0;
     virtual void SetBrightnessPattern(uint8_t* newPattern, uint32_t curTime, bool isParamChange) = 0;
     virtual void Init(uint32_t curTime) = 0;
-    virtual uint8_t Update(uint32_t& newTime) = 0;
+    virtual void Update(uint32_t& newTime) = 0;
     virtual bool IsReadyForColorPatternChange(uint32_t currentTime) = 0;
     virtual bool IsReadyForBrightnessChange(uint32_t currentTime) = 0;
     virtual void SkipTime(uint32_t amount) = 0;

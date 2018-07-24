@@ -21,9 +21,9 @@
  *    Make standard snake work with blackness; overlayed with dimming pattern too maybe
  *    Serial output: buffer large outputs to avoid one big delay
  *    PatternHandler: Replace ___ParametersChanged() logic with a function for setting the params; pass in an enum as the param and automatically call ParamChanged() from within
+ *    Before blending with FORWARD_HUES, check for the longest path and decide FORWARD or BACKWARD
  *    
  *  Bugs:
- *    HSV blending SHORTEST_HUES direction flips when blending from one palette to next
  *    Flickering happens at 100FPS and greater. No idea why.
  *    
  *    
