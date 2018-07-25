@@ -186,10 +186,12 @@ void PatternRepeater::SetCRGBs(CRGB* target, uint16_t numLEDs, PaletteManager& p
   uint16_t curColorIndex = colorIndexFirst;
   uint16_t curBrightnessIndex = brightnessIndexFirst;
 
+  CRGB temp;
   for(uint16_t i = 0; i < numLEDs; i++) {
-    CHSV temp = blend(pm.palette[colorPattern[curColorIndex].a], pm.palette[colorPattern[curColorIndex].b], colorPattern[curColorIndex].blendAmount, SHORTEST_HUES);
-    temp.v = brightnessPattern[curBrightnessIndex] * myBrightness / 255;
-    target[i] = temp;
+    // Blend using CRGB; this adds saturation and brightness but avoids jumping directions around the color wheel
+    temp = pm.palette[colorPattern[curColorIndex].a];
+    target[i] = blend(temp, pm.palette[colorPattern[curColorIndex].b], colorPattern[curColorIndex].blendAmount);
+    target[i] %= brightnessPattern[curBrightnessIndex] * myBrightness / 255;
 
     //Serial.println(String(i) + ": " + String(colorPattern[curColorIndex].a));
 

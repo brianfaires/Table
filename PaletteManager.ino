@@ -57,7 +57,7 @@ void PaletteManager::Update(uint32_t curTime) {
     if(transitionTime < walkLength) {
       uint8_t blendAmount = 255 * transitionTime / walkLength;//debug: changed from 256, why?
       for(uint8_t i = 0; i < PALETTE_SIZE; i++) {
-        palette[i] = blend(oldPalette[i], targetPalette[i], blendAmount, FORWARD_HUES);
+        palette[i] = blend(oldPalette[i], targetPalette[i], blendAmount, /*gradientProtection ? blendDirections[i] :*/ SHORTEST_HUES);
       }
     }
     else {

@@ -199,9 +199,10 @@ bool PatternScroller::IsReadyForColorPatternChange(uint32_t currentTime) {
 void PatternScroller::SetCRGBs(CRGB* target, uint16_t numLEDs, PaletteManager& pm) {
   CHSV temp;
   for(uint16_t i = 0; i < numLEDs; i++) {
-    temp = blend(pm.palette[colors[i].a], pm.palette[colors[i].b], colors[i].blendAmount, SHORTEST_HUES);
-    temp.v = brightnesses[i] * myBrightness / 255;
-    target[i] = temp;
+    // Blend using CRGB; this adds saturation and brightness but avoids jumping directions around the color wheel
+    temp = pm.palette[colors[i].a];
+    target[i] = blend(temp, pm.palette[colors[i].b], colors[i].blendAmount);
+    target[i] %= brightnesses[i] * myBrightness / 255;
   }
 }
 

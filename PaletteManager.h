@@ -57,6 +57,7 @@ class PaletteManager {
     void SetPauseLength(uint32_t newPauseLength, uint32_t curTime);
 
   private:
+    void SetBlendDirections();
     uint8_t target;
     uint32_t walkLength;
     uint32_t pauseLength;

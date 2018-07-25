@@ -21,18 +21,16 @@
  *    Make standard snake work with blackness; overlayed with dimming pattern too maybe
  *    Serial output: buffer large outputs to avoid one big delay
  *    PatternHandler: Replace ___ParametersChanged() logic with a function for setting the params; pass in an enum as the param and automatically call ParamChanged() from within
- *    Before blending with FORWARD_HUES, check for the longest path and decide FORWARD or BACKWARD
  *    
  *  Bugs:
  *    Flickering happens at 100FPS and greater. No idea why.
  *    
  *    
  *  Testing/development milestones:
- *    PaletteManager 
- *      - w/gradients; blending between all palette pairs
- *      - timing of all params
  *    PatternRepeaters
  *      - Repeater
+ *        - Bugs:
+ *          - Reversing direction causes black pixels; running on reverse direction causes 1 color and random black pixels; overwriting random stuff; obv overflow error
  *      - Scroller
  */
 

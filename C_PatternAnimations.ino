@@ -562,7 +562,6 @@ void BaseLayerScroller(bool initDisplay, PatternHandler& ph) {
   }
   
   int8_t colorSpeed = brightnessSpeed/2;//scaleParam(baseParams.colorSpeed, colorSpeed_lower, colorSpeed_upper);
-  //if(colorSpeed == 0) { colorSpeed = 1; }
   uint8_t numColors = scaleParam(baseParams.numColors, 1, PALETTE_SIZE);
   uint8_t colorThickness = scaleParam(baseParams.colorThickness, 8, NUM_LEDS/PALETTE_SIZE);
 
