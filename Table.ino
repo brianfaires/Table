@@ -35,6 +35,7 @@
  *          - Assumes a constant period between patterns (maybe this is good and should be enforced)
  *      - Scroller
  *      
+*      - Updated layout; keep in mind for PatternGenerator, that values are now scaling an RGB, not HSV
  */
 
 #include <PaletteManager.h>
@@ -71,7 +72,7 @@ void setup() {
   pm.Init(INIT_PM_WALK_LENGTH, INIT_PM_PAUSE_LENGTH, timing.now);
   InitBaseLayer();
   InitTopLayer();
-  pr.myBrightness = INIT_PATTERN_REPEATER_BRIGHTNESS;
+  //pr.myBrightness = INIT_PATTERN_REPEATER_BRIGHTNESS;
   ps.myBrightness = INIT_PATTERN_SCROLLER_BRIGHTNESS;
 
   
@@ -154,7 +155,7 @@ void SkipTime(uint32_t amount) {
   SkipTimeForIO(amount);
   pm.SkipTime(amount);
   ps.SkipTime(amount);
-  pr.SkipTime(amount);
+  //pr.SkipTime(amount);
 }
 
 void SkipTimeForTimers(uint32_t amount) {

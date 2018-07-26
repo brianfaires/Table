@@ -6,6 +6,7 @@
 #include "PaletteManager.h"
 #include "PatternScroller.h"
 #include "PatternRepeater.h"
+#include "PatternController.h"
 
 #define FPS_TO_US(x) (1000000 / x)
 #define FPS_TO_MS(x) (1000 / x)
@@ -26,7 +27,8 @@ CRGBArray<NUM_LEDS> leds_top;
 
 PaletteManager pm;
 PatternScroller ps;
-PatternRepeater pr;
+PatternController pc;
+//PatternRepeater pr;
 
 struct_timers timing;
 struct_config config;

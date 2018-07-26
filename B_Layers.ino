@@ -1,7 +1,7 @@
 void DrawBaseLayer() {
   switch(baseParams.animation) {
     case SCROLLER:
-      BaseLayerScroller(false, pr);
+      BaseLayerScroller(false, ps);
       break;
 
     case FIRE:
@@ -44,7 +44,7 @@ void InitBaseLayer() {
   
   switch(baseParams.animation) {
     case SCROLLER:
-      BaseLayerScroller(true, pr);
+      BaseLayerScroller(true, ps);
       break;
 
     default:

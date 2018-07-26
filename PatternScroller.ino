@@ -121,8 +121,8 @@ void PatternScroller::ScrollColorPattern(bool scrollForward) {
       colors[i] = colors[i-1];
 
     // Adjust indexes
-    if(--colorIndexFirst == 65535) { colorIndexFirst = colorPatternLength - 1; }
-    if(--colorIndexLast  == 65535) { colorIndexLast  = colorPatternLength - 1; }
+    if(--colorIndexFirst == 0xFFFF) { colorIndexFirst = colorPatternLength - 1; }
+    if(--colorIndexLast  == 0xFFFF) { colorIndexLast  = colorPatternLength - 1; }
     
     // Write the new color
     colors[0] = colorPattern[colorIndexFirst];
@@ -152,8 +152,8 @@ void PatternScroller::ScrollBrightnessPattern(bool scrollForward) {
       brightnesses[i] = brightnesses[i-1];
 
     // Adjust indexes
-    if(--brightnessIndexFirst == 65535) { brightnessIndexFirst = brightnessPatternLength - 1; }
-    if(--brightnessIndexLast  == 65535) { brightnessIndexLast  = brightnessPatternLength - 1; }
+    if(--brightnessIndexFirst == 0xFFFF) { brightnessIndexFirst = brightnessPatternLength - 1; }
+    if(--brightnessIndexLast  == 0xFFFF) { brightnessIndexLast  = brightnessPatternLength - 1; }
     
     // Write the new brightness
     brightnesses[0] = brightnessPattern[brightnessIndexFirst];
