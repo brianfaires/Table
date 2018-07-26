@@ -1,4 +1,5 @@
 #define GET_FADE_STEP_SIZE(x) 255.0f / (x+1)
+#define PERIOD (2*ph.transLength + ph.brightLength + ph.spacing + 2)
 
 void WriteColorPattern_Gradient(PatternHandler& ph) {
   #ifdef DEBUG_ERRORS
@@ -52,7 +53,7 @@ void WriteColorPattern_Blocks(PatternHandler& ph) {
 
 void WriteDimPattern_Comet(PatternHandler& ph, bool isParamChange) {
   float fadeStepSize = GET_FADE_STEP_SIZE(2*ph.transLength + 1);
-  uint8_t pattern[ph.GetPeriod()];
+  uint8_t pattern[PERIOD];
 
   uint8_t i = 0;
   uint8_t limit;
@@ -70,12 +71,12 @@ void WriteDimPattern_Comet(PatternHandler& ph, bool isParamChange) {
     pattern[i] = 255;
   }
 
-  ph.SetBrightnessPattern(pattern, timing.now, isParamChange);
+  ph.SetBrightnessPattern(pattern, PERIOD, timing.now, isParamChange);
 }
 
 void WriteDimPattern_BackwardComet(PatternHandler& ph, bool isParamChange) {
   float fadeStepSize = GET_FADE_STEP_SIZE(2*ph.transLength + 1);
-  uint8_t pattern[ph.GetPeriod()];
+  uint8_t pattern[PERIOD];
 
   uint8_t i = 0;
   uint8_t limit;
@@ -91,15 +92,13 @@ void WriteDimPattern_BackwardComet(PatternHandler& ph, bool isParamChange) {
     pattern[i] = fadeStepSize * (limit - i);
   }
 
-  ph.SetBrightnessPattern(pattern, timing.now, isParamChange);
+  ph.SetBrightnessPattern(pattern, PERIOD, timing.now, isParamChange);
 }
 
 void WriteDimPattern_TwoSided(PatternHandler& ph, bool isParamChange) {
   float fadeStepSize = GET_FADE_STEP_SIZE(ph.transLength+1);
-  uint8_t pattern[ph.GetPeriod()];
-Serial.println(ph.spacing);
-Serial.println(ph.transLength);
-Serial.println(ph.brightLength);
+  uint8_t pattern[PERIOD];
+
   uint8_t i = 0;
   uint8_t limit;
   for(limit = ph.spacing; i < limit; i++) {
@@ -119,7 +118,7 @@ Serial.println(ph.brightLength);
     pattern[i] = fadeStepSize * (limit - i);
   }
 
-  ph.SetBrightnessPattern(pattern, timing.now, isParamChange);
+  ph.SetBrightnessPattern(pattern, PERIOD, timing.now, isParamChange);
 }
 
 void WriteDimPattern_Barbell(PatternHandler& ph, bool isParamChange) {
@@ -130,7 +129,7 @@ void WriteDimPattern_Barbell(PatternHandler& ph, bool isParamChange) {
   else { adjBrightLength++; adjSpacing++; }
 
   float fadeStepSize = GET_FADE_STEP_SIZE(adjTransLength);
-  uint8_t pattern[ph.GetPeriod()];
+  uint8_t pattern[PERIOD];
   
   uint8_t i = 0;
   uint8_t limit;
@@ -155,7 +154,7 @@ void WriteDimPattern_Barbell(PatternHandler& ph, bool isParamChange) {
     pattern[i] = 255;
   }
 
-  ph.SetBrightnessPattern(pattern, timing.now, isParamChange);
+  ph.SetBrightnessPattern(pattern, PERIOD, timing.now, isParamChange);
 }
 
 void WriteDimPattern_StepBarbell(PatternHandler& ph, bool isParamChange) {
@@ -165,7 +164,7 @@ void WriteDimPattern_StepBarbell(PatternHandler& ph, bool isParamChange) {
   if(ph.brightLength % 2 == 0) { adjTransLength++; }
   else { adjBrightLength++; adjSpacing++; }
 
-  uint8_t pattern[ph.GetPeriod()];
+  uint8_t pattern[PERIOD];
 
   uint8_t i = 0;
   uint8_t limit;
@@ -185,7 +184,7 @@ void WriteDimPattern_StepBarbell(PatternHandler& ph, bool isParamChange) {
     pattern[i] = 255;
   }
 
-  ph.SetBrightnessPattern(pattern, timing.now, isParamChange);
+  ph.SetBrightnessPattern(pattern, PERIOD, timing.now, isParamChange);
 }
 
 void WriteDimPattern_BrokenBarbell(PatternHandler& ph, bool isParamChange) {
@@ -196,7 +195,7 @@ void WriteDimPattern_BrokenBarbell(PatternHandler& ph, bool isParamChange) {
   else { adjBrightLength++; }
 
   float fadeStepSize = GET_FADE_STEP_SIZE(adjTransLength);
-  uint8_t pattern[ph.GetPeriod()];
+  uint8_t pattern[PERIOD];
 
   uint8_t i = 0;
   uint8_t limit;
@@ -225,7 +224,7 @@ void WriteDimPattern_BrokenBarbell(PatternHandler& ph, bool isParamChange) {
     pattern[i] = 255;
   }
 
-  ph.SetBrightnessPattern(pattern, timing.now, isParamChange);
+  ph.SetBrightnessPattern(pattern, PERIOD, timing.now, isParamChange);
 }
 
 void WriteDimPattern_BrokenStepBarbell(PatternHandler& ph, bool isParamChange) {
@@ -235,7 +234,7 @@ void WriteDimPattern_BrokenStepBarbell(PatternHandler& ph, bool isParamChange) {
   if(ph.brightLength % 2 == 0) { adjSpacing++; }
   else { adjBrightLength++; }
   
-  uint8_t pattern[ph.GetPeriod()];
+  uint8_t pattern[PERIOD];
 
   uint8_t i = 0;
   uint8_t limit;
@@ -263,11 +262,11 @@ void WriteDimPattern_BrokenStepBarbell(PatternHandler& ph, bool isParamChange) {
     pattern[i] = 255;
   }
 
-  ph.SetBrightnessPattern(pattern, timing.now, isParamChange);
+  ph.SetBrightnessPattern(pattern, PERIOD, timing.now, isParamChange);
 }
 
 void WriteDimPattern_InverseStepBarbell(PatternHandler& ph, bool isParamChange) {
-  uint8_t pattern[ph.GetPeriod()];
+  uint8_t pattern[PERIOD];
 
   uint8_t i = 0;
   uint8_t limit;
@@ -287,11 +286,11 @@ void WriteDimPattern_InverseStepBarbell(PatternHandler& ph, bool isParamChange) 
     pattern[i] = 64;
   }
 
-  ph.SetBrightnessPattern(pattern, timing.now, isParamChange);
+  ph.SetBrightnessPattern(pattern, PERIOD, timing.now, isParamChange);
 }
 
 void WriteDimPattern_Towers(PatternHandler& ph, bool isParamChange) {
-  uint8_t pattern[ph.GetPeriod()];
+  uint8_t pattern[PERIOD];
 
   uint8_t i = 0;
   uint8_t limit;
@@ -319,11 +318,11 @@ void WriteDimPattern_Towers(PatternHandler& ph, bool isParamChange) {
     pattern[i] = 64;
   }
 
-  ph.SetBrightnessPattern(pattern, timing.now, isParamChange);
+  ph.SetBrightnessPattern(pattern, PERIOD, timing.now, isParamChange);
 }
 
 void WriteDimPattern_StepsUp(PatternHandler& ph, bool isParamChange) {
-  uint8_t pattern[ph.GetPeriod()];
+  uint8_t pattern[PERIOD];
 
   uint8_t i = 0;
   uint8_t limit;
@@ -351,11 +350,11 @@ void WriteDimPattern_StepsUp(PatternHandler& ph, bool isParamChange) {
     pattern[i] = 255;
   }
 
-  ph.SetBrightnessPattern(pattern, timing.now, isParamChange);
+  ph.SetBrightnessPattern(pattern, PERIOD, timing.now, isParamChange);
 }
 
 void WriteDimPattern_StepsDown(PatternHandler& ph, bool isParamChange) {
-  uint8_t pattern[ph.GetPeriod()];
+  uint8_t pattern[PERIOD];
 
   uint8_t i = 0;
   uint8_t limit;
@@ -383,12 +382,12 @@ void WriteDimPattern_StepsDown(PatternHandler& ph, bool isParamChange) {
     pattern[i] = 80;
   }
 
-  ph.SetBrightnessPattern(pattern, timing.now, isParamChange);
+  ph.SetBrightnessPattern(pattern, PERIOD, timing.now, isParamChange);
 }
 
 void WriteDimPattern_SlopedHighTowers(PatternHandler& ph, bool isParamChange) {
   float fadeStepSize = GET_FADE_STEP_SIZE(ph.transLength);
-  uint8_t pattern[ph.GetPeriod()];
+  uint8_t pattern[PERIOD];
 
   uint8_t i = 0;
   uint8_t limit; 
@@ -418,12 +417,12 @@ void WriteDimPattern_SlopedHighTowers(PatternHandler& ph, bool isParamChange) {
     pattern[i] = fadeStepSize * (limit - i);
   }
 
-  ph.SetBrightnessPattern(pattern, timing.now, isParamChange);
+  ph.SetBrightnessPattern(pattern, PERIOD, timing.now, isParamChange);
 }
 
 void WriteDimPattern_SlopedLowTowers(PatternHandler& ph, bool isParamChange) {
   float fadeStepSize = GET_FADE_STEP_SIZE(ph.transLength);
-  uint8_t pattern[ph.GetPeriod()];
+  uint8_t pattern[PERIOD];
 
   uint8_t i = 0;
   uint8_t limit;
@@ -452,12 +451,12 @@ void WriteDimPattern_SlopedLowTowers(PatternHandler& ph, bool isParamChange) {
     pattern[i] = fadeStepSize * (limit - i);
   }
 
-  ph.SetBrightnessPattern(pattern, timing.now, isParamChange);
+  ph.SetBrightnessPattern(pattern, PERIOD, timing.now, isParamChange);
 }
 
 void WriteDimPattern_SlideHigh(PatternHandler& ph, bool isParamChange) {
   float fadeStepSize = GET_FADE_STEP_SIZE(ph.transLength);
-  uint8_t pattern[ph.GetPeriod()];
+  uint8_t pattern[PERIOD];
 
   uint8_t i = 0;
   uint8_t limit;
@@ -486,12 +485,12 @@ void WriteDimPattern_SlideHigh(PatternHandler& ph, bool isParamChange) {
     pattern[i] = fadeStepSize * (uint8_t)(i - lastLimitMinusOne);
   }
 
-  ph.SetBrightnessPattern(pattern, timing.now, isParamChange);
+  ph.SetBrightnessPattern(pattern, PERIOD, timing.now, isParamChange);
 }
 
 void WriteDimPattern_SlideLow(PatternHandler& ph, bool isParamChange) {
   float fadeStepSize = GET_FADE_STEP_SIZE(ph.transLength);
-  uint8_t pattern[ph.GetPeriod()];
+  uint8_t pattern[PERIOD];
 
   uint8_t i = 0;
   uint8_t limit;
@@ -521,17 +520,17 @@ void WriteDimPattern_SlideLow(PatternHandler& ph, bool isParamChange) {
     pattern[i] = fadeStepSize * (limit - i);
   }
   
-  ph.SetBrightnessPattern(pattern, timing.now, isParamChange);
+  ph.SetBrightnessPattern(pattern, PERIOD, timing.now, isParamChange);
 }
 
 void WriteDimPattern_None(PatternHandler& ph, bool isParamChange) {
-  const uint8_t period = ph.GetPeriod();
+  const uint8_t period = PERIOD;
   uint8_t pattern[period];
   for(uint8_t i = 0; i < period; i++) {
     pattern[i] = 255;
   }
   
-  ph.SetBrightnessPattern(pattern, timing.now, isParamChange);
+  ph.SetBrightnessPattern(pattern, PERIOD, timing.now, isParamChange);
 
 }
 
@@ -562,8 +561,11 @@ void BaseLayerScroller(bool initDisplay, PatternHandler& ph) {
   }
   
   int8_t colorSpeed = brightnessSpeed/2;//scaleParam(baseParams.colorSpeed, colorSpeed_lower, colorSpeed_upper);
-  uint8_t numColors = scaleParam(baseParams.numColors, 1, PALETTE_SIZE);
-  uint8_t colorThickness = scaleParam(baseParams.colorThickness, 8, NUM_LEDS/PALETTE_SIZE);
+  uint8_t numColors = scaleParam(baseParams.numColors, 2, PALETTE_SIZE-1);
+  #ifdef DEBUG_ERRORS
+    if(NUM_LEDS > 255*2) { Serial.println("ERROR: NUM_LEDS/numColors results in colorThickness > 255"); }
+  #endif
+  uint8_t colorThickness = scaleParam(baseParams.colorThickness, 8, NUM_LEDS/(PALETTE_SIZE-1));
 
   const uint8_t fixedPeriod = 21;
   uint8_t transLength = scaleParam(baseParams.transLength, 4, 8);
@@ -592,11 +594,13 @@ void BaseLayerScroller(bool initDisplay, PatternHandler& ph) {
       bool updateMade = false;
       
       if(ph.colorThickness < colorThickness) {
-        ph.colorThickness++;
+        //ph.colorThickness++;
+        ph.colorThickness = colorThickness;
         updateMade = true;
       }
       else if(ph.colorThickness > colorThickness) {
-        ph.colorThickness--;
+        //ph.colorThickness--;
+        ph.colorThickness = colorThickness;
         updateMade = true;
       }
   

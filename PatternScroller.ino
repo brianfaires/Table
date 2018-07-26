@@ -7,15 +7,12 @@ PatternScroller::PatternScroller() {
   transLength = 0;
   brightLength = 0;
   numColors = 1;
+  brightnessPatternLength = NUM_LEDS;
   myBrightness = 255;
 
-  for(uint8_t i = 0; i < GetPeriod(); i++) {
+  for(uint16_t i = 0; i < brightnessPatternLength; i++) {
     brightnessPattern[i] = 255;
   }
-}
-
-uint8_t PatternScroller::GetPeriod() {
-  return spacing + 2*transLength + brightLength + 2;
 }
 
 bool PatternScroller::BrightnessPatternIsInitialized() {
@@ -43,18 +40,18 @@ void PatternScroller::SetColorPattern(PRGB* newPattern, uint16_t newColorPattern
   //Serial.println("TEST: SetColorPattern()");
 }
 
-void PatternScroller::SetBrightnessPattern(uint8_t* newPattern, uint32_t curTime, bool isParamChange) {
+void PatternScroller::SetBrightnessPattern(uint8_t* newPattern, uint16_t newBrightnessPatternLength, uint32_t curTime, bool isParamChange) {
   if(brightnessSpeed > 0) {
     brightnessIndexFirst = 0;
-    brightnessIndexLast = (NUM_LEDS-1) % GetPeriod();
+    brightnessIndexLast = (NUM_LEDS-1) % brightnessPatternLength;
   }
   else {
-    brightnessIndexFirst = GetPeriod() - 1 - ((NUM_LEDS-1) % GetPeriod());
-    brightnessIndexLast = GetPeriod() - 1;
+    brightnessIndexFirst = brightnessPatternLength - 1 - ((NUM_LEDS-1) % brightnessPatternLength);
+    brightnessIndexLast = brightnessPatternLength - 1;
   }
 
-  memcpy(brightnessPattern, newPattern, GetPeriod());
-  //for(uint8_t i = 0; i < GetPeriod(); i++)
+  memcpy(brightnessPattern, newPattern, brightnessPatternLength);
+  //for(uint8_t i = 0; i < brightnessPatternLength; i++)
     //Serial.println(String(i) + ": " + brightnessPattern[i]);
 }
 
@@ -68,11 +65,11 @@ void PatternScroller::Init(uint32_t curTime) {
 
   if(BrightnessPatternIsInitialized()) {
     for(uint16_t i = 0; i < NUM_LEDS; i++) {
-      brightnesses[i] = brightnessPattern[i % GetPeriod()];
+      brightnesses[i] = brightnessPattern[i % brightnessPatternLength];
     }
 
     brightnessIndexFirst = 0;
-    brightnessIndexLast = (NUM_LEDS-1) % GetPeriod();
+    brightnessIndexLast = (NUM_LEDS-1) % brightnessPatternLength;
   }
 
   lastBrightnessMove = curTime;
@@ -155,8 +152,8 @@ void PatternScroller::ScrollBrightnessPattern(bool scrollForward) {
       brightnesses[i] = brightnesses[i-1];
 
     // Adjust indexes
-    if(--brightnessIndexFirst == 65535) { brightnessIndexFirst = GetPeriod() - 1; }
-    if(--brightnessIndexLast  == 65535) { brightnessIndexLast  = GetPeriod() - 1; }
+    if(--brightnessIndexFirst == 65535) { brightnessIndexFirst = brightnessPatternLength - 1; }
+    if(--brightnessIndexLast  == 65535) { brightnessIndexLast  = brightnessPatternLength - 1; }
     
     // Write the new brightness
     brightnesses[0] = brightnessPattern[brightnessIndexFirst];
@@ -169,8 +166,8 @@ void PatternScroller::ScrollBrightnessPattern(bool scrollForward) {
       brightnesses[i] = brightnesses[i+1];
 
     // Adjust indexes
-    if(++brightnessIndexFirst == GetPeriod()) { brightnessIndexFirst = 0; }
-    if(++brightnessIndexLast  == GetPeriod()) { brightnessIndexLast  = 0; }
+    if(++brightnessIndexFirst == brightnessPatternLength) { brightnessIndexFirst = 0; }
+    if(++brightnessIndexLast  == brightnessPatternLength) { brightnessIndexLast  = 0; }
 
     brightnesses[NUM_LEDS-1] = brightnessPattern[brightnessIndexLast];
   }
@@ -181,9 +178,9 @@ bool PatternScroller::IsReadyForBrightnessChange(uint32_t currentTime) {
   if(currentTime - lastBrightnessMove < stepSize) { return false; }
   
   if(brightnessParamWaitCounter > 0 && brightnessParamWaitCounter < 2*BRIGHTNESS_PARAM_CHANGE_DISTANCE) { return false; }
-  if(brightnessSpeed == 0) { return brightnessIndexFirst == 0 || brightnessIndexLast == GetPeriod() - 1; }
+  if(brightnessSpeed == 0) { return brightnessIndexFirst == 0 || brightnessIndexLast == brightnessPatternLength - 1; }
   else if(brightnessSpeed >= 0) { return brightnessIndexFirst == 0; }
-  else { return brightnessIndexLast == GetPeriod() - 1; }
+  else { return brightnessIndexLast == brightnessPatternLength - 1; }
 }
 
 bool PatternScroller::IsReadyForColorPatternChange(uint32_t currentTime) {

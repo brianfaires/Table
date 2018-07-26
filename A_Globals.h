@@ -10,6 +10,9 @@
 #define FPS_TO_US(x) (1000000 / x)
 #define FPS_TO_MS(x) (1000 / x)
 
+
+#define NUM_PM_PARAMS 2
+
 // Timing debug tools
 #ifdef DEBUG_TIMING
   uint32_t timingValues[10];

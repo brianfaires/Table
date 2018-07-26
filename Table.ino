@@ -30,10 +30,14 @@
  *    PatternRepeaters
  *      - Repeater
  *        - Bugs:
- *          - Reversing direction causes black pixels; running on reverse direction causes 1 color and random black pixels; overwriting random stuff; obv overflow error
+ *          - Diff color period causes rapid movement
+ *          - Re-add paramWaitCounter logic to updating parameters
+ *          - Assumes a constant period between patterns (maybe this is good and should be enforced)
  *      - Scroller
+ *      
  */
 
+#include <PaletteManager.h>
 #include <FastLED.h>
 #include "A_Globals.h"
 
