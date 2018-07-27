@@ -1,7 +1,7 @@
 void DrawBaseLayer() {
   switch(baseParams.animation) {
     case SCROLLER:
-      BaseLayerScroller(false, ps);
+      pc.Update(&baseParams, leds_top, NUM_LEDS, pm, timing.now);
       break;
 
     case FIRE:
@@ -44,7 +44,7 @@ void InitBaseLayer() {
   
   switch(baseParams.animation) {
     case SCROLLER:
-      BaseLayerScroller(true, ps);
+      pc.Init(&baseParams, timing.now);
       break;
 
     default:
@@ -83,6 +83,7 @@ void TransitionBaseAnimation(uint32_t curTime) {
     }
   }
 }
+
 void NextBaseAnimation(uint32_t curTime) {
   uint8_t lastBaseAnimation = baseParams.animation;
   baseParams.animation = 1 + (baseParams.animation % NUM_BASE_ANIMATIONS);

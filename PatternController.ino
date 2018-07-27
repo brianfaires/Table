@@ -21,8 +21,23 @@ PatternController::PatternController() {
   
 }
 
-void PatternController::Init(uint32_t curTime) {
+void PatternController::Init(struct_base_show_params* params, uint32_t curTime) {
   pr.Init(curTime);
+
+  ScaleParams(params);
+  pr.colorSpeed = colorSpeed;
+  pr.brightnessSpeed = brightnessSpeed;
+    
+  pg.numColors = numColors;
+  pg.colorThickness = colorThickness;
+  pg.WriteColorPattern(colorPatternIndex, targetColorPattern);
+  pr.SetColorPattern(targetColorPattern, colorPeriod);
+
+  pg.brightLength = brightLength;
+  pg.transLength = transLength;
+  pg.spacing = spacing;
+  pg.WriteBrightnessPattern(brightnessPatternIndex, targetBrightnessPattern);
+  pr.SetBrightnessPattern(targetBrightnessPattern, brightnessPeriod);
 }
 
 void PatternController::SkipTime(uint32_t amount) {
@@ -31,8 +46,8 @@ void PatternController::SkipTime(uint32_t amount) {
 
 void PatternController::ScaleParams(struct_base_show_params* params) {
   uint8_t displayMode = scaleParam(params->displayMode, 0, NUM_BRIGHTNESS_PATTERNS * NUM_COLOR_PATTERNS - 1);
-  curBrightnessPattern = displayMode % NUM_BRIGHTNESS_PATTERNS;
-  curColorPattern = displayMode / NUM_BRIGHTNESS_PATTERNS;
+  brightnessPatternIndex = displayMode % NUM_BRIGHTNESS_PATTERNS;
+  colorPatternIndex = displayMode / NUM_BRIGHTNESS_PATTERNS;
 
   uint8_t abs_brightnessSpeed = scaleParam((uint8_t)abs(params->brightnessSpeed), 0, 63);
   brightnessSpeed = abs_brightnessSpeed * (params->brightnessSpeed >= 0 ? 1 : -1);
@@ -60,21 +75,22 @@ void PatternController::ScaleParams(struct_base_show_params* params) {
   spacing = brightnessPeriod - 2*transLength - brightLength - 2;
 }
 
-void PatternController::Update(struct_base_show_params* params, uint32_t curTime) {
+void PatternController::Update(struct_base_show_params* params, CRGB* target, uint16_t numLEDs, PaletteManager& pm, uint32_t curTime) {
   ScaleParams(params);
   WalkSpeeds();
   
   if(WalkColorParams()) {
-    pg.WriteColorPattern(curColorPattern, targetColorPattern);
+    pg.WriteColorPattern(colorPatternIndex, targetColorPattern);
     pr.SetColorPattern(targetColorPattern, colorPeriod);
   }
   
   if(WalkBrightnessParams()) {
-    pg.WriteBrightnessPattern(curBrightnessPattern, targetBrightnessPattern);
+    pg.WriteBrightnessPattern(brightnessPatternIndex, targetBrightnessPattern);
     pr.SetBrightnessPattern(targetBrightnessPattern, brightnessPeriod);
   }
   
   pr.Update(curTime);
+  pr.SetCRGBs(target, numLEDs, pm);
 }
 
 void PatternController::WalkSpeeds() {

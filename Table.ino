@@ -72,9 +72,6 @@ void setup() {
   pm.Init(INIT_PM_WALK_LENGTH, INIT_PM_PAUSE_LENGTH, timing.now);
   InitBaseLayer();
   InitTopLayer();
-  //pr.myBrightness = INIT_PATTERN_REPEATER_BRIGHTNESS;
-  ps.myBrightness = INIT_PATTERN_SCROLLER_BRIGHTNESS;
-
   
   #ifdef DEBUG_SERIAL
     Serial.println("setup() complete.");
@@ -154,8 +151,7 @@ void SkipTime(uint32_t amount) {
   SkipTimeForTimers(amount);
   SkipTimeForIO(amount);
   pm.SkipTime(amount);
-  ps.SkipTime(amount);
-  //pr.SkipTime(amount);
+  pc.SkipTime(amount);
 }
 
 void SkipTimeForTimers(uint32_t amount) {

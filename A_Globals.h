@@ -26,9 +26,7 @@ CRGBArray<NUM_LEDS> leds;
 CRGBArray<NUM_LEDS> leds_top;
 
 PaletteManager pm;
-PatternScroller ps;
 PatternController pc;
-//PatternRepeater pr;
 
 struct_timers timing;
 struct_config config;

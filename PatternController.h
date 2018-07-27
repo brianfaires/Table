@@ -7,8 +7,8 @@
 class PatternController {
   public:
     PatternController();
-    void Init(uint32_t curTime);
-    void Update(struct_base_show_params* params, uint32_t curTime);
+    void Init(struct_base_show_params* params, uint32_t curTime);
+    void Update(struct_base_show_params* params, CRGB* target, uint16_t numLEDs, PaletteManager& pm, uint32_t curTime);
     void SkipTime(uint32_t amount);
 
   private:
@@ -25,7 +25,7 @@ class PatternController {
     uint32_t lastBrightnessChange, lastColorChange;
     uint8_t numColors, colorThickness, brightLength, spacing, transLength;
     int8_t colorSpeed, brightnessSpeed;
-    uint8_t curBrightnessPattern, curColorPattern;
+    uint8_t brightnessPatternIndex, colorPatternIndex;
     uint16_t colorPeriod, brightnessPeriod;
 
 };
