@@ -24,15 +24,13 @@
  *    Flickering happens at 100FPS and greater. No idea why.
  *    
  *    
- *  Testing/development milestones:
- *    PatternRepeaters
- *      - Repeater
- *        - Bugs:
- *          - Re-add paramWaitCounter logic to updating parameters
- *          - Assumes a constant period between patterns (maybe this is good and should be enforced)
- *      - Scroller
+ *  To do:
+ *    - Confirm final Gamma stuff
+ *    - Test PatternRepeater, get it into a library
+ *    - Test/Tune PatternGenerator
+ *    - Tune Palettes
+ *    - Test PatternScroller, get it into a library
  *      
-*      - Updated layout; keep in mind for PatternGenerator, that values are now scaling an RGB, not HSV
  */
 
 #include <PaletteManager.h>
@@ -91,17 +89,11 @@ void setup() {
 }
 
 void loop() {
-  #ifdef COLOR_CORRECTION_TEST
-    RunColorCorrectionTest();
+  #ifdef SIMPLE_COLOR_CORRECTION_TEST
+    RunSimpleColorCorrectionTest();
     return;
-  #elif defined(GRADIENT_COLOR_CORRECTION_GAMMA_TEST)
-    RunGradientColorCorrectionGammaTest();
-    return;
-  #elif defined(GRADIENT_COLOR_CORRECTION_GAMMA_TEST2)
-    RunGradientColorCorrectionGammaTest2();
-    return;
-  #elif defined(GAMMA_CONFIG_TEST)
-    RunGammaConfigTest();
+  #elif defined(GRADIENT_COLOR_CORRECTION_TEST)
+    RunGradientColorCorrectionTest();
     return;
   #endif
 
