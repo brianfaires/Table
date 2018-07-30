@@ -1,9 +1,6 @@
 #include "PatternGenerator.h"
 #include "PatternRepeater.h"
 
-#define NUM_BRIGHTNESS_PATTERNS 1
-#define NUM_COLOR_PATTERNS 2
-
 class PatternController {
   public:
     PatternController();

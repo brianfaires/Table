@@ -18,7 +18,10 @@
   */
   
 PatternController::PatternController() {
-  
+  brightnessPeriod = 21;
+  colorPeriod = 420;
+  colorPatternIndex = 0;
+  brightnessPatternIndex = 0;
 }
 
 void PatternController::Init(struct_base_show_params* params, uint32_t curTime) {
@@ -31,13 +34,12 @@ void PatternController::Init(struct_base_show_params* params, uint32_t curTime) 
   pg.numColors = numColors;
   pg.colorThickness = colorThickness;
   pg.WriteColorPattern(colorPatternIndex, targetColorPattern);
-  pr.SetColorPattern(targetColorPattern, colorPeriod);
-
+  pr.SetColorPattern(targetColorPattern, pg.GetColorPeriod(colorPatternIndex));
   pg.brightLength = brightLength;
   pg.transLength = transLength;
   pg.spacing = spacing;
   pg.WriteBrightnessPattern(brightnessPatternIndex, targetBrightnessPattern);
-  pr.SetBrightnessPattern(targetBrightnessPattern, brightnessPeriod);
+  pr.SetBrightnessPattern(targetBrightnessPattern, pg.GetBrightnessPeriod());
 }
 
 void PatternController::SkipTime(uint32_t amount) {
@@ -46,8 +48,20 @@ void PatternController::SkipTime(uint32_t amount) {
 
 void PatternController::ScaleParams(struct_base_show_params* params) {
   uint8_t displayMode = scaleParam(params->displayMode, 0, NUM_BRIGHTNESS_PATTERNS * NUM_COLOR_PATTERNS - 1);
-  brightnessPatternIndex = displayMode % NUM_BRIGHTNESS_PATTERNS;
+  
+  uint8_t lastColorIndex = colorPatternIndex;
   colorPatternIndex = displayMode / NUM_BRIGHTNESS_PATTERNS;
+  if(lastColorIndex != colorPatternIndex) {
+    pg.WriteColorPattern(colorPatternIndex, targetColorPattern);
+    pr.SetColorPattern(targetColorPattern, pg.GetColorPeriod(colorPatternIndex));
+  }
+  
+  uint8_t lastBrightnessIndex = brightnessPatternIndex;
+  brightnessPatternIndex = displayMode % NUM_BRIGHTNESS_PATTERNS;
+  if(lastBrightnessIndex != brightnessPatternIndex) {
+    pg.WriteBrightnessPattern(brightnessPatternIndex, targetBrightnessPattern);
+    pr.SetBrightnessPattern(targetBrightnessPattern, pg.GetBrightnessPeriod());
+  }
 
   uint8_t abs_brightnessSpeed = scaleParam((uint8_t)abs(params->brightnessSpeed), 0, 63);
   brightnessSpeed = abs_brightnessSpeed * (params->brightnessSpeed >= 0 ? 1 : -1);
@@ -68,27 +82,31 @@ void PatternController::ScaleParams(struct_base_show_params* params) {
   #ifdef DEBUG_ERRORS
     if(NUM_LEDS > 255*2) { Serial.println("ERROR: NUM_LEDS/numColors results in colorThickness > 255"); }
   #endif
-  uint8_t colorThickness = scaleParam(params->colorThickness, 8, NUM_LEDS/(PALETTE_SIZE-1));
+  colorThickness = scaleParam(params->colorThickness, 8, NUM_LEDS/numColors);
 
   transLength = scaleParam(params->transLength, 4, 8);
   brightLength = scaleParam(params->brightLength, 0, brightnessPeriod - 2*transLength - 2);
   spacing = brightnessPeriod - 2*transLength - brightLength - 2;
+
+//debug
+  numColors = 3;
+  colorThickness = 70;
 }
 
 void PatternController::Update(struct_base_show_params* params, CRGB* target, uint16_t numLEDs, PaletteManager& pm, uint32_t curTime) {
   ScaleParams(params);
   WalkSpeeds();
-  
+
   if(WalkColorParams()) {
     pg.WriteColorPattern(colorPatternIndex, targetColorPattern);
-    pr.SetColorPattern(targetColorPattern, colorPeriod);
+    pr.SetColorPattern(targetColorPattern, pg.GetColorPeriod(colorPatternIndex));
   }
   
   if(WalkBrightnessParams()) {
     pg.WriteBrightnessPattern(brightnessPatternIndex, targetBrightnessPattern);
-    pr.SetBrightnessPattern(targetBrightnessPattern, brightnessPeriod);
+    pr.SetBrightnessPattern(targetBrightnessPattern, pg.GetBrightnessPeriod());
   }
-  
+
   pr.Update(curTime);
   pr.SetCRGBs(target, numLEDs, pm);
 }
@@ -134,7 +152,12 @@ void PatternController::WalkSpeeds() {
 
 bool PatternController::WalkColorParams() {
   bool updateMade = false;
-  
+
+  // Change values immediately
+  pg.colorThickness = colorThickness;
+  pg.numColors = numColors;
+  return true;
+
   if(pr.IsReadyForColorMove(timing.now)) {
     // Gradually update params in sync with movement
     if(pg.colorThickness < colorThickness) {

@@ -8,7 +8,7 @@ PatternScroller::PatternScroller() {
   brightLength = 0;
   numColors = 1;
   brightnessPatternLength = NUM_LEDS;
-  myBrightness = 255;
+  myBrightness = 64;
 
   for(uint16_t i = 0; i < brightnessPatternLength; i++) {
     brightnessPattern[i] = 255;

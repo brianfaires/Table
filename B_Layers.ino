@@ -1,7 +1,7 @@
 void DrawBaseLayer() {
   switch(baseParams.animation) {
     case SCROLLER:
-      pc.Update(&baseParams, leds_top, NUM_LEDS, pm, timing.now);
+      pc.Update(&baseParams, leds, NUM_LEDS, pm, timing.now);
       break;
 
     case FIRE:

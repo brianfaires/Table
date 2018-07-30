@@ -1,4 +1,4 @@
-PatternRepeater::PatternRepeater() {
+  PatternRepeater::PatternRepeater() {
   colorPatternLength = 1;
   colorPattern[0] = { 0, 0, 0 };
   colorIndexFirst = 0;
@@ -103,21 +103,41 @@ void PatternRepeater::SetCRGBs(CRGB* target, uint16_t numLEDs, PaletteManager& p
   uint16_t curColorIndex = colorIndexFirst;
   uint16_t curBrightnessIndex = brightnessIndexFirst;
 
+
   CRGB temp;
   for(uint16_t i = 0; i < numLEDs; i++) {
     // Blend using CRGB; this adds saturation and brightness but avoids jumping directions around the color wheel
     temp = pm.palette[colorPattern[curColorIndex].a];
-    target[i] = blend(temp, pm.palette[colorPattern[curColorIndex].b], colorPattern[curColorIndex].blendAmount);
+    temp = ReverseGammaCorrect(temp);
+    target[i] = blend(temp, ReverseGammaCorrect(pm.palette[colorPattern[curColorIndex].b]), colorPattern[curColorIndex].blendAmount);
+
+
+    /*
+    target[i].maximizeBrightness();
+    CHSV temp2 = rgb2hsv_approximate(target[i]);
+    temp2.v = brightnessPattern[curBrightnessIndex] * myBrightness / 255;
+    target[i] = temp2;
+    */
     target[i] %= brightnessPattern[curBrightnessIndex] * myBrightness / 255;
+    target[i] = GammaCorrect(target[i]);
+    
     #ifdef DEBUG_ERRORS
-      if(curBrightnessIndex >= brightnessPatternLength) { Serial.println("ERROR: SetCRGBs(): curBrightnessIndex out of bounds."); }
-      if(curColorIndex >= colorPatternLength) { Serial.println("ERROR: SetCRGBs(): curColorIndex out of bounds."); }
+      if(curBrightnessIndex >= brightnessPatternLength) { Serial.println("ERROR: SetCRGBs(): curBrightnessIndex out of bounds: " + 
+      String(curBrightnessIndex) + " / " + String(brightnessPatternLength)); }
+      if(curColorIndex >= colorPatternLength) { Serial.println("ERROR: SetCRGBs(): curColorIndex out of bounds: " + 
+      String(curColorIndex) + " / " + String(colorPatternLength)); }
     #endif
 
-    //Serial.println(String(i) + ": " + String(colorPattern[curColorIndex].a));
-
+    //Serial.println(String(i) + ": " + String(colorPattern[curColorIndex].a) + ", "  + String(colorPattern[curColorIndex].b) + ", "  + String(colorPattern[curColorIndex].blendAmount));
+    
     if(++curColorIndex == colorPatternLength) { curColorIndex = 0; }
     if(++curBrightnessIndex == brightnessPatternLength) { curBrightnessIndex = 0; }
   }
+/*
+  Serial.println("SetCRGBs(): ");
+  for(uint8_t ii = 0; ii < numLEDs; ii++) {
+    Serial.print(String(ii) + " = " + String(brightnessPattern[ii % brightnessPatternLength]) + "\t");
+    Serial.println(String(target[ii].b));
+  }*/
 }
 

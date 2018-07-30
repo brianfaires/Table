@@ -112,6 +112,7 @@ void PatternGenerator::WriteColorPattern_Gradient(PRGB* outputArray) {
   for(uint8_t i = 0; i < numColors; i++) {
     for(uint8_t j = 0; j < colorThickness; j++) {
       pattern[colorThickness*i + j] = (PRGB) { i, i == numColors-1 ? 0 : i+1, j * 255 / colorThickness };
+      //Serial.println(String(i) + "/" + String(j) + ": " + String(i == numColors-1 ? 0 : i+1) + ", " + String(j * 255 / colorThickness));
     }
   }
 
