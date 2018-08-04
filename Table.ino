@@ -3,6 +3,7 @@
  *    Blend out/in animations at same time
  *    Overlay blendAmount: base on Luma(), or brightness of top layer only
  *    PatternScroller reverseDirection: overwrite random pixels at the end
+ *    PaletteManager random walk palettes
  *  
  *  Button IO:
  *    Medium-long press into tap doesn't do double click
@@ -25,7 +26,7 @@
  *    
  *    
  *  To do:
- *    - Confirm final Gamma stuff
+ *    - Confirm final Gamma stuff, move into library
  *    - Test PatternRepeater, get it into a library
  *    - Test/Tune PatternGenerator
  *    - Tune Palettes
@@ -67,6 +68,7 @@ void setup() {
   
   //--------------------Initialize software--------------------
   pm.Init(INIT_PM_WALK_LENGTH, INIT_PM_PAUSE_LENGTH, timing.now);
+  Gamma.Init(COLOR_CORRECTION, gammaR, gammaG, gammaB, gammaDim, reverseGammaR, reverseGammaG, reverseGammaB);
   InitBaseLayer();
   InitTopLayer();
   
@@ -89,11 +91,8 @@ void setup() {
 }
 
 void loop() {
-  #ifdef SIMPLE_COLOR_CORRECTION_TEST
-    RunSimpleColorCorrectionTest();
-    return;
-  #elif defined(GRADIENT_COLOR_CORRECTION_TEST)
-    RunGradientColorCorrectionTest();
+  #ifdef TEST_COLOR_CORRECTION
+    Gamma.RunTests(leds, 384, 4, 16, COLOR_CORRECTION);
     return;
   #endif
 

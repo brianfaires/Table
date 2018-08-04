@@ -109,11 +109,11 @@ void PatternRepeater::SetCRGBs(CRGB* target, uint16_t numLEDs, PaletteManager& p
     // Blend using CRGB; this adds saturation and brightness but avoids jumping directions around the color wheel
     tempA = pm.palette[colorPattern[curColorIndex].a];
     tempB = pm.palette[colorPattern[curColorIndex].b];
-    ReverseGammaCorrect(tempA);
-    ReverseGammaCorrect(tempB);
+    Gamma.Inverse(tempA);
+    Gamma.Inverse(tempB);
     target[i] = blend(tempA, tempB, colorPattern[curColorIndex].blendAmount);
-    GammaCorrect(target[i]);
-    target[i] %= brightnessPattern[curBrightnessIndex] * myBrightness / 255;
+    Gamma.Correct(target[i]);
+    target[i] %= brightnessPattern[curBrightnessIndex] * myBrightness / 255;//debug: this doesn't work; %= isn't gamma corrected, and the gamma correction has dimmed blended colors
     
     #ifdef DEBUG_ERRORS
       if(curBrightnessIndex >= brightnessPatternLength) { Serial.println("ERROR: SetCRGBs(): curBrightnessIndex out of bounds: " + 

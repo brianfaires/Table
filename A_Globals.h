@@ -4,6 +4,7 @@
 #include "A_Config.h"
 #include "Z_Types.h"
 #include "PaletteManager.h"
+#include "GammaManager.h"
 #include "PatternScroller.h"
 #include "PatternRepeater.h"
 #include "PatternController.h"
@@ -27,6 +28,7 @@ CRGBArray<NUM_LEDS> leds_top;
 
 PaletteManager pm;
 PatternController pc;
+GammaManager Gamma;
 
 struct_timers timing;
 struct_config config;
