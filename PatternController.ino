@@ -67,6 +67,7 @@ void PatternController::ScaleParams(struct_base_show_params* params) {
   brightnessSpeed = abs_brightnessSpeed * (params->brightnessSpeed >= 0 ? 1 : -1);
   
   // Bound colorSpeed based on brightnessSpeed
+  /*
   int8_t colorSpeed_lower, colorSpeed_upper;
   if(brightnessSpeed > 0) {
     colorSpeed_lower = brightnessSpeed / -4;
@@ -76,7 +77,7 @@ void PatternController::ScaleParams(struct_base_show_params* params) {
     colorSpeed_upper = brightnessSpeed * 3/2;
     colorSpeed_upper = brightnessSpeed / -4;
   }
-  
+  */
   colorSpeed = brightnessSpeed/2;//scaleParam(params->colorSpeed, colorSpeed_lower, colorSpeed_upper);
   numColors = scaleParam(params->numColors, 2, PALETTE_SIZE-1);
   #ifdef DEBUG_ERRORS

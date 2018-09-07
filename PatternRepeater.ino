@@ -45,10 +45,10 @@ void PatternRepeater::Update(uint32_t& curTime) {
     lastBrightnessMove = curTime;
   }
   else {
-    uint32_t stepSize = ONE_SECOND / abs(brightnessSpeed);
+    uint32_t stepSize = ONE_SEC_US / abs(brightnessSpeed);
     if(curTime - lastBrightnessMove >= stepSize) {
       ScrollBrightnessPattern(brightnessSpeed > 0);
-      lastBrightnessMove += ONE_SECOND / abs(brightnessSpeed);
+      lastBrightnessMove += ONE_SEC_US / abs(brightnessSpeed);
     }
   }
 
@@ -57,10 +57,10 @@ void PatternRepeater::Update(uint32_t& curTime) {
     lastColorMove = curTime;
   }
   else {
-    uint32_t stepSize = ONE_SECOND / abs(colorSpeed);
+    uint32_t stepSize = ONE_SEC_US / abs(colorSpeed);
     if(curTime - lastColorMove >= stepSize) {
       ScrollColorPattern(colorSpeed > 0);
-      lastColorMove += ONE_SECOND / abs(colorSpeed);
+      lastColorMove += ONE_SEC_US / abs(colorSpeed);
     }
   }
 }
@@ -87,7 +87,7 @@ bool PatternRepeater::IsReadyForBrightnessMove(uint32_t curTime) {
   // Returns true if this cycle is going to move the pattern (i.e. only change pattern on the same draw cycle as a move)
   if(brightnessSpeed == 0) { return true; }
   
-  uint32_t stepSize = ONE_SECOND / abs(brightnessSpeed);
+  uint32_t stepSize = ONE_SEC_US / abs(brightnessSpeed);
   return curTime - lastBrightnessMove >= stepSize;
 }
 
@@ -95,7 +95,7 @@ bool PatternRepeater::IsReadyForColorMove(uint32_t currentTime) {
   // Returns true if this cycle is going to move the pattern (i.e. only change pattern on the same draw cycle as a move)
   if(colorSpeed == 0) { return true; }
   
-  uint32_t stepSize = ONE_SECOND / abs(colorSpeed);
+  uint32_t stepSize = ONE_SEC_US / abs(colorSpeed);
   return currentTime - lastColorMove >= stepSize;
 }
 

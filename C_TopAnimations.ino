@@ -4,11 +4,11 @@ void Glitter() {
   int8_t refreshRate = scaleParam(topParams.speed, 9, 13);
   uint16_t numLitLEDs = scaleParam(topParams.portion, 3, 16);
   
-  if(timing.now - lastGlitter > ONE_SECOND / refreshRate) {
+  if(timing.now - lastGlitter > ONE_SEC_US / refreshRate) {
     leds_top = CRGB::Black;
     lastGlitter = timing.now;
     for(uint16_t i = 0; i < numLitLEDs; i++) {
-      leds_top[random8(NUM_LEDS)] = pm.palette[5];
+      leds_top[random16(NUM_LEDS)] = pm.palette[5];
     }
   }
 }
@@ -22,7 +22,7 @@ void Rain() {
   else if(refreshRate >= 0 && refreshRate < 7) { refreshRate = 7; }
 
   
-  if(timing.now - lastMove > ONE_SECOND / abs(refreshRate)) {
+  if(timing.now - lastMove > ONE_SEC_US / abs(refreshRate)) {
     lastMove = timing.now;
     
     if(refreshRate > 0) {

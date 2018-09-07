@@ -9,8 +9,8 @@
 #include "PatternRepeater.h"
 #include "PatternController.h"
 
-#define FPS_TO_US(x) (1000000 / x)
-#define FPS_TO_MS(x) (1000 / x)
+#define FPS_TO_US(x) (ONE_SEC_US / x)
+#define FPS_TO_MS(x) (ONE_SEC_MS / x)
 
 
 #define NUM_PM_PARAMS 2

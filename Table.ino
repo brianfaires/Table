@@ -4,6 +4,7 @@
  *    Overlay blendAmount: base on Luma(), or brightness of top layer only
  *    PatternScroller reverseDirection: overwrite random pixels at the end
  *    PaletteManager random walk palettes
+ *    Use fastmath function scale8() in  scaleParam() functions
  *  
  *  Button IO:
  *    Medium-long press into tap doesn't do double click
@@ -88,6 +89,18 @@ void setup() {
   #endif
   
   SkipTime(micros());
+
+
+
+  CHSV a = CHSV(0,255,255);
+  CHSV b = CHSV(128,255,255);
+  uint8_t gradientLength = 10;
+
+  CHSV hsvs[gradientLength];
+  fillGradientHSV(a, b, gradientLength, hsvs);
+  for(uint8_t i = 0; i < gradientLength; i++) { Serial.println(String(i) + ": " + ToString(hsvs[i])); }
+
+  delay(600000);
 }
 
 void loop() {

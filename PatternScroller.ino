@@ -79,16 +79,16 @@ void PatternScroller::Init(uint32_t curTime) {
 void PatternScroller::Update(uint32_t& currentTime) {
   //uint8_t retVal = 0; // Return value reflects if color and/or brightness patterns moved
   
-  bool brightnessMoved = false;
+  //bool brightnessMoved = false;
   if(brightnessSpeed == 0) {
     lastBrightnessMove = currentTime;
   }
   else {
-    uint32_t stepSize = ONE_SECOND / abs(brightnessSpeed);
+    uint32_t stepSize = ONE_SEC_US / abs(brightnessSpeed);
     if(currentTime - lastBrightnessMove >= stepSize) {
       ScrollBrightnessPattern(brightnessSpeed > 0);
       lastBrightnessMove += stepSize;
-      brightnessMoved = true;
+      //brightnessMoved = true;
       //retVal |= BRIGHTNESS_PATTERN_MOVED;
     }
   }
@@ -99,7 +99,7 @@ void PatternScroller::Update(uint32_t& currentTime) {
     lastColorMove = currentTime;
   }
   else {
-    uint32_t stepSize = ONE_SECOND / abs(colorSpeed);
+    uint32_t stepSize = ONE_SEC_US / abs(colorSpeed);
     if(/*mustMoveColor ||*/ ((currentTime > lastColorMove) && (currentTime - lastColorMove >= stepSize))) {
       ScrollColorPattern(colorSpeed > 0);
       lastColorMove += stepSize;
@@ -174,7 +174,7 @@ void PatternScroller::ScrollBrightnessPattern(bool scrollForward) {
 }
 
 bool PatternScroller::IsReadyForBrightnessChange(uint32_t currentTime) {
-  uint32_t stepSize = ONE_SECOND / abs(brightnessSpeed);
+  uint32_t stepSize = ONE_SEC_US / abs(brightnessSpeed);
   if(currentTime - lastBrightnessMove < stepSize) { return false; }
   
   if(brightnessParamWaitCounter > 0 && brightnessParamWaitCounter < 2*BRIGHTNESS_PARAM_CHANGE_DISTANCE) { return false; }
@@ -184,7 +184,7 @@ bool PatternScroller::IsReadyForBrightnessChange(uint32_t currentTime) {
 }
 
 bool PatternScroller::IsReadyForColorPatternChange(uint32_t currentTime) {
-  uint32_t stepSize = ONE_SECOND / abs(colorSpeed);
+  uint32_t stepSize = ONE_SEC_US / abs(colorSpeed);
   if(currentTime - lastColorMove < stepSize) { return false; }
   
   if(colorParamWaitCounter > 0 && colorParamWaitCounter < 2*PATTERN_PARAM_CHANGE_DISTANCE) { return false; }

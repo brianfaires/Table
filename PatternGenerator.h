@@ -111,7 +111,9 @@ void PatternGenerator::WriteColorPattern_Gradient(PRGB* outputArray) {
   
   for(uint8_t i = 0; i < numColors; i++) {
     for(uint8_t j = 0; j < colorThickness; j++) {
-      pattern[colorThickness*i + j] = (PRGB) { i, i == numColors-1 ? 0 : i+1, j * 255 / colorThickness };
+      uint8_t b = i == numColors-1 ? 0 : i+1; // Necessary because using "{ }" will convert to int and throw a warning
+      uint8_t blendAmount = j * 255 / colorThickness; // Necessary because using "{ }" will convert to int and throw a warning
+      pattern[colorThickness*i + j] = (PRGB) { i, b, blendAmount};
       //Serial.println(String(i) + "/" + String(j) + ": " + String(i == numColors-1 ? 0 : i+1) + ", " + String(j * 255 / colorThickness));
     }
   }

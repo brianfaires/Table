@@ -152,7 +152,7 @@ void ColorExplosion() {
 void Orbs() {
   const uint8_t centerPoint = 51;
   const uint8_t minRadius = 3;
-  const uint8_t maxRadius = 51;
+  //const uint8_t maxRadius = 51;
   const uint8_t fadeRate = 64;
     
   uint8_t curRadius;
