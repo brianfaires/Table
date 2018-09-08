@@ -14,12 +14,11 @@ inline int16_t scaleParam16(int8_t param, int16_t minVal, int16_t maxVal) {
 String ToString(CHSV hsv) {
   return "(" + String(hsv.h) + ", " + String(hsv.s) + ", " + String(hsv.v) + ")";
 }
-
 String ToString(CRGB rgb) {
   return "(" + String(rgb.r) + ", " + String(rgb.g) + ", " + String(rgb.b) + ")";
 }
 
-void fillGradientHSV(CHSV a, CHSV b, uint16_t numPixels, CHSV* leds) {
+void fill_gradient_HSV_linear(CHSV* leds, uint16_t numPixels, CHSV a, CHSV b) {
   int16_t x1, y1, x2, y2;
   getCartesianFromHSV(a, x1, y1);
   getCartesianFromHSV(b, x2, y2);
@@ -28,30 +27,62 @@ void fillGradientHSV(CHSV a, CHSV b, uint16_t numPixels, CHSV* leds) {
 
   for(uint16_t i = 0; i < numPixels; i++) {
     uint8_t blendAmount = 255 * i / (numPixels-1);
-    x = (x1 + x2) * blendAmount / 255;
-    y = (y1 + y2) * blendAmount / 255;
-    getHSVFromCartesian(leds[i], x, y);
+    x = x1 + (x2-x1) * blendAmount/255;
+    y = y1 + (y2-y1) * blendAmount/255;
+    leds[i] = getHSVFromCartesian(x, y);
   }
 }
+void fill_gradient_HSV_linear(CRGB* leds, uint16_t numPixels, CHSV a, CHSV b) {
+  int16_t x1, y1, x2, y2;
+  getCartesianFromHSV(a, x1, y1);
+  getCartesianFromHSV(b, x2, y2);
 
+  int16_t x, y;
+
+  for(uint16_t i = 0; i < numPixels; i++) {
+    uint8_t blendAmount = 255 * i / (numPixels-1);
+    x = x1 + (x2-x1) * blendAmount/255;
+    y = y1 + (y2-y1) * blendAmount/255;
+    leds[i] = getHSVFromCartesian(x, y);
+  }  
+}
 void blendHSV(CHSV& a, CHSV b, uint8_t blendAmount) {
   int16_t x1, y1, x2, y2;
   getCartesianFromHSV(a, x1, y1);
   getCartesianFromHSV(b, x2, y2);
 
-  int16_t x = (x1 + x2) * blendAmount / 255;
-  int16_t y = (y1 + y2) * blendAmount / 255;
-  getHSVFromCartesian(a, x, y);
+  int16_t x = x1 + (x2-x1) * blendAmount/255;
+  int16_t y = y1 + (y2-y1) * blendAmount/255;
+  uint8_t v = a.v;
+  a = getHSVFromCartesian(x, y);
+  a.v = v;
 }
-
 inline void getCartesianFromHSV(CHSV color, int16_t& x, int16_t& y) {
-  uint16_t theta = 256 * color.h + 128;
+  uint16_t theta = 256 * color.h;
   x = cos16(theta) * color.s / 255;
   y = sin16(theta) * color.s / 255;
+
+  //Serial.println("getCart" + ToString(color) + "= " + String(theta) + ", " + String(x) + ", " + String(y));
+}
+inline CHSV getHSVFromCartesian(int16_t x, int16_t y) {
+  CHSV hsv;
+  hsv.h = (uint8_t) (atan2(y/32767.0, x/32767.0) * 128 / PI); // theta
+  hsv.s = (uint8_t) (sqrt(x * x + y * y) / 128); // length of hypotenuse
+  hsv.v = 255;
+  return hsv;
+  //Serial.println("getHSV(" + String(x) + ", " + String(y) + ") = " + ToString(hsv));
 }
 
-inline void getHSVFromCartesian(CHSV& hsv, int16_t x, int16_t y) {
-  hsv.s = sqrt(x * x + y * y) / 256; // length of hypotenuse
-  hsv.h = 256 * atan2(y / 32767.0, x / 32767.0) * PI / 180; // theta
+// Test function to compare gamma corrected RGB blending with linear HSV blending
+void CompareGradients(CHSV a, CHSV b, uint8_t numLEDs, CRGB* leds) {
+  fill_gradient_HSV_linear(&leds[0], numLEDs, a, b);
+  CRGB rgbA = a;
+  CRGB rgbB = b;
+  Gamma.Inverse(rgbA);
+  Gamma.Inverse(rgbB);
+  fill_gradient_RGB(&leds[384-numLEDs], numLEDs, rgbB, rgbA);
+  for(int i = 384-numLEDs; i <= 384; i++) {
+    Gamma.SetPixel(leds[i], 255);
+  }
 }
 

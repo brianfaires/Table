@@ -58,7 +58,7 @@ void setup() {
   #endif
 
   pinMode(BTN1_PIN, INPUT_PULLUP);
-  FastLED.addLeds<APA102, LED_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(leds, NUM_LEDS).setCorrection(COLOR_CORRECTION);
+  FastLED.addLeds<APA102, LED_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ), GLOBAL_BRIGHTNESS_5BIT>(leds, NUM_LEDS).setCorrection(COLOR_CORRECTION);
   //FastLED.addLeds<WS2811, LED_PIN, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
   //FastLED.setBrightness(BRIGHTNESS);
   leds = CRGB::Black;
@@ -90,22 +90,11 @@ void setup() {
   
   SkipTime(micros());
 
-
-
-  CHSV a = CHSV(0,255,255);
-  CHSV b = CHSV(128,255,255);
-  uint8_t gradientLength = 10;
-
-  CHSV hsvs[gradientLength];
-  fillGradientHSV(a, b, gradientLength, hsvs);
-  for(uint8_t i = 0; i < gradientLength; i++) { Serial.println(String(i) + ": " + ToString(hsvs[i])); }
-
-  delay(600000);
 }
 
 void loop() {
   #ifdef TEST_COLOR_CORRECTION
-    Gamma.RunTests(leds, 384, 4, 16, COLOR_CORRECTION);
+    Gamma.RunTests(leds, 384, 4, 32, COLOR_CORRECTION);
     return;
   #endif
 
