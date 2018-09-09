@@ -1,4 +1,5 @@
-#define GET_FADE_STEP_SIZE(x) 255.0f / (x+1)
+#define MIN_BRIGHTNESS 32
+#define GET_FADE_STEP_SIZE(x) (255.0f - MIN_BRIGHTNESS) / (x+1)
 #define NUM_BRIGHTNESS_PATTERNS 16
 #define NUM_COLOR_PATTERNS 2
 
@@ -49,7 +50,7 @@ inline uint8_t PatternGenerator::GetBrightnessPeriod() {
 inline uint16_t PatternGenerator::GetColorPeriod(uint8_t colorPatternIndex) {
   switch(colorPatternIndex) {
     case 0:  return numColors * colorThickness;
-    default: return numColors * (colorThickness + 1) / 2;
+    default: return colorThickness;
   }
 
   #ifdef DEBUG_ERRORS
@@ -127,16 +128,42 @@ void PatternGenerator::WriteColorPattern_Blocks(PRGB* outputArray) {
       Serial.println("ERROR: Snake, numColors = " + String(numColors));
       numColors = PALETTE_SIZE;
     }
-    if(numColors * colorThickness > NUM_LEDS) {
-      Serial.println("Error: Snake, period = " + String(numColors * colorThickness));
+    if(colorThickness > NUM_LEDS) {
+      Serial.println("Error: Snake, period = " + String(colorThickness));
       colorThickness = NUM_LEDS / numColors;
     }
   #endif
 
-  PRGB pattern[GetColorPeriod(1)];//debug:magic number index
+  uint16_t period = GetColorPeriod(1); //debug:magic number index
+  PRGB pattern[period];
+  uint16_t colorLengths[numColors];
+  uint16_t minLength = period / numColors;
+
+  for(uint8_t i = 0; i < numColors; i++) { colorLengths[i] = minLength; }
+  
+  // Assign extra pixels, inside first
+  uint8_t extra = period - minLength * numColors;
+  if(extra % 2 == 1 && numColors % 2 == 1) {
+    colorLengths[numColors/2]++;
+    extra--;
+  }    
+  if(extra > 0) {
+    uint8_t assigned = 0;
+    for(uint8_t i = 0; i < numColors/2; i++) {
+      colorLengths[numColors/2 - 1 - i]++;
+      assigned++;
+      if(assigned == extra) { break; }
+      
+      colorLengths[(numColors+1)/2 + i]++;
+      assigned++;
+      if(assigned == extra) { break; }
+    }
+  }
+
+  // Write pattern
   uint16_t pixel = 0;
   for(uint8_t col = 0; col < numColors; col++) {
-    for(uint8_t i = 0; i < (colorThickness + 1) / 2; i++) {
+    for(uint16_t i = 0; i < colorLengths[col]; i++) {
       pattern[pixel++] = (PRGB){ col, 0, 0 };
     }
   }
@@ -158,13 +185,14 @@ void PatternGenerator::WriteDimPattern_Comet(uint8_t* outputPattern) {
   uint8_t lastLimitMinusOne = limit - 1;
   
   for(limit += 2*transLength + 1; i < limit; i++) {
-    pattern[i] = fadeStepSize * (uint8_t)(i - lastLimitMinusOne);
+    pattern[i] = MIN_BRIGHTNESS + fadeStepSize * (uint8_t)(i - lastLimitMinusOne);
   }
 
   for(limit += brightLength + 1; i < limit; i++) {
     pattern[i] = 255;
   }
 
+//for(uint8_t i =0; i < GetBrightnessPeriod(); i++) { Serial.println(String(i) + ": " + pattern[i]);}
   memcpy(outputPattern, pattern, GetBrightnessPeriod());
 }
 

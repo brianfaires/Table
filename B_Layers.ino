@@ -1,7 +1,7 @@
 void DrawBaseLayer() {
   switch(baseParams.animation) {
     case SCROLLER:
-      pc.Update(&baseParams, leds, NUM_LEDS, pm, timing.now);
+      pc.Update(baseParams, leds, NUM_LEDS, timing.now);
       break;
 
     case FIRE:
@@ -44,7 +44,7 @@ void InitBaseLayer() {
   
   switch(baseParams.animation) {
     case SCROLLER:
-      pc.Init(&baseParams, timing.now);
+      pc.Init(baseParams, &pm, &Gamma, timing.now);
       break;
 
     default:

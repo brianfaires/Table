@@ -89,7 +89,6 @@ void setup() {
   #endif
   
   SkipTime(micros());
-
 }
 
 void loop() {

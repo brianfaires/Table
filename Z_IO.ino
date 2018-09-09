@@ -166,7 +166,7 @@ bool ProcessSerialInput() {
         InitBaseLayer();
       }
       else if(paramNum == 1) { baseParams.colorSpeed = value; }
-      else if(paramNum == 2) { baseParams.brightnessSpeed = value; }
+      else if(paramNum == 2) { baseParams.dimSpeed = value; }
       else if(paramNum == 3) { baseParams.spacing = value; }
       else if(paramNum == 4) { baseParams.colorThickness = value; }
       else if(paramNum == 5) { baseParams.brightLength = value; }
@@ -225,7 +225,7 @@ void PrintBaseParams() {
     
     output += "\t" + String(parameterCounter++) + ".Animation:\t  " + String(baseParams.animation) + "\n";
     output += "\t" + String(parameterCounter++) + ".ColorSpeed:\t  " + String(baseParams.colorSpeed) + "\n";
-    output += "\t" + String(parameterCounter++) + ".BrightSpeed:\t  " + String(baseParams.brightnessSpeed) + "\n";
+    output += "\t" + String(parameterCounter++) + ".BrightSpeed:\t  " + String(baseParams.dimSpeed) + "\n";
     output += "\t" + String(parameterCounter++) + ".Spacing:\t  " + String(baseParams.spacing) + "\n";
     output += "\t" + String(parameterCounter++) + ".ColorThickness: " + String(baseParams.colorThickness) + "\n";
     output += "\t" + String(parameterCounter++) + ".BrightLength:\t  " + String(baseParams.brightLength) + "\n";
