@@ -24,7 +24,9 @@
 
 // Objects
 CRGBArray<NUM_LEDS> leds;
+uint8_t leds_b[NUM_LEDS];
 CRGBArray<NUM_LEDS> leds_top;
+uint8_t leds_top_b[NUM_LEDS];
 
 PaletteManager pm;
 GammaManager Gamma;

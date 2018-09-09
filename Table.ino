@@ -58,7 +58,7 @@ void setup() {
   #endif
 
   pinMode(BTN1_PIN, INPUT_PULLUP);
-  FastLED.addLeds<APA102, LED_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ), GLOBAL_BRIGHTNESS_5BIT>(leds, NUM_LEDS).setCorrection(COLOR_CORRECTION);
+  FastLED.addLeds<APA102, LED_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ), GLOBAL_BRIGHTNESS_5BIT>(leds, NUM_LEDS, 0, leds_b).setCorrection(COLOR_CORRECTION);
   //FastLED.addLeds<WS2811, LED_PIN, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
   //FastLED.setBrightness(BRIGHTNESS);
   leds = CRGB::Black;
