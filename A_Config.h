@@ -5,7 +5,7 @@
 #define DEBUG_SERIAL
 //#define TEST_PALETTES
 //#define USE_TEST_PALETTE
-#define TEST_COLOR_CORRECTION
+//#define TEST_COLOR_CORRECTION
 
 #ifdef DEBUG_SERIAL
   #define MANUAL_PARAMS
@@ -21,7 +21,7 @@
 
 
 // Refresh rates and timers
-#define REFRESH_RATE 99 // This starts flickering dim colors at 100FPS, no idea why
+#define REFRESH_RATE 99 // This starts flickering dim colors at 100FPS, no idea why - may be APA102 manufacturer (See FastLED FAQ)
 #define ONE_SEC_US 1000000L
 #define ONE_MIN_US 60 * ONE_SEC_US
 #define ONE_SEC_MS 1000
@@ -56,13 +56,13 @@
 #define INIT_TOP_PARAM_WALK   30 * ONE_MIN_US
 
 #define INIT_PM_WALK_LENGTH   3 * ONE_SEC_US
-#define INIT_PM_PAUSE_LENGTH  10 * ONE_MIN_US
+#define INIT_PM_PAUSE_LENGTH  30 * ONE_MIN_US
 
 #define INIT_PATTERN_REPEATER_BRIGHTNESS 32 // RGB Scaling
 #define INIT_PATTERN_SCROLLER_BRIGHTNESS 32 // RGB Scaling
 
 // Hardware config
-#define GLOBAL_BRIGHTNESS_5BIT 4
+#define GLOBAL_BRIGHTNESS_5BIT 3
 #define COLOR_CORRECTION 0xDA96FF//0x8080FF//0xAAA0FF//0xB4ABFF//0xFFFFFF
 #define STARTUP_DELAY_MS 1000
 #define LED_DATA_RATE_MHZ 24

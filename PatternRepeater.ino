@@ -106,7 +106,7 @@ void PatternRepeater::SetCRGBs(CRGB* target, uint16_t numLEDs, PaletteManager& p
 
   CRGB tempA, tempB;
   for(uint16_t i = 0; i < numLEDs; i++) {
-    // Blend using CRGB; this adds saturation and brightness but avoids jumping directions around the color wheel
+    // Blend using CRGB; this avoids jumping directions around the color wheel
     tempA = pm.palette[colorPattern[curColorIndex].a];
     tempB = pm.palette[colorPattern[curColorIndex].b];
     Gamma.Inverse(tempA);

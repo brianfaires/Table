@@ -140,6 +140,7 @@ void loop() {
       OverlayLayers();
     #endif
 
+    Gamma.FixFloors(leds, NUM_LEDS);
     FastLED.show();
     timing.lastDraw += US_BETWEEN_DRAWS;
     #ifdef DEBUG_ERRORS
