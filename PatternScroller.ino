@@ -187,8 +187,9 @@ void PatternScroller::SetCRGBs(CRGB* target, uint16_t numLEDs, PaletteManager& p
   for(uint16_t i = 0; i < numLEDs; i++) {
     // Blend using CRGB; this adds saturation and brightness but avoids jumping directions around the color wheel
     temp = pm.palette[colors[i].a];
-    target[i] = blend(temp, pm.palette[colors[i].b], colors[i].blendAmount);
-    target[i] %= brightnesses[i] * myBrightness / 255;
+    //target[i] = HSV2RGB(blend(temp, pm.palette[colors[i].b], colors[i].blendAmount));
+    //target[i] %= brightnesses[i] * myBrightness / 255;
+    // debug: fix these
   }
 }
 

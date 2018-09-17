@@ -104,7 +104,7 @@ void PatternController::ScaleParams(struct_base_show_params& params) {
   #endif
 }
 
-void PatternController::Update(struct_base_show_params& params, CRGB* target, uint16_t numLEDs, uint32_t curTime) {
+void PatternController::Update(struct_base_show_params& params, CRGB* target, uint8_t* target_b, uint16_t numLEDs, uint32_t curTime) {
   ScaleParams(params);
   WalkSpeeds();
 
@@ -119,7 +119,7 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
   }
 
   pr.Update(curTime);
-  pr.SetCRGBs(target, numLEDs);
+  pr.SetCRGBs(target, target_b, numLEDs);
 }
 
 void PatternController::WalkSpeeds() {

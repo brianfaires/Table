@@ -39,11 +39,13 @@ void fill_gradient_HSV_linear(CRGB* leds, uint16_t numPixels, CHSV a, CHSV b) {
 
   int16_t x, y;
 
+  CHSV temp;
   for(uint16_t i = 0; i < numPixels; i++) {
     uint8_t blendAmount = 255 * i / (numPixels-1);
     x = x1 + (x2-x1) * blendAmount/255;
     y = y1 + (y2-y1) * blendAmount/255;
-    leds[i] = getHSVFromCartesian(x, y);
+    temp = getHSVFromCartesian(x, y);
+    leds[i] = HSV2RGB(temp, leds_b[i]);
   }  
 }
 void blendHSV(CHSV& a, CHSV b, uint8_t blendAmount) {
@@ -76,13 +78,23 @@ inline CHSV getHSVFromCartesian(int16_t x, int16_t y) {
 // Test function to compare gamma corrected RGB blending with linear HSV blending
 void CompareGradients(CHSV a, CHSV b, uint8_t numLEDs, CRGB* leds) {
   fill_gradient_HSV_linear(&leds[0], numLEDs, a, b);
-  CRGB rgbA = a;
-  CRGB rgbB = b;
+  CRGB rgbA, rgbB;
+  hsv2rgb_rainbow(a, rgbA);
+  hsv2rgb_rainbow(b, rgbB);
   Gamma.Inverse(rgbA);
   Gamma.Inverse(rgbB);
   fill_gradient_RGB(&leds[384-numLEDs], numLEDs, rgbB, rgbA);
   for(int i = 384-numLEDs; i <= 384; i++) {
-    Gamma.SetPixel(leds[i], 255);
+    Gamma.SetPixel(leds[i], leds_b[i], 255);
   }
+}
+
+CRGB HSV2RGB(CHSV& hsv, uint8_t& led_b) {
+  uint8_t tempV = hsv.v;
+  hsv.v = 255;
+  CRGB retVal;
+  hsv2rgb_rainbow(hsv, retVal);
+  Gamma.SetBrightness(retVal, led_b, tempV);
+  return retVal;
 }
 

@@ -48,9 +48,9 @@ void Fire() {
 
 void CreateFirePalette(CRGBPalette16 *firePalette) {
   CRGB steps[3];
-  steps[0] = pm.palette[0];
-  steps[1] = pm.palette[2];
-  steps[2] = pm.palette[4];
+  hsv2rgb_rainbow(pm.palette[0], steps[0]);
+  hsv2rgb_rainbow(pm.palette[2], steps[1]);
+  hsv2rgb_rainbow(pm.palette[4], steps[2]);
 
   steps[0].maximizeBrightness();
   steps[1].maximizeBrightness();
@@ -160,11 +160,11 @@ void Orbs() {
   
   int16_t radiusOffset = 0;//round((maxRadius-minRadius) * (sin8(baseCount % 255) - 128.0) / 128.0);
   if(radiusOffset < 0) {
-    colorToUse = pm.palette[2];
+    hsv2rgb_rainbow(pm.palette[2], colorToUse);
     curRadius = minRadius - radiusOffset;
   }
   else {
-    colorToUse = pm.palette[3];
+    hsv2rgb_rainbow(pm.palette[3], colorToUse);
     curRadius = minRadius + radiusOffset;
   }
   
@@ -190,7 +190,7 @@ void ScrollingGlimmerBands() {
   uint16_t curPixel = 0;
   for(uint8_t i = 0; i < baseParams.numColors; i++) {
     for(uint8_t j = 0; j < baseParams.colorThickness; j++) {
-      colorPattern[curPixel] = pm.palette[2 + i];
+      hsv2rgb_rainbow(pm.palette[2 + i], colorPattern[curPixel]);
       if(random8(glimmerPortion) == 0) {
         colorPattern[curPixel] |= glimmerFloor;
       }
@@ -214,7 +214,8 @@ void CenterSpawn() {
   uint8_t blendAmount = 0;//2*(baseCount % 128);
 
   
-  leds[NUM_LEDS/2] = leds[NUM_LEDS/2 - 1] = nblend(pm.palette[firstCol], pm.palette[secondCol], blendAmount);
-
+  leds[NUM_LEDS/2 - 1] = HSV2RGB(nblend(pm.palette[firstCol], pm.palette[secondCol], blendAmount), leds_b[NUM_LEDS/2 - 1]);
+  leds[NUM_LEDS/2] = leds[NUM_LEDS/2 - 1];
+  leds_b[NUM_LEDS/2] = leds_b[NUM_LEDS/2 - 1];
 }
 

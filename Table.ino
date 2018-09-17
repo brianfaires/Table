@@ -58,10 +58,11 @@ void setup() {
   #endif
 
   pinMode(BTN1_PIN, INPUT_PULLUP);
-  FastLED.addLeds<APA102, LED_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ), GLOBAL_BRIGHTNESS_5BIT>(leds, NUM_LEDS, 0, leds_b).setCorrection(COLOR_CORRECTION);
-  //FastLED.addLeds<WS2811, LED_PIN, GRB>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  FastLED.addLeds<APA102, LED_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(leds, NUM_LEDS, 0, leds_b).setCorrection(COLOR_CORRECTION);
   //FastLED.setBrightness(BRIGHTNESS);
   leds = CRGB::Black;
+  leds_top = CRGB::Black;
+
   FastLED.show();
   #ifdef DEBUG_SERIAL
     Serial.println("LEDs defined and cleared.");
@@ -69,7 +70,7 @@ void setup() {
   
   //--------------------Initialize software--------------------
   pm.Init(INIT_PM_WALK_LENGTH, INIT_PM_PAUSE_LENGTH, timing.now);
-  Gamma.Init(COLOR_CORRECTION, gammaR, gammaG, gammaB, gammaDim, reverseGammaR, reverseGammaG, reverseGammaB);
+  Gamma.Init(COLOR_CORRECTION, gammaR, gammaG, gammaB, gammaDim, gammaDim_5bit, reverseGammaR, reverseGammaG, reverseGammaB);
   InitBaseLayer();
   InitTopLayer();
   
@@ -93,7 +94,8 @@ void setup() {
 
 void loop() {
   #ifdef TEST_COLOR_CORRECTION
-    Gamma.RunTests(leds, 384, 4, 32, COLOR_CORRECTION);
+    for(uint16_t i = 0; i < NUM_LEDS; i++) { leds_b[i] = 255; }
+    Gamma.RunTests(leds, leds_b, 384, 4, 32, COLOR_CORRECTION);
     return;
   #endif
 
@@ -126,6 +128,7 @@ void loop() {
     
     #ifdef TEST_PALETTES
       leds = CRGB::Black;
+      for(uint16_t i = 0; i < NUM_LEDS; i++) { leds_b[i] = GLOBAL_BRIGHTNESS_5BIT; }
       uint8_t pixelsPerPalette = NUM_LEDS / PALETTE_SIZE;
       for(uint8_t i = 0; i < PALETTE_SIZE; i++) {
         //leds(pixelsPerPalette*i + 1, pixelsPerPalette*(i+1) - 2) = pm.palette[i]; // With spaces

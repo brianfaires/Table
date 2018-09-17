@@ -6,7 +6,7 @@ class PatternController {
   public:
     PatternController();
     void Init(struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, uint32_t curTime);
-    void Update(struct_base_show_params& params, CRGB* target, uint16_t numLEDs, uint32_t curTime);
+    void Update(struct_base_show_params& params, CRGB* target, uint8_t* target_b, uint16_t numLEDs, uint32_t curTime);
     void SkipTime(uint32_t amount);
 
   private:

@@ -8,7 +8,8 @@ void Glitter() {
     leds_top = CRGB::Black;
     lastGlitter = timing.now;
     for(uint16_t i = 0; i < numLitLEDs; i++) {
-      leds_top[random16(NUM_LEDS)] = pm.palette[5];
+      uint16_t randIdx = random16(NUM_LEDS);
+      leds_top[randIdx] = HSV2RGB(pm.palette[5], leds_top_b[randIdx]);
     }
   }
 }
@@ -28,9 +29,10 @@ void Rain() {
     if(refreshRate > 0) {
       for(uint16_t i = NUM_LEDS-1; i > 0; i--) {
         leds_top[i] = leds_top[i-1];
+        leds_top_b[i] = leds_top_b[i-1];
       }
       if(random8(portion) == 0) {
-        leds_top[0] = pm.palette[5];
+        leds_top[0] = HSV2RGB(pm.palette[5], leds_top_b[0]);
       }
       else {
         leds_top[0] = CRGB::Black;
@@ -39,9 +41,10 @@ void Rain() {
     else {
       for(uint16_t i = 0; i < NUM_LEDS-1; i++) {
         leds_top[i] = leds_top[i+1];
+        leds_top_b[i] = leds_top_b[i+1];
       }
       if(random8(portion) == 0) {
-        leds_top[NUM_LEDS-1] = pm.palette[5];
+        leds_top[NUM_LEDS-1] = HSV2RGB(pm.palette[5], leds_top_b[NUM_LEDS-1]);
       }
       else {
         leds_top[NUM_LEDS-1] = CRGB::Black;
