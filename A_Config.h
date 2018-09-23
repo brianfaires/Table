@@ -63,7 +63,6 @@
 #define INIT_PATTERN_SCROLLER_BRIGHTNESS 32 // RGB Scaling
 
 // Hardware config
-#define COLOR_CORRECTION 0xFFA0FF // Color balance shifts with dimming. This is a balance. //0xF0B0FF//0xDA96FF//0x8080FF//0xAAA0FF//0xB4ABFF//0xFFFFFF
 #define STARTUP_DELAY_MS 1000
 #define LED_DATA_RATE_MHZ 24
 #define SERIAL_DATA_RATE_HZ 115200
@@ -274,6 +273,18 @@ const uint8_t PROGMEM gammaDim[] = {
   251,255, // 251
   251,255, // 253
   251,255 // 255
+};
+
+
+const CRGB PROGMEM colorCorrections[] = {
+  0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
+  0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
+  0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
+  0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
+  0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
+  0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
+  0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
+  0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF  
 };
 
 /* Prior to paired-lookup tables

@@ -1,5 +1,6 @@
 /* TODO:
  *  Future ideas
+ *  **Use hardware SPI pins
  *    Blend out/in animations at same time
  *    Overlay blendAmount: base on Luma(), or brightness of top layer only
  *    PatternScroller reverseDirection: overwrite random pixels at the end
@@ -58,7 +59,8 @@ void setup() {
   #endif
 
   pinMode(BTN1_PIN, INPUT_PULLUP);
-  FastLED.addLeds<APA102, LED_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(leds, NUM_LEDS, 0, leds_b).setCorrection(COLOR_CORRECTION);
+  FastLED.addLeds<APA102, LED_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(leds, NUM_LEDS, 0, leds_b, colorCorrections, &globalBrightness, gammaDim, gammaDim_5bit);
+  //FastLED.addLeds<APA102, LED_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(leds, NUM_LEDS, 0).setCorrection(COLOR_CORRECTION);
   //FastLED.setBrightness(BRIGHTNESS);
   leds = CRGB::Black;
   leds_top = CRGB::Black;
@@ -70,7 +72,7 @@ void setup() {
   
   //--------------------Initialize software--------------------
   pm.Init(INIT_PM_WALK_LENGTH, INIT_PM_PAUSE_LENGTH, timing.now);
-  Gamma.Init(COLOR_CORRECTION, gammaR, gammaG, gammaB, gammaDim, gammaDim_5bit, reverseGammaR, reverseGammaG, reverseGammaB);
+  Gamma.Init(gammaR, gammaG, gammaB, gammaDim, gammaDim_5bit, reverseGammaR, reverseGammaG, reverseGammaB);
   InitBaseLayer();
   InitTopLayer();
   
@@ -95,7 +97,7 @@ void setup() {
 void loop() {
   #ifdef TEST_COLOR_CORRECTION
     for(uint16_t i = 0; i < NUM_LEDS; i++) { leds_b[i] = 255; }
-    Gamma.RunTests(leds, leds_b, 384, 4, 32, COLOR_CORRECTION);
+    Gamma.RunTests(leds, leds_b, 384, 4, 32);
     return;
   #endif
 
