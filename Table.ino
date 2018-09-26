@@ -1,6 +1,7 @@
 /* TODO:
  *  Future ideas
  *  **Use hardware SPI pins
+ *  **Update FastLED fork to only have additional code; to facilitate future merges
  *    Blend out/in animations at same time
  *    Overlay blendAmount: base on Luma(), or brightness of top layer only
  *    PatternScroller reverseDirection: overwrite random pixels at the end
@@ -72,9 +73,20 @@ void setup() {
   
   //--------------------Initialize software--------------------
   pm.Init(INIT_PM_WALK_LENGTH, INIT_PM_PAUSE_LENGTH, timing.now);
-  Gamma.Init(gammaR, gammaG, gammaB, gammaDim, gammaDim_5bit, reverseGammaR, reverseGammaG, reverseGammaB);
+  #ifdef DEBUG_SERIAL
+    Serial.println("PaletteManager init complete.");
+  #endif
+  
+  Gamma.Init(gammaR, gammaG, gammaB, reverseGammaR, reverseGammaG, reverseGammaB, &globalBrightness);
+  #ifdef DEBUG_SERIAL
+    Serial.println("Gamma init complete.");
+  #endif
+  
   InitBaseLayer();
   InitTopLayer();
+  #ifdef DEBUG_SERIAL
+    Serial.println("Layer init complete.");
+  #endif
   
   #ifdef DEBUG_SERIAL
     Serial.println("setup() complete.");
@@ -130,7 +142,7 @@ void loop() {
     
     #ifdef TEST_PALETTES
       leds = CRGB::Black;
-      for(uint16_t i = 0; i < NUM_LEDS; i++) { leds_b[i] = GLOBAL_BRIGHTNESS_5BIT; }
+      for(uint16_t i = 0; i < NUM_LEDS; i++) { leds_b[i] = globalBrightness; }
       uint8_t pixelsPerPalette = NUM_LEDS / PALETTE_SIZE;
       for(uint8_t i = 0; i < PALETTE_SIZE; i++) {
         //leds(pixelsPerPalette*i + 1, pixelsPerPalette*(i+1) - 2) = pm.palette[i]; // With spaces
@@ -144,7 +156,6 @@ void loop() {
       OverlayLayers();
     #endif
 
-    Gamma.FixFloors(leds, NUM_LEDS);
     FastLED.show();
     timing.lastDraw += US_BETWEEN_DRAWS;
     #ifdef DEBUG_ERRORS

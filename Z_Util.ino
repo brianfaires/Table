@@ -85,7 +85,8 @@ void CompareGradients(CHSV a, CHSV b, uint8_t numLEDs, CRGB* leds) {
   Gamma.Inverse(rgbB);
   fill_gradient_RGB(&leds[384-numLEDs], numLEDs, rgbB, rgbA);
   for(int i = 384-numLEDs; i <= 384; i++) {
-    Gamma.SetPixel(leds[i], leds_b[i], 255);
+    Gamma.Correct(leds[i]); 
+    leds_b[i] = 255;
   }
 }
 
@@ -94,7 +95,7 @@ CRGB HSV2RGB(CHSV& hsv, uint8_t& led_b) {
   hsv.v = 255;
   CRGB retVal;
   hsv2rgb_rainbow(hsv, retVal);
-  Gamma.SetBrightness(retVal, led_b, tempV);
+  led_b = tempV;
   return retVal;
 }
 
