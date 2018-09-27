@@ -139,11 +139,11 @@ void PatternGenerator::WriteDimPattern_Comet(uint8_t* outputPattern) {
 
   uint8_t lastLimitMinusOne = limit - 1;
   
-  for(limit += 2*transLength + 1; i < limit; i++) {
+  for(limit += 2*transLength + 2; i < limit; i++) {
     pattern[i] = MIN_BRIGHTNESS + fadeStepSize * (uint8_t)(i - lastLimitMinusOne);
   }
 
-  for(limit += brightLength + 1; i < limit; i++) {
+  for(limit += brightLength; i < limit; i++) {
     pattern[i] = 255;
   }
 
@@ -161,11 +161,11 @@ void PatternGenerator::WriteDimPattern_BackwardComet(uint8_t* outputPattern) {
     pattern[i] = 0;
   }
 
-  for(limit += brightLength + 1; i < limit; i++) {
+  for(limit += brightLength; i < limit; i++) {
     pattern[i] = 255;
   }
 
-  for(limit += 2*transLength + 1; i < limit; i++) {
+  for(limit += 2*transLength + 2; i < limit; i++) {
     pattern[i] = fadeStepSize * (limit - i);
   }
 
@@ -254,7 +254,7 @@ void PatternGenerator::WriteDimPattern_StepBarbell(uint8_t* outputPattern) {
   }
   
   for(limit += 2*adjTransLength; i < limit; i++) {
-    pattern[i] = 64;
+    pattern[i] = 32;
   }
 
   for(limit += adjBrightLength; i < limit; i++) {
@@ -324,7 +324,7 @@ void PatternGenerator::WriteDimPattern_BrokenStepBarbell(uint8_t* outputPattern)
   } 
 
   for(limit += adjTransLength; i < limit; i++) {
-    pattern[i] = 64;
+    pattern[i] = 32;
   }
 
   pattern[i] = 0;
@@ -332,7 +332,7 @@ void PatternGenerator::WriteDimPattern_BrokenStepBarbell(uint8_t* outputPattern)
   limit++;
 
   for(limit += adjTransLength; i < limit; i++) {
-    pattern[i] = 64;
+    pattern[i] = 32;
   }
   
   for(limit += adjBrightLength; i < limit; i++) {
@@ -352,7 +352,7 @@ void PatternGenerator::WriteDimPattern_InverseStepBarbell(uint8_t* outputPattern
   }
 
   for(limit += 1 + transLength; i < limit; i++) {
-    pattern[i] = 64;
+    pattern[i] = 32;
   }
   
   for(limit += brightLength; i < limit; i++) {
@@ -360,7 +360,7 @@ void PatternGenerator::WriteDimPattern_InverseStepBarbell(uint8_t* outputPattern
   }
 
   for(limit += 1 + transLength; i < limit; i++) {
-    pattern[i] = 64;
+    pattern[i] = 32;
   }
 
   memcpy(outputPattern, pattern, GetBrightnessPeriod());
@@ -376,7 +376,7 @@ void PatternGenerator::WriteDimPattern_Towers(uint8_t* outputPattern) {
   }
   
   for(limit += transLength; i < limit; i++) {
-    pattern[i] = 64;
+    pattern[i] = 32;
   }
 
   pattern[i] = 0;
@@ -392,7 +392,7 @@ void PatternGenerator::WriteDimPattern_Towers(uint8_t* outputPattern) {
   limit++;
 
   for(limit += transLength; i < limit; i++) {
-    pattern[i] = 64;
+    pattern[i] = 32;
   }
 
   memcpy(outputPattern, pattern, GetBrightnessPeriod());
@@ -408,7 +408,7 @@ void PatternGenerator::WriteDimPattern_StepsUp(uint8_t* outputPattern) {
   }
 
   for(limit += transLength; i < limit; i++) {
-    pattern[i] = 80;
+    pattern[i] = 70;
   }
 
   pattern[i] = 0;
@@ -416,7 +416,7 @@ void PatternGenerator::WriteDimPattern_StepsUp(uint8_t* outputPattern) {
   limit++;
   
   for(limit += transLength; i < limit; i++) {
-    pattern[i] = 160;
+    pattern[i] = 150;
   }
 
   pattern[i] = 0;
@@ -448,7 +448,7 @@ void PatternGenerator::WriteDimPattern_StepsDown(uint8_t* outputPattern) {
   limit++;
 
   for(limit += transLength; i < limit; i++) {
-    pattern[i] = 160;
+    pattern[i] = 150;
   }
 
   pattern[i] = 0;
@@ -456,7 +456,7 @@ void PatternGenerator::WriteDimPattern_StepsDown(uint8_t* outputPattern) {
   limit++;
   
   for(limit += transLength; i < limit; i++) {
-    pattern[i] = 80;
+    pattern[i] = 70;
   }
 
   memcpy(outputPattern, pattern, GetBrightnessPeriod());
@@ -517,7 +517,7 @@ void PatternGenerator::WriteDimPattern_SlopedLowTowers(uint8_t* outputPattern) {
   limit++;
   
   for(limit += brightLength; i < limit; i++) {
-    pattern[i] = 64;
+    pattern[i] = 32;
   }
 
   pattern[i] = 0;

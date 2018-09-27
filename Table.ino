@@ -1,7 +1,6 @@
 /* TODO:
  *  Future ideas
  *  **Use hardware SPI pins
- *  **Update FastLED fork to only have additional code; to facilitate future merges
  *    Blend out/in animations at same time
  *    Overlay blendAmount: base on Luma(), or brightness of top layer only
  *    PatternScroller reverseDirection: overwrite random pixels at the end
@@ -29,8 +28,6 @@
  *    
  *    
  *  To do:
- *    - Confirm final Gamma stuff, move into library
- *    - Test PatternRepeater, get it into a library
  *    - Test/Tune PatternGenerator
  *    - Tune Palettes
  *    - Test PatternScroller, get it into a library
