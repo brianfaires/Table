@@ -139,7 +139,7 @@ bool ProcessSerialInput() {
       }
       
       long paramNum = s.toInt();
-      if(paramNum < 0 || paramNum > NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS + NUM_LAYER_PARAMS) { return false; }
+      if(paramNum < 0 || paramNum >= NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS + NUM_LAYER_PARAMS + NUM_PATTERN_PARAMS) { return false; }
       if(paramNum < 10) { s = s.substring(1); }
       else { s = s.substring(2); }
       long value = s.toInt();
@@ -182,14 +182,18 @@ bool ProcessSerialInput() {
       else if(paramNum == 11) { topParams.speed = value; }
       else if(paramNum == 12) { pm.SetPauseLength(1000 * value, timing.now); }
       else if(paramNum == 13) { pm.SetWalkLength(1000 * value, timing.now); }
-      else if(paramNum == 14) { config.basePauseLength = 1000 * value; }
-      else if(paramNum == 15) { config.baseTransOutLength = 1000 * value; }
-      else if(paramNum == 16) { config.baseTransInLength = 1000 * value; }
-      else if(paramNum == 17) { config.baseParamWalkTime = 1000 * value; }
-      else if(paramNum == 18) { config.topPauseLength = 1000 * value; }
-      else if(paramNum == 19) { config.topTransOutLength = 1000 * value; }
-      else if(paramNum == 20) { config.topTransInLength = 1000 * value; }
-      else if(paramNum == 21) { config.topParamWalkTime = 1000 * value; }
+      else if(paramNum == 14) { layerConfig.basePauseLength = 1000 * value; }
+      else if(paramNum == 15) { layerConfig.baseTransOutLength = 1000 * value; }
+      else if(paramNum == 16) { layerConfig.baseTransInLength = 1000 * value; }
+      else if(paramNum == 17) { layerConfig.baseParamWalkTime = 1000 * value; }
+      else if(paramNum == 18) { layerConfig.topPauseLength = 1000 * value; }
+      else if(paramNum == 19) { layerConfig.topTransOutLength = 1000 * value; }
+      else if(paramNum == 20) { layerConfig.topTransInLength = 1000 * value; }
+      else if(paramNum == 21) { layerConfig.topParamWalkTime = 1000 * value; }
+      else if(paramNum == 22) { pc.SetColorPauseLength(1000 * value); }
+      else if(paramNum == 23) { pc.SetColorBlendLength(1000 * value); }
+      else if(paramNum == 24) { pc.SetDimPauseLength(1000 * value); }
+      else if(paramNum == 25) { pc.SetDimBlendLength(1000 * value); }
       else { return false; }
   
       return true;
@@ -207,6 +211,7 @@ void PrintParams() {
     PrintTopParams();
     PrintPaletteManagerParams();
     PrintLayerParams();
+    PrintPatternControllerParams();
 
     #ifdef TEST_PALETTES
       String output = "";
@@ -270,18 +275,34 @@ void PrintLayerParams() {
     uint8_t parameterCounter = NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS;
     String output = "Base Layer Parameters:\n";
 
-    output += "\t" + String(parameterCounter++) + ".PauseLength:\t   " + String(config.basePauseLength/1000) + "\n";
-    output += "\t" + String(parameterCounter++) + ".TransOutLength: " + String(config.baseTransOutLength/1000) + "\n";
-    output += "\t" + String(parameterCounter++) + ".TransInLength:  " + String(config.baseTransInLength/1000) + "\n";
-    output += "\t" + String(parameterCounter++) + ".ParamWalkTime:  " + String(config.baseParamWalkTime/1000) + "\n";
+    output += "\t" + String(parameterCounter++) + ".PauseLength:\t   " + String(layerConfig.basePauseLength/1000) + "\n";
+    output += "\t" + String(parameterCounter++) + ".TransOutLength: " + String(layerConfig.baseTransOutLength/1000) + "\n";
+    output += "\t" + String(parameterCounter++) + ".TransInLength:  " + String(layerConfig.baseTransInLength/1000) + "\n";
+    output += "\t" + String(parameterCounter++) + ".ParamWalkTime:  " + String(layerConfig.baseParamWalkTime/1000) + "\n";
     output += "Top Layer Parameters:\n";
-    output += "\t" + String(parameterCounter++) + ".PauseLength:\t   " + String(config.topPauseLength/1000) + "\n";
-    output += "\t" + String(parameterCounter++) + ".TransOutLength: " + String(config.topTransOutLength/1000) + "\n";
-    output += "\t" + String(parameterCounter++) + ".TransInLength:  " + String(config.topTransInLength/1000) + "\n";
-    output += "\t" + String(parameterCounter++) + ".ParamWalkTime:  " + String(config.topParamWalkTime/1000) + "\n";
+    output += "\t" + String(parameterCounter++) + ".PauseLength:\t   " + String(layerConfig.topPauseLength/1000) + "\n";
+    output += "\t" + String(parameterCounter++) + ".TransOutLength: " + String(layerConfig.topTransOutLength/1000) + "\n";
+    output += "\t" + String(parameterCounter++) + ".TransInLength:  " + String(layerConfig.topTransInLength/1000) + "\n";
+    output += "\t" + String(parameterCounter++) + ".ParamWalkTime:  " + String(layerConfig.topParamWalkTime/1000) + "\n";
     
     if(parameterCounter != NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS + NUM_LAYER_PARAMS) { output += "ERROR: PrintLayerParams(), parameter count mismatch.\n"; }
     Serial.print(output);
   #endif
 }
+
+void PrintPatternControllerParams() {
+  #ifdef DEBUG_SERIAL
+    uint8_t parameterCounter = NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS + NUM_LAYER_PARAMS;
+    String output = "Pattern Controller Parameters:\n";
+    
+    output += "\t" + String(parameterCounter++) + ".ColorPauseLength:\t  " + String(pc.GetColorPauseLength()/1000) + "\n";
+    output += "\t" + String(parameterCounter++) + ".ColorBlendLength:\t  " + String(pc.GetColorBlendLength()/1000) + "\n";
+    output += "\t" + String(parameterCounter++) + ".DimPauseLength:\t  " + String(pc.GetDimPauseLength()/1000) + "\n";
+    output += "\t" + String(parameterCounter++) + ".DimBlendLength:\t  " + String(pc.GetDimBlendLength()/1000) + "\n";
+    
+    if(parameterCounter != NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS + NUM_LAYER_PARAMS + NUM_PATTERN_PARAMS) { output += "ERROR: PrintPaletteManagerParams(), parameter count mismatch.\n"; }
+    Serial.print(output);
+  #endif
+}
+
 

@@ -1,6 +1,6 @@
 #define MIN_BRIGHTNESS 1
 #define GET_FADE_STEP_SIZE(x) (255.0f - MIN_BRIGHTNESS) / (x+1)
-#define NUM_BRIGHTNESS_PATTERNS 16
+#define NUM_DIM_PATTERNS 16
 #define NUM_COLOR_PATTERNS 2
 
 class PatternGenerator {
@@ -8,10 +8,10 @@ class PatternGenerator {
     uint8_t numColors, colorThickness, brightLength, transLength, spacing;
     
     PatternGenerator();
-    uint8_t GetBrightnessPeriod();
-    uint16_t GetColorPeriod(uint8_t colorPatternIndex);
-    void WriteBrightnessPattern(uint8_t brightnessPatternIndex, uint8_t* outputArray);
-    void WriteColorPattern(uint8_t colorPatternIndex, PRGB* outputArray);
+    uint8_t GetDimPeriod();
+    uint16_t GetColorPeriod(uint8_t targetColorPatternIndex);
+    void WriteDimPattern(uint8_t targetDimPatternIndex, uint8_t* outputArray);
+    void WriteColorPattern(uint8_t targetColorPatternIndex, PRGB* outputArray);
 
   private:
     void WriteColorPattern_Gradient(PRGB* outputPattern);

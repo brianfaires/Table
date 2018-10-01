@@ -64,13 +64,13 @@ void CleanupBaseLayer(uint8_t lastAnimation) {
 void TransitionBaseAnimation(uint32_t curTime) {
   static bool alreadySwitched = false;
   
-  if(curTime - timing.lastBaseTransition >= config.basePauseLength) {
-    uint32_t transitionTime = curTime - timing.lastBaseTransition - config.basePauseLength;
-    if(transitionTime < config.baseTransOutLength) {
-      baseTransitionProgress = 256 * transitionTime / config.baseTransOutLength;
+  if(curTime - timing.lastBaseTransition >= layerConfig.basePauseLength) {
+    uint32_t transitionTime = curTime - timing.lastBaseTransition - layerConfig.basePauseLength;
+    if(transitionTime < layerConfig.baseTransOutLength) {
+      baseTransitionProgress = 256 * transitionTime / layerConfig.baseTransOutLength;
     }
-    else if(transitionTime < config.baseTransOutLength + config.baseTransInLength) {
-      baseTransitionProgress = 255 * (config.baseTransOutLength + config.baseTransInLength - transitionTime) / config.baseTransInLength;
+    else if(transitionTime < layerConfig.baseTransOutLength + layerConfig.baseTransInLength) {
+      baseTransitionProgress = 255 * (layerConfig.baseTransOutLength + layerConfig.baseTransInLength - transitionTime) / layerConfig.baseTransInLength;
       if(!alreadySwitched) {
         NextBaseAnimation(curTime);
         alreadySwitched = true;
@@ -146,13 +146,13 @@ void CleanupTopLayer(uint8_t lastAnimation) {
 }
 void TransitionTopAnimation(uint32_t curTime) {
   static bool alreadySwitched = false;
-  if(curTime - timing.lastTopTransition >= config.topPauseLength) {
-    uint32_t transitionTime = curTime - timing.lastTopTransition - config.topPauseLength;
-    if(transitionTime < config.topTransOutLength) {
-      topTransitionProgress = 256 * transitionTime / config.topTransOutLength;
+  if(curTime - timing.lastTopTransition >= layerConfig.topPauseLength) {
+    uint32_t transitionTime = curTime - timing.lastTopTransition - layerConfig.topPauseLength;
+    if(transitionTime < layerConfig.topTransOutLength) {
+      topTransitionProgress = 256 * transitionTime / layerConfig.topTransOutLength;
     }
-    else if(transitionTime < config.topTransOutLength + config.topTransInLength) {
-      topTransitionProgress = 255 * (config.topTransOutLength + config.topTransInLength - transitionTime) / config.topTransInLength;
+    else if(transitionTime < layerConfig.topTransOutLength + layerConfig.topTransInLength) {
+      topTransitionProgress = 255 * (layerConfig.topTransOutLength + layerConfig.topTransInLength - transitionTime) / layerConfig.topTransInLength;
       if(!alreadySwitched) {
         NextTopAnimation(curTime);
         alreadySwitched = true;

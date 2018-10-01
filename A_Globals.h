@@ -27,14 +27,14 @@ CRGBArray<NUM_LEDS> leds;
 uint8_t leds_b[NUM_LEDS];
 CRGBArray<NUM_LEDS> leds_top;
 uint8_t leds_top_b[NUM_LEDS];
-uint8_t globalBrightness = 255;
+uint8_t globalBrightness = INIT_GLOBAL_BRIGHTNESS;
 
 PaletteManager pm;
 GammaManager Gamma;
 PatternController pc;
 
 struct_timers timing;
-struct_config config;
+struct_config layerConfig;
 struct_base_show_params baseParams;
 struct_top_show_params topParams;
 

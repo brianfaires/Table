@@ -1,71 +1,105 @@
-/*
-  // Blend brightness pattern
-  uint8_t blendAmount;
-  uint32_t blendTime = currentTime - lastBrightnessPatternChange;
-  if(blendTime >= brightnessPatternBlendTime) {
-    blendAmount = 255;
-  }
-  else {
-    blendAmount = 255 * blendTime / brightnessPatternBlendTime;
-  }
-  
-  for(uint8_t i = 0; i < brightnessPatternLength; i++) {
-    brightnessPattern[i] = (blendAmount * nextBrightnessPattern[i] + (255 - blendAmount) * lastBrightnessPattern[i]) / 255;
-  }
-
-
-
-  */
-  
 PatternController::PatternController() {
   brightnessPeriod = 21;
   colorPeriod = 420;
-  colorPatternIndex = 0;
-  brightnessPatternIndex = 0;
+  targetColorPatternIndex = 0;
+  targetDimPatternIndex = 0;
+  dimPatternBlendLength = INIT_PATTERN_CONTROLLER_DIM_BLEND_LENGTH;
+  colorPatternBlendLength = INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH;
+  dimPatternPauseLength = INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH;
+  colorPatternPauseLength = INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH;
+}
+
+uint32_t PatternController::GetColorPauseLength() {
+  return colorPatternPauseLength;
+}
+void PatternController::SetColorPauseLength(uint32_t value) {
+  colorPatternPauseLength = value;
+}
+
+uint32_t PatternController::GetDimPauseLength() {
+  return dimPatternPauseLength;
+}
+void PatternController::SetDimPauseLength(uint32_t value) {
+  dimPatternPauseLength = value;
+}
+
+uint32_t PatternController::GetColorBlendLength() {
+  return colorPatternBlendLength;
+}
+void PatternController::SetColorBlendLength(uint32_t value) {
+  colorPatternBlendLength = value;
+}
+
+uint32_t PatternController::GetDimBlendLength() {
+  return dimPatternBlendLength;
+}
+void PatternController::SetDimBlendLength(uint32_t value) {
+  dimPatternBlendLength = value;
 }
 
 void PatternController::Init(struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, uint32_t curTime) {
   pr.Init(pm, gm, curTime);
 
-  ScaleParams(params);
+  lastDimParamChange = curTime;
+  lastColorParamChange = curTime;
+  lastDimPatternChange = curTime;
+  lastColorPatternChange = curTime;
+
+  ScaleParams(params, curTime);
   pr.colorSpeed = colorSpeed;
   pr.dimSpeed = dimSpeed;
     
   pg.numColors = numColors;
   pg.colorThickness = colorThickness;
-  pg.WriteColorPattern(colorPatternIndex, targetColorPattern);
-  pr.SetColorPattern(targetColorPattern, pg.GetColorPeriod(colorPatternIndex));
+  pg.WriteColorPattern(targetColorPatternIndex, targetColorPattern);
+  pr.SetColorPattern(targetColorPattern, pg.GetColorPeriod(targetColorPatternIndex));
   pg.brightLength = brightLength;
   pg.transLength = transLength;
   pg.spacing = spacing;
   
-  pg.WriteBrightnessPattern(brightnessPatternIndex, targetBrightnessPattern);
-  pr.SetDimPattern(targetBrightnessPattern, pg.GetBrightnessPeriod());
+  pg.WriteDimPattern(targetDimPatternIndex, targetDimPattern);
+  pr.SetDimPattern(targetDimPattern, pg.GetDimPeriod());
 }
 
 void PatternController::SkipTime(uint32_t amount) {
   pr.SkipTime(amount);
 }
 
-void PatternController::SetDisplayMode(uint8_t colorPattern, uint8_t brightnessPattern) {
-    uint8_t lastColorIndex = colorPatternIndex;
-    colorPatternIndex = colorPattern;
-    if(lastColorIndex != colorPatternIndex) {
-      pg.WriteColorPattern(colorPatternIndex, targetColorPattern);
-      pr.SetColorPattern(targetColorPattern, pg.GetColorPeriod(colorPatternIndex));
+void PatternController::SetDisplayMode(uint8_t colorPattern, uint8_t dimPattern, uint32_t curTime) {
+    if(targetColorPatternIndex != colorPattern) {
+      // New dim pattern target; this was not the cause of a blend completing.  Mark oldIndex as 0xFF to signal this.
+      memcpy(oldColorPattern, curColorPattern, pg.GetColorPeriod(oldColorPatternIndex));
+      oldColorPatternIndex = 0xFF;// targetColorPatternIndex;
+      
+      targetColorPatternIndex = colorPattern;
+      pg.WriteColorPattern(targetColorPatternIndex, targetColorPattern);
+
+      lastColorPatternChange = curTime;
     }
-    
-    uint8_t lastBrightnessIndex = brightnessPatternIndex;
-    brightnessPatternIndex = brightnessPattern;
-    if(lastBrightnessIndex != brightnessPatternIndex) {
-      pg.WriteBrightnessPattern(brightnessPatternIndex, targetBrightnessPattern);
-      pr.SetDimPattern(targetBrightnessPattern, pg.GetBrightnessPeriod());
+
+    if(targetDimPatternIndex != dimPattern) {
+      // New dim pattern target; this was not the cause of a blend completing.  Mark oldIndex as 0xFF to signal this.
+      uint8_t lastDimPattern = oldDimPatternIndex;
+      memcpy(oldDimPattern, curDimPattern, pg.GetDimPeriod());
+      oldDimPatternIndex = 0xFF;// targetDimPatternIndex;
+
+      targetDimPatternIndex = dimPattern;
+
+      if(dimPattern == NUM_DIM_PATTERNS-1) {
+        do { randomDimPatternIndex = random8(NUM_DIM_PATTERNS-1); } while(randomDimPatternIndex == lastDimPattern);
+        pg.WriteDimPattern(randomDimPatternIndex, targetDimPattern);
+      }
+      else {
+        pg.WriteDimPattern(targetDimPatternIndex, targetDimPattern);
+      }
+      
+      lastDimPatternChange = curTime;
     }
 }
 
-void PatternController::ScaleParams(struct_base_show_params& params) {
+void PatternController::ScaleParams(struct_base_show_params& params, uint32_t curTime) {
   #ifdef EXPLICIT_PARAMETERS
-    SetDisplayMode(params.displayMode / NUM_BRIGHTNESS_PATTERNS, params.displayMode % NUM_BRIGHTNESS_PATTERNS);
+    SetDisplayMode(params.displayMode / NUM_DIM_PATTERNS, params.displayMode % NUM_DIM_PATTERNS, curTime);
     dimSpeed = params.dimSpeed;
     colorSpeed = params.colorSpeed;
     numColors = params.numColors;
@@ -74,8 +108,8 @@ void PatternController::ScaleParams(struct_base_show_params& params) {
     brightLength = params.brightLength;
     spacing = params.spacing;
   #else  
-    uint8_t displayMode = scaleParam(params.displayMode, 0, NUM_BRIGHTNESS_PATTERNS * NUM_COLOR_PATTERNS - 1);
-    SetDisplayMode(displayMode / NUM_BRIGHTNESS_PATTERNS, displayMode % NUM_BRIGHTNESS_PATTERNS);
+    uint8_t displayMode = scaleParam(params.displayMode, 0, NUM_DIM_PATTERNS * NUM_COLOR_PATTERNS - 1);
+    SetDisplayMode(displayMode / NUM_DIM_PATTERNS, displayMode % NUM_DIM_PATTERNS, curTime);
 
     uint8_t abs_dimSpeed = scaleParam((uint8_t)abs(params.dimSpeed), 0, 63);
     dimSpeed = abs_dimSpeed * (params.dimSpeed >= 0 ? 1 : -1);
@@ -105,19 +139,24 @@ void PatternController::ScaleParams(struct_base_show_params& params) {
 }
 
 void PatternController::Update(struct_base_show_params& params, CRGB* target, uint8_t* target_b, uint16_t numLEDs, uint32_t curTime) {
-  ScaleParams(params);
+  ScaleParams(params, curTime);
   WalkSpeeds();
 
   if(WalkColorParams()) {
-    pg.WriteColorPattern(colorPatternIndex, targetColorPattern);
-    pr.SetColorPattern(targetColorPattern, pg.GetColorPeriod(colorPatternIndex));
-  }
-  
-  if(WalkBrightnessParams()) {
-    pg.WriteBrightnessPattern(brightnessPatternIndex, targetBrightnessPattern);
-    pr.SetDimPattern(targetBrightnessPattern, pg.GetBrightnessPeriod());
+    if(oldColorPatternIndex != 0xFF) { pg.WriteColorPattern(oldColorPatternIndex, curColorPattern); }
+    pg.WriteColorPattern(targetColorPatternIndex, targetColorPattern);
+  }  
+  if(WalkDimParams()) {
+    if(oldDimPatternIndex != 0xFF) { pg.WriteDimPattern(oldDimPatternIndex, curDimPattern); }
+    pg.WriteDimPattern(targetDimPatternIndex, targetDimPattern);
   }
 
+  BlendColorPattern(curTime);
+  BlendDimPattern(curTime);
+  
+  pr.SetColorPattern(curColorPattern, pg.GetColorPeriod(targetColorPatternIndex));
+  pr.SetDimPattern(curDimPattern, pg.GetDimPeriod());
+  
   pr.Update(curTime);
   pr.SetCRGBs(target, target_b, numLEDs);
 }
@@ -198,7 +237,7 @@ bool PatternController::WalkColorParams() {
   return updateMade;
 }
 
-bool PatternController::WalkBrightnessParams() {
+bool PatternController::WalkDimParams() {
   bool updateMade = false;
   
   if(pr.IsReadyForDimMove(timing.now)) {
@@ -233,5 +272,41 @@ bool PatternController::WalkBrightnessParams() {
   }
 
   return updateMade;
+}
+
+void PatternController::BlendColorPattern(uint32_t curTime) {
+  memcpy(curColorPattern, targetColorPattern, pg.GetColorPeriod(targetColorPatternIndex));
+}
+
+void PatternController::BlendDimPattern(uint32_t curTime) {
+  if(curTime - lastDimPatternChange >= dimPatternPauseLength) {
+    uint32_t transitionTime = curTime - lastDimPatternChange - dimPatternPauseLength;
+    if(transitionTime < dimPatternBlendLength) {
+      uint8_t blendAmount = 255 * transitionTime / dimPatternBlendLength;//debug: changed from 256, why?
+  
+      for(uint8_t i = 0; i < pg.GetDimPeriod(); i++) {
+        curDimPattern[i] = (255 - blendAmount) * oldDimPattern[i] / 255 + blendAmount * targetDimPattern[i] / 255;
+      }
+  
+      pr.SetDimPattern(targetDimPattern, pg.GetDimPeriod());
+    }
+    else {
+      // Blending just finished
+      oldDimPatternIndex = targetDimPatternIndex;
+      memcpy(oldDimPattern, targetDimPattern, pg.GetDimPeriod());
+      memcpy(curDimPattern, targetDimPattern, pg.GetDimPeriod());
+      
+      if(targetDimPatternIndex == NUM_DIM_PATTERNS-1) {
+        uint8_t lastRandomIndex = randomDimPatternIndex;
+        do { randomDimPatternIndex = random8(NUM_DIM_PATTERNS-1); } while (randomDimPatternIndex == lastRandomIndex);
+        pg.WriteDimPattern(randomDimPatternIndex, targetDimPattern);
+      }
+      else {
+        pg.WriteDimPattern(targetDimPatternIndex, targetDimPattern);
+      }
+
+      lastDimPatternChange = curTime;
+    }
+  }
 }
 

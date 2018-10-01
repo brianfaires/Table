@@ -124,11 +124,11 @@ void loop() {
       }
       
     #else
-      if(timing.now - timing.lastBaseParamWalk >= config.baseParamWalkTime) {
+      if(timing.now - timing.lastBaseParamWalk >= layerConfig.baseParamWalkTime) {
         WalkBaseParams();
         timing.lastBaseParamWalk = timing.now;
       }
-      if(timing.now - timing.lastTopParamWalk >= config.topParamWalkTime) {
+      if(timing.now - timing.lastTopParamWalk >= layerConfig.topParamWalkTime) {
         WalkTopParams();
         timing.lastTopParamWalk = timing.now;
       }
