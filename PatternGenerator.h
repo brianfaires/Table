@@ -18,16 +18,17 @@ class PatternGenerator {
     void WriteColorPattern_Blocks(PRGB* outputPattern);
     
     void WriteDimPattern_Comet(uint8_t* outputPattern);
-    void WriteDimPattern_BackwardComet(uint8_t* outputPattern);
+    void WriteDimPattern_ReverseComet(uint8_t* outputPattern);
     void WriteDimPattern_TwoSided(uint8_t* outputPattern);
     void WriteDimPattern_Barbell(uint8_t* outputPattern);
-    void WriteDimPattern_StepBarbell(uint8_t* outputPattern);
-    void WriteDimPattern_BrokenBarbell(uint8_t* outputPattern);
-    void WriteDimPattern_BrokenStepBarbell(uint8_t* outputPattern);
-    void WriteDimPattern_InverseStepBarbell(uint8_t* outputPattern);
+    void WriteDimPattern_Snake(uint8_t* outputPattern);
+    void WriteDimPattern_Snake2(uint8_t* outputPattern);
+    void WriteDimPattern_Snake3(uint8_t* outputPattern);
+    void WriteDimPattern_ThreeEvenComets(uint8_t* outputPattern);
+    void WriteDimPattern_ThreeEvenReverseComets(uint8_t* outputPattern);
     void WriteDimPattern_Towers(uint8_t* outputPattern);
-    void WriteDimPattern_StepsUp(uint8_t* outputPattern);
-    void WriteDimPattern_StepsDown(uint8_t* outputPattern);
+    void WriteDimPattern_Bowties(uint8_t* outputPattern);
+    void WriteDimPattern_ReverseBowties(uint8_t* outputPattern);
     void WriteDimPattern_SlopedHighTowers(uint8_t* outputPattern);
     void WriteDimPattern_SlopedLowTowers(uint8_t* outputPattern);
     void WriteDimPattern_SlideHigh(uint8_t* outputPattern);

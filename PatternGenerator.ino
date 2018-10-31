@@ -21,20 +21,20 @@ void PatternGenerator::WriteDimPattern(uint8_t targetDimPatternIndex, uint8_t* o
   
   switch(targetDimPatternIndex) {
     case 0:  WriteDimPattern_Comet(outputArray); break;
-    case 1:  WriteDimPattern_BackwardComet(outputArray); break;
+    case 1:  WriteDimPattern_ReverseComet(outputArray); break;
     case 2:  WriteDimPattern_TwoSided(outputArray); break;
     case 3:  WriteDimPattern_Barbell(outputArray); break;
-    case 4:  WriteDimPattern_StepBarbell(outputArray); break;
-    case 5:  WriteDimPattern_BrokenBarbell(outputArray); break;
-    case 6:  WriteDimPattern_InverseStepBarbell(outputArray); break;
-    case 7:  WriteDimPattern_BrokenStepBarbell(outputArray); break;
-    case 8:  WriteDimPattern_Towers(outputArray); break;
-    case 9:  WriteDimPattern_StepsUp(outputArray); break;
-    case 10: WriteDimPattern_StepsDown(outputArray); break;
-    case 11: WriteDimPattern_SlopedHighTowers(outputArray); break;
-    case 12: WriteDimPattern_SlopedLowTowers(outputArray); break;
-    case 13: WriteDimPattern_SlideHigh(outputArray); break;
-    case 14: WriteDimPattern_SlideLow(outputArray); break;
+    case 4: WriteDimPattern_SlopedHighTowers(outputArray); break;
+    case 5: WriteDimPattern_SlopedLowTowers(outputArray); break;
+    case 6: WriteDimPattern_SlideHigh(outputArray); break;
+    case 7: WriteDimPattern_SlideLow(outputArray); break;
+    case 8: WriteDimPattern_Bowties(outputArray); break;
+    case 9:  WriteDimPattern_ReverseBowties(outputArray); break;
+    case 10:  WriteDimPattern_Towers(outputArray); break;
+    case 11:  WriteDimPattern_Snake(outputArray); break;
+    case 12:  WriteDimPattern_Snake2(outputArray); break;
+    case 13:  WriteDimPattern_ThreeEvenComets(outputArray); break;
+    case 14:  WriteDimPattern_ThreeEvenReverseComets(outputArray); break;
     default: WriteDimPattern_NoDim(outputArray); break;
   }
 }
@@ -140,7 +140,7 @@ void PatternGenerator::WriteDimPattern_Comet(uint8_t* outputPattern) {
   uint8_t lastLimitMinusOne = limit - 1;
   
   for(limit += 2*transLength + 2; i < limit; i++) {
-    pattern[i] = MIN_BRIGHTNESS + fadeStepSize * (uint8_t)(i - lastLimitMinusOne);
+    pattern[i] = MIN_BRIGHTNESS + fadeStepSize * (uint8_t)(i - lastLimitMinusOne); // debug: use MIN_BRIGHTNESS really?
   }
 
   for(limit += brightLength; i < limit; i++) {
@@ -151,7 +151,7 @@ void PatternGenerator::WriteDimPattern_Comet(uint8_t* outputPattern) {
   memcpy(outputPattern, pattern, GetDimPeriod());
 }
 
-void PatternGenerator::WriteDimPattern_BackwardComet(uint8_t* outputPattern) {
+void PatternGenerator::WriteDimPattern_ReverseComet(uint8_t* outputPattern) {
   float fadeStepSize = GET_FADE_STEP_SIZE(2*transLength + 1);
   uint8_t pattern[GetDimPeriod()];
 
@@ -234,44 +234,60 @@ void PatternGenerator::WriteDimPattern_Barbell(uint8_t* outputPattern) {
   memcpy(outputPattern, pattern, GetDimPeriod());
 }
 
-void PatternGenerator::WriteDimPattern_StepBarbell(uint8_t* outputPattern) {
-  uint8_t adjSpacing = spacing;
-  uint8_t adjBrightLength = brightLength / 2;
-  uint8_t adjTransLength = transLength;
-  if(brightLength % 2 == 0) { adjTransLength++; }
-  else { adjBrightLength++; adjSpacing++; }
-
-  uint8_t pattern[GetDimPeriod()];
-
+void PatternGenerator::WriteDimPattern_Snake(uint8_t* outputPattern) {
+  uint8_t dimPeriod = GetDimPeriod();
+  uint8_t adjLength = dimPeriod - spacing;
+  uint8_t pattern[dimPeriod];
+  
   uint8_t i = 0;
   uint8_t limit;
-  for(limit = adjSpacing; i < limit; i++) {
+  for(limit = spacing; i < limit; i++) {
     pattern[i] = 0;
   }
 
-  for(limit += adjBrightLength; i < limit; i++) {
-    pattern[i] = 255;
-  }
-  
-  for(limit += 2*adjTransLength; i < limit; i++) {
-    pattern[i] = 32;
-  }
-
-  for(limit += adjBrightLength; i < limit; i++) {
+  for(limit += adjLength; i < limit; i++) {
     pattern[i] = 255;
   }
 
   memcpy(outputPattern, pattern, GetDimPeriod());
 }
 
-void PatternGenerator::WriteDimPattern_BrokenBarbell(uint8_t* outputPattern) {
-  uint8_t adjSpacing = spacing;
-  uint8_t adjBrightLength = brightLength / 2;
-  uint8_t adjTransLength = transLength;
-  if(brightLength % 2 == 0) { adjSpacing++; }
-  else { adjBrightLength++; }
+void PatternGenerator::WriteDimPattern_Snake2(uint8_t* outputPattern) {
+  uint8_t dimPeriod = GetDimPeriod();
+  uint8_t adjSpacing = (spacing + (brightLength%2)) / 2;
+  uint8_t adjLength = transLength + brightLength / 2 + 1;
+  uint8_t pattern[dimPeriod];
 
+  uint8_t i = 0;
+  uint8_t limit;
+  for(limit = adjSpacing; i < limit; i++) {
+    pattern[i] = 0;
+  }
+
+  for(limit += adjLength; i < limit; i++) {
+    pattern[i] = 255;
+  }
+  
+  for(limit += adjSpacing; i < limit; i++) {
+    pattern[i] = 0;
+  }
+  if(dimPeriod%2 == 1) {
+    pattern[i] = 0;
+    i++;
+    limit++;
+  }
+
+  for(limit += adjLength; i < limit; i++) {
+    pattern[i] = 255;
+  }
+
+  memcpy(outputPattern, pattern, GetDimPeriod());
+}
+
+void PatternGenerator::WriteDimPattern_ThreeEvenComets(uint8_t* outputPattern) {
+  uint8_t adjTransLength = (2*transLength + brightLength) / 3;
   float fadeStepSize = GET_FADE_STEP_SIZE(adjTransLength);
+  uint8_t adjSpacing = spacing + (2*transLength + brightLength) - (adjTransLength * 3);
   uint8_t pattern[GetDimPeriod()];
 
   uint8_t i = 0;
@@ -280,10 +296,52 @@ void PatternGenerator::WriteDimPattern_BrokenBarbell(uint8_t* outputPattern) {
     pattern[i] = 0;
   }
 
-  for(limit += adjBrightLength; i < limit; i++) {
-    pattern[i] = 255;
+  uint8_t lastLimitMinusOne = limit - 1;
+  for(limit += adjTransLength; i < limit; i++) {
+    pattern[i] = fadeStepSize * (uint8_t)(i - lastLimitMinusOne);
+  }
+  
+  pattern[i] = 0;
+  i++;
+  limit++;
+  
+  lastLimitMinusOne = limit - 1;
+  for(limit += adjTransLength; i < limit; i++) {
+    pattern[i] = fadeStepSize * (uint8_t)(i - lastLimitMinusOne);
   }
 
+  pattern[i] = 0;
+  i++;
+  limit++;
+
+  lastLimitMinusOne = limit - 1;
+  for(limit += adjTransLength; i < limit; i++) {
+    pattern[i] = fadeStepSize * (uint8_t)(i - lastLimitMinusOne);
+  }
+  
+  memcpy(outputPattern, pattern, GetDimPeriod());
+}
+
+void PatternGenerator::WriteDimPattern_ThreeEvenReverseComets(uint8_t* outputPattern) {
+  uint8_t adjTransLength = (2*transLength + brightLength) / 3;
+  float fadeStepSize = GET_FADE_STEP_SIZE(adjTransLength);
+  uint8_t adjSpacing = spacing + (2*transLength + brightLength) - (adjTransLength * 3);
+  uint8_t pattern[GetDimPeriod()];
+
+  uint8_t i = 0;
+  uint8_t limit;
+  for(limit = adjSpacing; i < limit; i++) {
+    pattern[i] = 0;
+  }
+
+  for(limit += adjTransLength; i < limit; i++) {
+    pattern[i] = fadeStepSize * (limit - i);
+  }
+  
+  pattern[i] = 0;
+  i++;
+  limit++;
+  
   for(limit += adjTransLength; i < limit; i++) {
     pattern[i] = fadeStepSize * (limit - i);
   }
@@ -292,77 +350,10 @@ void PatternGenerator::WriteDimPattern_BrokenBarbell(uint8_t* outputPattern) {
   i++;
   limit++;
 
-  uint8_t lastLimitMinusOne = limit - 1;
   for(limit += adjTransLength; i < limit; i++) {
-    pattern[i] = fadeStepSize * (uint8_t)(i - lastLimitMinusOne);
-  }
-
-  for(limit += adjBrightLength; i < limit; i++) {
-    pattern[i] = 255;
-  }
-
-  memcpy(outputPattern, pattern, GetDimPeriod());
-}
-
-void PatternGenerator::WriteDimPattern_BrokenStepBarbell(uint8_t* outputPattern) {
-  uint8_t adjSpacing = spacing;
-  uint8_t adjBrightLength = brightLength / 2;
-  uint8_t adjTransLength = transLength;
-  if(brightLength % 2 == 0) { adjSpacing++; }
-  else { adjBrightLength++; }
-  
-  uint8_t pattern[GetDimPeriod()];
-
-  uint8_t i = 0;
-  uint8_t limit;
-  for(limit = adjSpacing; i < limit; i++) {
-    pattern[i] = 0;
-  }
-
-  for(limit += adjBrightLength; i < limit; i++) {
-    pattern[i] = 255;
-  } 
-
-  for(limit += adjTransLength; i < limit; i++) {
-    pattern[i] = 32;
-  }
-
-  pattern[i] = 0;
-  i++;
-  limit++;
-
-  for(limit += adjTransLength; i < limit; i++) {
-    pattern[i] = 32;
+    pattern[i] = fadeStepSize * (limit - i);
   }
   
-  for(limit += adjBrightLength; i < limit; i++) {
-    pattern[i] = 255;
-  }
-
-  memcpy(outputPattern, pattern, GetDimPeriod());
-}
-
-void PatternGenerator::WriteDimPattern_InverseStepBarbell(uint8_t* outputPattern) {
-  uint8_t pattern[GetDimPeriod()];
-
-  uint8_t i = 0;
-  uint8_t limit;
-  for(limit = spacing; i < limit; i++) {
-    pattern[i] = 0;
-  }
-
-  for(limit += 1 + transLength; i < limit; i++) {
-    pattern[i] = 32;
-  }
-  
-  for(limit += brightLength; i < limit; i++) {
-    pattern[i] = 255;
-  }
-
-  for(limit += 1 + transLength; i < limit; i++) {
-    pattern[i] = 32;
-  }
-
   memcpy(outputPattern, pattern, GetDimPeriod());
 }
 
@@ -398,65 +389,91 @@ void PatternGenerator::WriteDimPattern_Towers(uint8_t* outputPattern) {
   memcpy(outputPattern, pattern, GetDimPeriod());
 }
 
-void PatternGenerator::WriteDimPattern_StepsUp(uint8_t* outputPattern) {
+void PatternGenerator::WriteDimPattern_Bowties(uint8_t* outputPattern) {
   uint8_t pattern[GetDimPeriod()];
-
+  
+  uint8_t transOuter = 1 + transLength / 2;
+  uint8_t transInner = (transLength+1) / 2;
+  float fadeStepSizeOuter = GET_FADE_STEP_SIZE(transOuter);
+  float fadeStepSizeInner = GET_FADE_STEP_SIZE(transInner);
+  
   uint8_t i = 0;
   uint8_t limit;
   for(limit = spacing; i < limit; i++) {
     pattern[i] = 0;
   }
-
-  for(limit += transLength; i < limit; i++) {
-    pattern[i] = 70;
-  }
-
-  pattern[i] = 0;
-  i++;
-  limit++;
   
-  for(limit += transLength; i < limit; i++) {
-    pattern[i] = 150;
+  for(limit += transOuter; i < limit; i++) {
+    pattern[i] = fadeStepSizeOuter * (limit - i);
   }
 
-  pattern[i] = 0;
-  i++;
-  limit++;
+  uint8_t lastLimitMinusOne = limit - 1;
+  for(limit += transInner; i < limit; i++) {
+    pattern[i] = fadeStepSizeInner * (uint8_t)(i - lastLimitMinusOne);
+  }
   
   for(limit += brightLength; i < limit; i++) {
     pattern[i] = 255;
+  }
+  
+  for(limit += transInner; i < limit; i++) {
+    pattern[i] = fadeStepSizeInner * (limit - i);
+  }
+  
+  lastLimitMinusOne = limit - 1;
+  for(limit += transOuter; i < limit; i++) {
+    pattern[i] = fadeStepSizeOuter * (uint8_t)(i - lastLimitMinusOne);
   }
 
   memcpy(outputPattern, pattern, GetDimPeriod());
 }
 
-void PatternGenerator::WriteDimPattern_StepsDown(uint8_t* outputPattern) {
+void PatternGenerator::WriteDimPattern_ReverseBowties(uint8_t* outputPattern) {
   uint8_t pattern[GetDimPeriod()];
 
+  uint8_t modBrightLength = brightLength;
+  uint8_t modTransLength = transLength;
+  while(modBrightLength > 2) { modBrightLength-=2; modTransLength++; }
+  
+  uint8_t transOuter = modTransLength / 2;
+  uint8_t transInner = (modTransLength+1) / 2;
+  float fadeStepSizeOuter = GET_FADE_STEP_SIZE(transOuter);
+  float fadeStepSizeInner = GET_FADE_STEP_SIZE(transInner);
+  
   uint8_t i = 0;
   uint8_t limit;
   for(limit = spacing; i < limit; i++) {
     pattern[i] = 0;
   }
 
-  for(limit += brightLength; i < limit; i++) {
-    pattern[i] = 255;
+  uint8_t lastLimitMinusOne = limit - 1;
+  for(limit += transOuter; i < limit; i++) {
+    pattern[i] = fadeStepSizeOuter * (uint8_t)(i - lastLimitMinusOne);
   }
-
-  pattern[i] = 0;
-  i++;
-  limit++;
-
-  for(limit += transLength; i < limit; i++) {
-    pattern[i] = 150;
+  
+  for(limit += transInner; i < limit; i++) {
+    pattern[i] = fadeStepSizeInner * (limit - i);
   }
 
   pattern[i] = 0;
   i++;
   limit++;
   
-  for(limit += transLength; i < limit; i++) {
-    pattern[i] = 70;
+  for(limit += modBrightLength; i < limit; i++) {
+    pattern[i] = 255;
+  }
+
+  pattern[i] = 0;
+  i++;
+  limit++;
+  
+  lastLimitMinusOne = limit - 1;
+  for(limit += transInner; i < limit; i++) {
+    pattern[i] = fadeStepSizeInner * (uint8_t)(i - lastLimitMinusOne);
+  }
+  
+  for(limit += transOuter; i < limit; i++) {
+    pattern[i] = fadeStepSizeOuter * (limit - i);
   }
 
   memcpy(outputPattern, pattern, GetDimPeriod());
@@ -609,3 +626,39 @@ void PatternGenerator::WriteDimPattern_NoDim(uint8_t* outputPattern) {
   memcpy(outputPattern, pattern, period);
 
 }
+
+// Retired
+/*
+
+
+void PatternGenerator::WriteDimPattern_StepBarbell(uint8_t* outputPattern) {
+  uint8_t adjSpacing = spacing;
+  uint8_t adjBrightLength = brightLength / 2;
+  uint8_t adjTransLength = transLength;
+  if(brightLength % 2 == 0) { adjTransLength++; }
+  else { adjBrightLength++; adjSpacing++; }
+
+  uint8_t pattern[GetDimPeriod()];
+
+  uint8_t i = 0;
+  uint8_t limit;
+  for(limit = adjSpacing; i < limit; i++) {
+    pattern[i] = 0;
+  }
+
+  for(limit += adjBrightLength; i < limit; i++) {
+    pattern[i] = 255;
+  }
+  
+  for(limit += 2*adjTransLength; i < limit; i++) {
+    pattern[i] = 32;
+  }
+
+  for(limit += adjBrightLength; i < limit; i++) {
+    pattern[i] = 255;
+  }
+
+  memcpy(outputPattern, pattern, GetDimPeriod());
+}
+*/
+
