@@ -7,6 +7,7 @@
 #include "GammaManager.h"
 #include "PatternScroller.h"
 #include "PatternRepeater.h"
+#include "PatternGenerator.h"
 #include "PatternController.h"
 
 #define FPS_TO_US(x) (ONE_SEC_US / x)
