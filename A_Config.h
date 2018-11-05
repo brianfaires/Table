@@ -1,5 +1,4 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#pragma once
 
 // Runtime config
 #define DEBUG_SERIAL
@@ -9,7 +8,6 @@
 
 #ifdef DEBUG_SERIAL
   #define MANUAL_PARAMS
-  #define DEBUG_ERRORS
   #define EXPLICIT_PARAMETERS
   //#define DEBUG_BUTTONS
   //#define DEBUG_TIMING
@@ -34,7 +32,6 @@
 #define INIT_BASE_ANIMATION 1
 #define INIT_BASE_BRIGHTNESS_SPEED 0
 #define INIT_BASE_COLOR_SPEED 0
-#define INIT_BASE_COLOR_THICKNESS_1 70
 #define INIT_BASE_BRIGHT_LENGTH 3
 #define INIT_BASE_TRANS_THICKNESS 8
 #define INIT_BASE_NUM_COLORS 3
@@ -409,6 +406,4 @@ const uint8_t PROGMEM gammaDim_5bit[32] = { // Manually created
   18,19,21,22,24,26,28,31
 };
 */
-
-#endif
 

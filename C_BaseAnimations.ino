@@ -185,11 +185,11 @@ void ScrollingGlimmerBands() {
   const uint8_t glimmerPortion = 4;
   const uint8_t glimmerFloor = 180;
   CRGB colorPattern[baseParams.dimPeriod];
-  uint8_t spacing = baseParams.dimPeriod - baseParams.numColors * baseParams.colorThickness;
+  uint8_t spacing = baseParams.dimPeriod - baseParams.numColors * baseParams.brightLength;
 
   uint16_t curPixel = 0;
   for(uint8_t i = 0; i < baseParams.numColors; i++) {
-    for(uint8_t j = 0; j < baseParams.colorThickness; j++) {
+    for(uint8_t j = 0; j < baseParams.brightLength; j++) {
       hsv2rgb_rainbow(pm.palette[2 + i], colorPattern[curPixel]);
       if(random8(glimmerPortion) == 0) {
         colorPattern[curPixel] |= glimmerFloor;

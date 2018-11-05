@@ -1,4 +1,5 @@
 #include "PatternScroller.h"
+
 PatternScroller::PatternScroller() {
   dimParamChangeType = IMMEDIATE;//ONCE_PER_MOVE;
   colorParamChangeType = IMMEDIATE;
@@ -21,7 +22,6 @@ void PatternScroller::Init(PaletteManager* pm, GammaManager* gm, uint16_t _numLE
   dimPeriod = pg.dimPeriod = params.dimPeriod;
   colorPeriod = pg.colorPeriod = params.colorPeriod;
   numColors = pg.numColors = params.numColors;
-  colorThickness = pg.colorThickness = params.colorThickness;
   brightLength = pg.brightLength = params.brightLength;
   
   transLength = pg.transLength = params.transLength;
@@ -118,24 +118,14 @@ bool PatternScroller::WalkColorParams(uint32_t curTime) {
 
   if(colorParamChangeType == IMMEDIATE) {
     // Instantly update params
-    if((pg.colorThickness != colorThickness) || (pg.numColors != numColors)) {
+    if(pg.numColors != numColors) {
       updateMade = true;
-      pg.colorThickness = colorThickness;
       pg.numColors = numColors;
     }
   }
   else if(IsReadyForColorMove(curTime)) {
     if(colorParamChangeType == ONCE_PER_MOVE || IsStartOfColorPattern()) {
       // Gradually update params in sync with movement
-      if(pg.colorThickness < colorThickness) {
-        pg.colorThickness++;
-        updateMade = true;
-      }
-      else if(pg.colorThickness > colorThickness) {
-        pg.colorThickness--;
-        updateMade = true;
-      }
-    
       if(pg.numColors < numColors) {
         pg.numColors++;
         updateMade = true;

@@ -1,3 +1,5 @@
+#include "PatternController.h"
+
 PatternController::PatternController() {
 }
 
@@ -71,7 +73,6 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
 
   // Update primary PatternScroller
   ps->numColors = scaledParams.numColors;
-  ps->colorThickness = scaledParams.colorThickness;
   ps->colorPeriod = scaledParams.colorPeriod;
   ps->brightLength = scaledParams.brightLength;
   ps->transLength = scaledParams.transLength;
@@ -82,7 +83,6 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
   PatternScroller* secondary = (ps == &ps1 ? &ps2 : &ps1);
   ScaleParams(params, scaledParams, secondary->dimPeriod, secondary->colorPeriod);
   secondary->numColors = scaledParams.numColors;
-  secondary->colorThickness = scaledParams.colorThickness;
   secondary->colorPeriod = scaledParams.colorPeriod;
   secondary->brightLength = scaledParams.brightLength;
   secondary->transLength = scaledParams.transLength;
@@ -146,20 +146,13 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_base
   #ifdef EXPLICIT_PARAMETERS
     output.displayMode = params.displayMode;
     output.numColors = params.numColors;
-    output.colorThickness = params.colorThickness;
     output.transLength = params.transLength;
     output.brightLength = params.brightLength;
     output.dimSpeed = params.dimSpeed;
     output.colorSpeed = params.colorSpeed;
 
     if(output.brightLength + 2*output.transLength + 2 > output.dimPeriod) {
-      #ifdef DEBUG_ERRORS
-        Serial.println("dimParams exceed the value in dimPeriod");
-        while(output.brightLength + 2*output.transLength + 2 > output.dimPeriod) {
-          if(output.brightLength > 0) { output.brightLength--; }
-          else output.transLength--;
-        }
-      #endif
+      THROW("dimParams exceed the value in dimPeriod");
     }
   #else
     uint8_t abs_dimSpeed = scaleParam((uint8_t)abs(params.dimSpeed), 0, 63);
@@ -180,11 +173,6 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_base
 
     output.displayMode = scaleParam(params.displayMode, 0, NUM_DIM_PATTERNS * NUM_COLOR_PATTERNS - 1);
     output.numColors = scaleParam(params.numColors, 2, PALETTE_SIZE-1);
-    #ifdef DEBUG_ERRORS
-      if(NUM_LEDS > 255*2) { Serial.println("ERROR: NUM_LEDS/numColors results in colorThickness > 255"); }
-    #endif
-    output.colorThickness = scaleParam(params.colorThickness, 8, NUM_LEDS/numColors);
-
     output.transLength = scaleParam(params.transLength, 4, 8);
     output.brightLength = scaleParam(params.brightLength, 0, output.dimPeriod - 2*output.transLength - 2);
   #endif
@@ -199,19 +187,16 @@ void PatternController::StartSplit(struct_base_show_params& params) {
   /*if(dimSpeed > 0) {    
     if(pr == &pr1) {
       pg2.numColors = params.numColors;
-      pg2.colorThickness = params.colorThickness;
       pg2.transLength = params.transLength;
       pg2.brightLength = params.brightLength;
     }
     else {
       // pr2 is current PatternRepeater
       pr1.numColors = pg2.numColors;
-      pr1.colorThickness = pg2.colorThickness;
       pr1.transLength = pg2.transLength;
       pr1.brightLength = pg2.brightLength;
 
       pg2.numColors = params.numColors;
-      pg2.colorThickness = params.colorThickness;
       pg2.transLength = params.transLength;
       pg2.brightLength = params.brightLength;
     }
@@ -223,19 +208,16 @@ void PatternController::StartSplit(struct_base_show_params& params) {
   else if(dimSpeed < 0) {
     if(pr == &pr1) {
       pg2.numColors = pg1.numColors;
-      pg2.colorThickness = pg1.colorThickness;
       pg2.transLength = pg1.transLength;
       pg2.brightLength = pg1.brightLength;
   
       pg1.numColors = params.numColors;
-      pg1.colorThickness = params.colorThickness;
       pg1.transLength = params.transLength;
       pg1.brightLength = params.brightLength;
     }
     else {
       // pr2 is the current PatternRepeater
       pg1.numColors = params.numColors;
-      pg1.colorThickness = params.colorThickness;
       pg1.transLength = params.transLength;
       pg1.brightLength = params.brightLength;
     }
@@ -244,9 +226,7 @@ void PatternController::StartSplit(struct_base_show_params& params) {
     ps = &ps1;
   }
   else {
-    #ifdef DEBUG_ERRORS
-      Serial.println("Error: Trying to split while dimSpeed == 0)");
-    #endif
+    THROW("Error: Trying to split while dimSpeed == 0)")
   }*/
 }
 

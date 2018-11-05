@@ -1,6 +1,4 @@
-#ifndef H_TYPES
-#define H_TYPES
-
+#pragma once
 #include "PaletteManager.h"
 
 #define NUM_BASE_PARAMS 10
@@ -8,7 +6,6 @@ struct struct_base_show_params {
   uint8_t animation = INIT_BASE_ANIMATION;
   int8_t dimSpeed = INIT_BASE_BRIGHTNESS_SPEED;
   int8_t colorSpeed = INIT_BASE_COLOR_SPEED;
-  uint8_t colorThickness = INIT_BASE_COLOR_THICKNESS_1;
   uint8_t brightLength = INIT_BASE_BRIGHT_LENGTH;
   uint8_t transLength = INIT_BASE_TRANS_THICKNESS;
   uint8_t numColors = INIT_BASE_NUM_COLORS;
@@ -47,4 +44,3 @@ struct struct_timers {
   uint32_t lastBaseTransition = 0, lastTopTransition = 0;
 };
 
-#endif

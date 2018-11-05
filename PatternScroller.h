@@ -1,6 +1,4 @@
-#ifndef PATTERN_SCROLLER_H
-#define PATTERN_SCROLLER_H
-
+#pragma once
 #include "GammaManager.h"
 #include "PaletteManager.h"
 #include "PatternRepeater.h"
@@ -23,7 +21,7 @@ class PatternScroller {
     
     uint16_t colorPeriod, dimPeriod;
     int8_t dimSpeed, colorSpeed;
-    uint8_t numColors, colorThickness, brightLength, transLength;
+    uint8_t numColors, brightLength, transLength;
     uint32_t dimBlendLength, colorBlendLength;
     uint32_t dimPauseLength, colorPauseLength;
     
@@ -54,6 +52,4 @@ class PatternScroller {
     uint32_t lastDimPatternChange, lastColorPatternChange;
     uint32_t lastDimMove, lastColorMove;
 };
-
-#endif
 

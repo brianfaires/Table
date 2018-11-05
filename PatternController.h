@@ -1,3 +1,5 @@
+#pragma once
+
 #include "GammaManager.h"
 #include "PaletteManager.h"
 #include "PatternScroller.h"

@@ -1,5 +1,4 @@
-#ifndef GLOBALS_H
-#define GLOBALS_H
+#pragma once
 
 #include "A_Config.h"
 #include "Z_Types.h"
@@ -37,5 +36,3 @@ struct_config layerConfig;
 struct_base_show_params baseParams;
 struct_top_show_params topParams;
 
-
-#endif

@@ -27,8 +27,12 @@
  *    
  *    
  *  To do:
- *    - Check pre-compiler macros, order, and where Config.h actually reaches.
- *    - Upgrade errors to THROW()
+ *    - PatternScroller testing
+ *    - dimPeriod changes
+ *    - colorPeriod changes
+ *    - Test param blending modes
+ *    - PatternController library
+ *    - Merge Git repos
  *    - Tune Palettes
  *      
  */
@@ -157,11 +161,7 @@ void loop() {
 
     FastLED.show();
     timing.lastDraw += US_BETWEEN_DRAWS;
-    #ifdef DEBUG_ERRORS
-      if(timing.now > timing.lastDraw + US_BETWEEN_DRAWS) {
-        Serial.println("ERROR: Drawing clipped by " + String(timing.now - timing.lastDraw) + "us");
-      }
-    #endif
+    if(timing.now > timing.lastDraw + US_BETWEEN_DRAWS) { THROW("ERROR: Drawing clipped by " + String(timing.now - timing.lastDraw) + "us") }
   }
 
   #ifdef DEBUG_TIMING
