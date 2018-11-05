@@ -184,8 +184,8 @@ void Orbs() {
 void ScrollingGlimmerBands() {
   const uint8_t glimmerPortion = 4;
   const uint8_t glimmerFloor = 180;
-  uint8_t period = baseParams.numColors * (baseParams.colorThickness + baseParams.spacing);
-  CRGB colorPattern[period];
+  CRGB colorPattern[baseParams.dimPeriod];
+  uint8_t spacing = baseParams.dimPeriod - baseParams.numColors * baseParams.colorThickness;
 
   uint16_t curPixel = 0;
   for(uint8_t i = 0; i < baseParams.numColors; i++) {
@@ -196,7 +196,7 @@ void ScrollingGlimmerBands() {
       }
       curPixel++;
     }
-    for(uint8_t j = 0; j < baseParams.spacing; j++) {
+    for(uint8_t j = 0; j < spacing; j++) {
       colorPattern[curPixel++] = CRGB::Black;
     }
   }

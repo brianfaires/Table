@@ -1,203 +1,280 @@
+#include "PatternScroller.h"
 PatternScroller::PatternScroller() {
-  colorPeriod = 1;
-  colorPattern[0] = { 0, 0, 0 };
-  lastColorMove = 0;
-  lastDimMove = 0;
-
-  brightnessPeriod = NUM_LEDS;
-  myBrightness = 64;
-
-  for(uint16_t i = 0; i < brightnessPeriod; i++) {
-    brightnessPattern[i] = 255;
-  }
-}
-
-
-void PatternScroller::SkipTime(uint32_t amount) {
-  lastColorMove += amount;
-  lastDimMove += amount;
-}
-
-void PatternScroller::SetColorPattern(PRGB* newPattern, uint16_t newColorPeriod) {
-  colorPeriod = newColorPeriod;
+  dimParamChangeType = IMMEDIATE;//ONCE_PER_MOVE;
+  colorParamChangeType = IMMEDIATE;
   
-  if(colorSpeed > 0) {
-    colorIndexFirst = 0;
-    colorIndexLast = (NUM_LEDS-1) % newColorPeriod;
-  }
-  else {
-    colorIndexFirst = colorPeriod - 1 - ((NUM_LEDS-1) % colorPeriod);
-    colorIndexLast = colorPeriod - 1;
-  }
-
-  memcpy(colorPattern, newPattern, sizeof(PRGB)*colorPeriod);
-  //Serial.println("TEST: SetColorPattern()");
+  targetColorPatternIndex = 0;
+  targetDimPatternIndex = 0;
+  oldDimPatternIndex = 0;
+  oldColorPatternIndex = 0;
+  randomDimPatternIndex = 0;
+  randomColorPatternIndex = 0;
 }
 
-void PatternScroller::SetDimPattern(uint8_t* newPattern, uint16_t newDimPeriod, uint32_t curTime, bool isParamChange) {
-  if(dimSpeed > 0) {
-    brightnessIndexFirst = 0;
-    brightnessIndexLast = (NUM_LEDS-1) % brightnessPeriod;
-  }
-  else {
-    brightnessIndexFirst = brightnessPeriod - 1 - ((NUM_LEDS-1) % brightnessPeriod);
-    brightnessIndexLast = brightnessPeriod - 1;
-  }
+void PatternScroller::Init(PaletteManager* pm, GammaManager* gm, uint16_t _numLEDs, uint8_t dimPatternIndex, uint8_t colorPatternIndex, struct_base_show_params& params, uint32_t curTime) {
+  pr.Init(pm, gm);
 
-  memcpy(brightnessPattern, newPattern, brightnessPeriod);
-  //for(uint8_t i = 0; i < brightnessPeriod; i++)
-    //Serial.println(String(i) + ": " + brightnessPattern[i]);
-}
+  numLEDs = _numLEDs;
+  dimSpeed = params.dimSpeed;
+  colorSpeed = params.colorSpeed;
+  
+  dimPeriod = pg.dimPeriod = params.dimPeriod;
+  colorPeriod = pg.colorPeriod = params.colorPeriod;
+  numColors = pg.numColors = params.numColors;
+  colorThickness = pg.colorThickness = params.colorThickness;
+  brightLength = pg.brightLength = params.brightLength;
+  
+  transLength = pg.transLength = params.transLength;
+  SetDisplayMode(dimPatternIndex, colorPatternIndex, curTime);
 
-void PatternScroller::Init(uint32_t curTime) {
-  for(uint16_t i = 0; i < NUM_LEDS; i++) {
-    colors[i] = { colorPattern[i % colorPeriod].a, colorPattern[i % colorPeriod].b, colorPattern[i % colorPeriod].blendAmount };
-  }
+  pg.WriteDimPattern(dimPatternIndex, targetDimPattern);
+  pr.SetDimPattern(targetDimPattern, dimPeriod);
+  pg.WriteColorPattern(colorPatternIndex, targetColorPattern);
+  pr.SetColorPattern(targetColorPattern, colorPeriod);
 
-  colorIndexFirst = 0;
-  colorIndexLast = (NUM_LEDS-1) % colorPeriod;
-
-  //if(BrightnessPatternIsInitialized()) {
-    for(uint16_t i = 0; i < NUM_LEDS; i++) {
-      brightnesses[i] = brightnessPattern[i % brightnessPeriod];
-  //}
-
-    brightnessIndexFirst = 0;
-    brightnessIndexLast = (NUM_LEDS-1) % brightnessPeriod;
-  }
-
+  //lastDimParamChange = curTime;
+  //lastColorParamChange = curTime;
+  lastDimPatternChange = curTime;
+  lastColorPatternChange = curTime;
   lastDimMove = curTime;
   lastColorMove = curTime;
 }
 
-void PatternScroller::Update(uint32_t& curTime) {
-  //uint8_t retVal = 0; // Return value reflects if color and/or brightness patterns moved
+bool PatternScroller::Update(uint32_t curTime) {
+// Returns true if dim pattern moved
+  if(WalkColorParams(curTime)) {
+    if(oldColorPatternIndex != 0xFF) { pg.WriteColorPattern(oldColorPatternIndex, oldColorPattern); }
+    pg.WriteColorPattern(targetColorPatternIndex, targetColorPattern);
+    BlendColorPattern(curTime);
+  }
+
+  if(WalkDimParams(curTime)) {
+    if(oldDimPatternIndex != 0xFF) { pg.WriteDimPattern(oldDimPatternIndex, oldDimPattern); }
+    pg.WriteDimPattern(targetDimPatternIndex, targetDimPattern);
+    BlendDimPattern(curTime);
+  }
+
+  if(curTime - lastDimPatternChange >= dimPauseLength) {
+    BlendDimPattern(curTime);
+  }
   
-  bool brightnessMoved = false;
+  if(curTime - lastColorPatternChange >= colorPauseLength) {
+    BlendColorPattern(curTime);
+  }
+  
+  pr.SetColorPattern(curColorPattern, colorPeriod);
+  pr.SetDimPattern(curDimPattern, dimPeriod);
+
+  return ScrollPatterns(curTime);
+}
+
+void PatternScroller::SkipTime(uint32_t amount) {
+  lastColorMove += amount;
+  lastDimMove += amount;
+  //lastDimParamChange += amount;
+  //lastColorParamChange += amount;
+  lastDimPatternChange += amount;
+  lastColorPatternChange += amount;
+}
+
+void PatternScroller::SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs) {
+  pr.SetCRGBs(target, target_b, numLEDs);
+}
+
+void PatternScroller::SetDisplayMode(uint8_t dimPatternIndex, uint8_t colorPatternIndex, uint32_t curTime) {
+  if(targetColorPatternIndex != colorPatternIndex) {
+    // New dim pattern target; this was not the cause of a blend completing.  Mark oldIndex as 0xFF to signal this.
+    memcpy(oldColorPattern, curColorPattern, colorPeriod);
+    oldColorPatternIndex = 0xFF;// targetColorPatternIndex;
+    targetColorPatternIndex = colorPatternIndex;
+    pg.WriteColorPattern(targetColorPatternIndex, targetColorPattern);
+
+    lastColorPatternChange = curTime;
+  }
+
+  if(targetDimPatternIndex != dimPatternIndex) {
+    // New dim pattern target; this was not the cause of a blend completing.  Mark oldIndex as 0xFF to signal this.
+    uint8_t lastDimPattern = oldDimPatternIndex;
+    oldDimPatternIndex = 0xFF;// targetDimPatternIndex;
+
+    memcpy(oldDimPattern, curDimPattern, dimPeriod);
+    targetDimPatternIndex = dimPatternIndex;
+
+    if(dimPatternIndex == NUM_DIM_PATTERNS-1) {
+      do { randomDimPatternIndex = random8(NUM_DIM_PATTERNS-1); } while(randomDimPatternIndex == lastDimPattern);
+      pg.WriteDimPattern(randomDimPatternIndex, targetDimPattern);
+    }
+    else {
+      pg.WriteDimPattern(targetDimPatternIndex, targetDimPattern);
+    }
+
+    lastDimPatternChange = curTime;
+  }
+}
+
+
+bool PatternScroller::WalkColorParams(uint32_t curTime) {
+  bool updateMade = false;
+
+  if(colorParamChangeType == IMMEDIATE) {
+    // Instantly update params
+    if((pg.colorThickness != colorThickness) || (pg.numColors != numColors)) {
+      updateMade = true;
+      pg.colorThickness = colorThickness;
+      pg.numColors = numColors;
+    }
+  }
+  else if(IsReadyForColorMove(curTime)) {
+    if(colorParamChangeType == ONCE_PER_MOVE || IsStartOfColorPattern()) {
+      // Gradually update params in sync with movement
+      if(pg.colorThickness < colorThickness) {
+        pg.colorThickness++;
+        updateMade = true;
+      }
+      else if(pg.colorThickness > colorThickness) {
+        pg.colorThickness--;
+        updateMade = true;
+      }
+    
+      if(pg.numColors < numColors) {
+        pg.numColors++;
+        updateMade = true;
+      }
+      else if(pg.numColors > numColors) {
+        pg.numColors--;
+        updateMade = true;
+      }
+    }
+  }
+
+  return updateMade;
+}
+
+bool PatternScroller::WalkDimParams(uint32_t curTime) {
+  bool updateMade = false;
+  
+  if(dimParamChangeType == IMMEDIATE) {
+    // Instantly update params
+    if((pg.brightLength != brightLength) || (pg.transLength != transLength)) {
+      updateMade = true;
+      pg.brightLength = brightLength;
+      pg.transLength = transLength;
+    }
+  }
+  else if(IsReadyForDimMove(curTime)) {
+    if(dimParamChangeType == ONCE_PER_MOVE || IsStartOfDimPattern()) {
+      // Gradually update params in sync with movement    
+      if(pg.brightLength < brightLength) {
+        pg.brightLength++;
+        updateMade = true;
+      }
+      else if(pg.brightLength > brightLength) {
+        pg.brightLength--;
+        updateMade = true;
+      }
+      else if(pg.transLength < transLength) {
+        pg.transLength++;
+        updateMade = true;
+      }
+      else if(pg.transLength > transLength) {
+        pg.transLength--;
+        updateMade = true;
+      }
+    }
+  }
+
+  return updateMade;
+}
+
+void PatternScroller::BlendColorPattern(uint32_t curTime) {
+  // debug: Do an actual blend
+  memcpy(curColorPattern, targetColorPattern, sizeof(PRGB)*colorPeriod);
+}
+
+void PatternScroller::BlendDimPattern(uint32_t curTime) {
+  uint32_t transitionTime = curTime - lastDimPatternChange - dimPauseLength;
+  if(transitionTime < dimBlendLength) {
+    uint8_t blendAmount = 255 * transitionTime / dimBlendLength;//debug: changed from 256, why?
+
+    for(uint8_t i = 0; i < dimPeriod; i++) {
+      curDimPattern[i] = (255 - blendAmount) * oldDimPattern[i] / 255 + blendAmount * targetDimPattern[i] / 255;
+    }
+
+    pr.SetDimPattern(targetDimPattern, dimPeriod);
+  }
+  else {
+    // Blending just finished
+    oldDimPatternIndex = targetDimPatternIndex;
+    memcpy(oldDimPattern, targetDimPattern, dimPeriod);
+    memcpy(curDimPattern, targetDimPattern, dimPeriod);
+    
+    if(targetDimPatternIndex == NUM_DIM_PATTERNS-1) {
+      uint8_t lastRandomIndex = randomDimPatternIndex;
+      do { randomDimPatternIndex = random8(NUM_DIM_PATTERNS-1); } while (randomDimPatternIndex == lastRandomIndex);
+      pg.WriteDimPattern(randomDimPatternIndex, targetDimPattern);
+    }
+    else {
+      pg.WriteDimPattern(targetDimPatternIndex, targetDimPattern);
+    }
+
+    lastDimPatternChange = curTime;
+  }
+}
+
+bool PatternScroller::IsReadyForDimMove(uint32_t curTime) {
+  // Returns true if this cycle is going to move the pattern (i.e. only change pattern on the same draw cycle as a move)
+  if(dimSpeed == 0) { return true; }
+  
+  uint32_t stepSize = ONE_SECOND / abs(dimSpeed);
+  return curTime - lastDimMove >= stepSize;
+}
+
+bool PatternScroller::IsReadyForColorMove(uint32_t curTime) {
+  // Returns true if this cycle is going to move the pattern (i.e. only change pattern on the same draw cycle as a move)
+  if(colorSpeed == 0) { return true; }
+  
+  uint32_t stepSize = ONE_SECOND / abs(colorSpeed);
+  return curTime - lastColorMove >= stepSize;
+}
+
+bool PatternScroller::IsStartOfDimPattern() {
+  if(dimSpeed == 0) { return false; }
+  else if(dimSpeed > 0) { return pr.GetDimIndexFirst() == 0; }
+  else { return pr.GetDimIndexFirst() == dimPeriod - (numLEDs % dimPeriod); }
+}
+
+bool PatternScroller::IsStartOfColorPattern() {
+  if(colorSpeed == 0) { return false; }
+  else if(colorSpeed > 0) { return pr.GetColorIndexFirst() == 0; }
+  else { return pr.GetDimIndexFirst() == colorPeriod - (numLEDs % colorPeriod); }
+}
+
+bool PatternScroller::ScrollPatterns(uint32_t curTime) {
+  bool dimMoved = false;
+
+  // Move dim pattern
   if(dimSpeed == 0) {
     lastDimMove = curTime;
   }
   else {
-    uint32_t stepSize = ONE_SECOND / abs(dimSpeed);
-    if(curTime - lastDimMove >= stepSize) {
-      ScrollDimPattern(dimSpeed > 0);
-      lastDimMove += stepSize;
-      brightnessMoved = true;
+    if(IsReadyForDimMove(curTime)) {
+      dimMoved = true;
+      pr.ScrollDimPattern(dimSpeed > 0);
+      lastDimMove += ONE_SECOND / abs(dimSpeed);
     }
   }
 
-  // If color is moving into the brightness, sync up the movement frames to avoid flicker
-  //bool mustMoveColor = brightnessMoved && (((dimSpeed > 0) && (colorSpeed > dimSpeed)) || ((dimSpeed < 0) && (colorSpeed < dimSpeed)));
+  // Move color pattern
   if(colorSpeed == 0) {
     lastColorMove = curTime;
   }
   else {
-    uint32_t stepSize = ONE_SEC_US / abs(colorSpeed);
-    if(/*mustMoveColor ||*/ ((curTime > lastColorMove) && (curTime - lastColorMove >= stepSize))) {
-      ScrollColorPattern(colorSpeed > 0);
-      lastColorMove += stepSize;
-      //Serial.println("mustMove: " + String(mustMoveColor));
+    if(IsReadyForColorMove(curTime)) {
+      pr.ScrollColorPattern(colorSpeed > 0);
+      lastColorMove += ONE_SECOND / abs(colorSpeed);
     }
   }
-}
 
-void PatternScroller::ScrollColorPattern(bool scrollForward) {
-  if(scrollForward) {
-    // Scroll colors forward
-    if(colorParamWaitCounter < 2*PATTERN_PARAM_CHANGE_DISTANCE) { colorParamWaitCounter++; }
-    
-    for(uint16_t i = NUM_LEDS-1; i > 0; i--)
-      colors[i] = colors[i-1];
-
-    // Adjust indexes
-    if(--colorIndexFirst == 0xFFFF) { colorIndexFirst = colorPeriod - 1; }
-    if(--colorIndexLast  == 0xFFFF) { colorIndexLast  = colorPeriod - 1; }
-    
-    // Write the new color
-    colors[0] = colorPattern[colorIndexFirst];
-  }
-  else {
-    // Scroll colors backward
-    if(colorParamWaitCounter > 0) { colorParamWaitCounter--; }
-    
-    for(uint16_t i = 0; i < NUM_LEDS-1; i++)
-      colors[i] = colors[i+1];
-
-    // Adjust indexes
-    if(++colorIndexFirst == colorPeriod) { colorIndexFirst = 0; }
-    if(++colorIndexLast  == colorPeriod) { colorIndexLast  = 0; }
-
-    // Write the new color
-    colors[NUM_LEDS-1] = colorPattern[colorIndexLast];
-  }
-}
-
-void PatternScroller::ScrollDimPattern(bool scrollForward) {
-  if(scrollForward) {
-    // Scroll brightnesses forward
-    if(brightnessParamWaitCounter < 2*BRIGHTNESS_PARAM_CHANGE_DISTANCE) { brightnessParamWaitCounter++; }
-    
-    for(uint16_t i = NUM_LEDS-1; i > 0; i--)
-      brightnesses[i] = brightnesses[i-1];
-
-    // Adjust indexes
-    if(--brightnessIndexFirst == 0xFFFF) { brightnessIndexFirst = brightnessPeriod - 1; }
-    if(--brightnessIndexLast  == 0xFFFF) { brightnessIndexLast  = brightnessPeriod - 1; }
-    
-    // Write the new brightness
-    brightnesses[0] = brightnessPattern[brightnessIndexFirst];
-  }
-  else {
-    // Scroll pixels backward
-    if(brightnessParamWaitCounter > 0) { brightnessParamWaitCounter--; }
-    
-    for(uint16_t i = 0; i < NUM_LEDS-1; i++)
-      brightnesses[i] = brightnesses[i+1];
-
-    // Adjust indexes
-    if(++brightnessIndexFirst == brightnessPeriod) { brightnessIndexFirst = 0; }
-    if(++brightnessIndexLast  == brightnessPeriod) { brightnessIndexLast  = 0; }
-
-    brightnesses[NUM_LEDS-1] = brightnessPattern[brightnessIndexLast];
-  }
-}
-
-bool PatternScroller::IsReadyForBrightnessChange(uint32_t curTime) {
-  uint32_t stepSize = ONE_SEC_US / abs(dimSpeed);
-  if(curTime - lastDimMove < stepSize) { return false; }
-  
-  if(brightnessParamWaitCounter > 0 && brightnessParamWaitCounter < 2*BRIGHTNESS_PARAM_CHANGE_DISTANCE) { return false; }
-  if(dimSpeed == 0) { return brightnessIndexFirst == 0 || brightnessIndexLast == brightnessPeriod - 1; }
-  else if(dimSpeed >= 0) { return brightnessIndexFirst == 0; }
-  else { return brightnessIndexLast == brightnessPeriod - 1; }
-}
-
-bool PatternScroller::IsReadyForColorPatternChange(uint32_t curTime) {
-  uint32_t stepSize = ONE_SEC_US / abs(colorSpeed);
-  if(curTime - lastColorMove < stepSize) { return false; }
-  
-  if(colorParamWaitCounter > 0 && colorParamWaitCounter < 2*PATTERN_PARAM_CHANGE_DISTANCE) { return false; }
-  if(colorSpeed == 0) { return colorIndexFirst == 0 || colorIndexLast == colorPeriod - 1; }
-  else if(colorSpeed > 0) { return colorIndexFirst == 0; }
-  else { return colorIndexLast == colorPeriod - 1; }
-}
-
-void PatternScroller::SetCRGBs(CRGB* target, uint16_t numLEDs, PaletteManager& pm) {
-  CHSV temp;
-  for(uint16_t i = 0; i < numLEDs; i++) {
-    // Blend using CRGB; this adds saturation and brightness but avoids jumping directions around the color wheel
-    temp = pm.palette[colors[i].a];
-    //target[i] = HSV2RGB(blend(temp, pm.palette[colors[i].b], colors[i].blendAmount));
-    //target[i] %= brightnesses[i] * myBrightness / 255;
-    // debug: fix these
-  }
-}
-
-void PatternScroller::BrightnessParametersChanged() {
-  brightnessParamWaitCounter = BRIGHTNESS_PARAM_CHANGE_DISTANCE;
-}
-
-void PatternScroller::ColorPatternParametersChanged() {
-  colorParamWaitCounter = PATTERN_PARAM_CHANGE_DISTANCE;
+  return dimMoved;
 }
 

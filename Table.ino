@@ -3,7 +3,6 @@
  *  **Use hardware SPI pins
  *    Blend out/in animations at same time
  *    Overlay blendAmount: base on Luma(), or brightness of top layer only
- *    PatternScroller reverseDirection: overwrite random pixels at the end
  *    PaletteManager random walk palettes
  *    Use fastmath function scale8() in  scaleParam() functions
  *  
@@ -28,9 +27,9 @@
  *    
  *    
  *  To do:
- *    - Test/Tune PatternGenerator
+ *    - Check pre-compiler macros, order, and where Config.h actually reaches.
+ *    - Upgrade errors to THROW()
  *    - Tune Palettes
- *    - Test PatternScroller, get it into a library
  *      
  */
 
@@ -121,6 +120,9 @@ void loop() {
       if(ProcessSerialInput()) { 
         PrintParams();
         SkipTime(micros() - timing.now);
+      }
+      else {
+        THROW("PrintParams returned false.")
       }
       
     #else

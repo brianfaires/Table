@@ -3,17 +3,18 @@
 
 #include "PaletteManager.h"
 
-#define NUM_BASE_PARAMS 9
+#define NUM_BASE_PARAMS 10
 struct struct_base_show_params {
   uint8_t animation = INIT_BASE_ANIMATION;
   int8_t dimSpeed = INIT_BASE_BRIGHTNESS_SPEED;
   int8_t colorSpeed = INIT_BASE_COLOR_SPEED;
-  uint8_t spacing = INIT_BASE_SPACING;
   uint8_t colorThickness = INIT_BASE_COLOR_THICKNESS_1;
   uint8_t brightLength = INIT_BASE_BRIGHT_LENGTH;
   uint8_t transLength = INIT_BASE_TRANS_THICKNESS;
   uint8_t numColors = INIT_BASE_NUM_COLORS;
   uint8_t displayMode = INIT_BASE_DISPLAY_MODE;
+  uint8_t dimPeriod = INIT_BASE_DIM_PERIOD;
+  uint8_t colorPeriod = INIT_BASE_COLOR_PERIOD;
 };
 
 

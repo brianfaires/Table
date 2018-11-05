@@ -5,10 +5,8 @@
 #include "Z_Types.h"
 #include "PaletteManager.h"
 #include "GammaManager.h"
-#include "PatternScroller.h"
-#include "PatternRepeater.h"
-#include "PatternGenerator.h"
 #include "PatternController.h"
+#include "ArduinoTrace.h"
 
 #define FPS_TO_US(x) (ONE_SEC_US / x)
 #define FPS_TO_MS(x) (ONE_SEC_MS / x)

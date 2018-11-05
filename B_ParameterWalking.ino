@@ -8,21 +8,18 @@ void WalkBaseParams() {
       baseParams.colorSpeed = 127 - random8();
       break;
     case 2:
-      baseParams.spacing = random8();
-      break;
-    case 3:
       baseParams.colorThickness = random8();
       break;
-    case 4:
+    case 3:
       baseParams.brightLength = random8();
       break;
-    case 5:
+    case 4:
       baseParams.transLength = random8();
       break;
-    case 6:
+    case 5:
       baseParams.numColors = random8();
       break;
-    case 7:
+    case 6:
       baseParams.displayMode = random8();
       break;
     default:

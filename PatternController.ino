@@ -1,122 +1,173 @@
 PatternController::PatternController() {
-  brightnessPeriod = 21;
-  colorPeriod = 420;
-  targetColorPatternIndex = 0;
-  targetDimPatternIndex = 0;
-  dimPatternBlendLength = INIT_PATTERN_CONTROLLER_DIM_BLEND_LENGTH;
-  colorPatternBlendLength = INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH;
-  dimPatternPauseLength = INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH;
-  colorPatternPauseLength = INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH;
 }
 
 uint32_t PatternController::GetColorPauseLength() {
-  return colorPatternPauseLength;
+  return ps1.colorPauseLength;
 }
 void PatternController::SetColorPauseLength(uint32_t value) {
-  colorPatternPauseLength = value;
+  ps1.colorPauseLength = value;
+  ps2.colorPauseLength = value;
 }
 
 uint32_t PatternController::GetDimPauseLength() {
-  return dimPatternPauseLength;
+  return ps1.dimPauseLength;
 }
 void PatternController::SetDimPauseLength(uint32_t value) {
-  dimPatternPauseLength = value;
+  ps1.dimPauseLength = value;
+  ps2.dimPauseLength = value;
 }
 
 uint32_t PatternController::GetColorBlendLength() {
-  return colorPatternBlendLength;
+  return ps1.colorBlendLength;
 }
 void PatternController::SetColorBlendLength(uint32_t value) {
-  colorPatternBlendLength = value;
+  ps1.colorBlendLength = value;
+  ps2.colorBlendLength = value;
 }
 
 uint32_t PatternController::GetDimBlendLength() {
-  return dimPatternBlendLength;
+  return ps1.dimBlendLength;
 }
 void PatternController::SetDimBlendLength(uint32_t value) {
-  dimPatternBlendLength = value;
+  ps1.dimBlendLength = value;
+  ps2.dimBlendLength = value;
 }
 
-void PatternController::Init(struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, uint32_t curTime) {
-  pr.Init(pm, gm, curTime);
+void PatternController::Init(uint16_t _numLEDs, struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, uint32_t curTime) {
+  SetDimBlendLength(INIT_PATTERN_CONTROLLER_DIM_BLEND_LENGTH);
+  SetColorBlendLength(INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH);
+  SetDimPauseLength(INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH);
+  SetColorPauseLength(INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH);
 
-  lastDimParamChange = curTime;
-  lastColorParamChange = curTime;
-  lastDimPatternChange = curTime;
-  lastColorPatternChange = curTime;
+  numLEDs = _numLEDs;
 
-  ScaleParams(params, curTime);
-  pr.colorSpeed = colorSpeed;
-  pr.dimSpeed = dimSpeed;
-    
-  pg.numColors = numColors;
-  pg.colorThickness = colorThickness;
-  pg.WriteColorPattern(targetColorPatternIndex, targetColorPattern);
-  pr.SetColorPattern(targetColorPattern, pg.GetColorPeriod(targetColorPatternIndex));
-  pg.brightLength = brightLength;
-  pg.transLength = transLength;
-  pg.spacing = spacing;
-  
-  pg.WriteDimPattern(targetDimPatternIndex, targetDimPattern);
-  pr.SetDimPattern(targetDimPattern, pg.GetDimPeriod());
+  struct_base_show_params scaledParams;
+  ScaleParams(params, scaledParams);
+
+  dimSpeed = scaledParams.dimSpeed;
+  colorSpeed = scaledParams.colorSpeed;
+  uint8_t dimPatternIndex = scaledParams.displayMode % NUM_DIM_PATTERNS;
+  uint8_t colorPatternIndex = scaledParams.displayMode / NUM_DIM_PATTERNS;
+
+  ps1.Init(pm, gm, numLEDs, dimPatternIndex, colorPatternIndex, scaledParams, curTime);
+  ps2.Init(pm, gm, numLEDs, dimPatternIndex, colorPatternIndex, scaledParams, curTime);
+
+  ps = &ps1;
 }
 
 void PatternController::SkipTime(uint32_t amount) {
-  pr.SkipTime(amount);
+  ps1.SkipTime(amount);
+  ps2.SkipTime(amount);
 }
 
-void PatternController::SetDisplayMode(uint8_t colorPattern, uint8_t dimPattern, uint32_t curTime) {
-    if(targetColorPatternIndex != colorPattern) {
-      // New dim pattern target; this was not the cause of a blend completing.  Mark oldIndex as 0xFF to signal this.
-      memcpy(oldColorPattern, curColorPattern, pg.GetColorPeriod(oldColorPatternIndex));
-      oldColorPatternIndex = 0xFF;// targetColorPatternIndex;
+void PatternController::Update(struct_base_show_params& params, CRGB* target, uint8_t* target_b, uint32_t curTime) {
+  struct_base_show_params scaledParams;
+  ScaleParams(params, scaledParams);
+  
+  if(!splitDisplay && ps->dimPeriod != scaledParams.dimPeriod) {
+    // debug: add second part: Only split when dimPeriod changes, and also if dimSpeed is not about to hit 0
+    StartSplit(scaledParams);
+  }
+
+  // Update primary PatternScroller
+  ps->numColors = scaledParams.numColors;
+  ps->colorThickness = scaledParams.colorThickness;
+  ps->colorPeriod = scaledParams.colorPeriod;
+  ps->brightLength = scaledParams.brightLength;
+  ps->transLength = scaledParams.transLength;
+  ps->SetDisplayMode(scaledParams.displayMode % NUM_DIM_PATTERNS, scaledParams.displayMode / NUM_DIM_PATTERNS, curTime);
+
+
+  // Update secondary PatternScroller, using its existing periods
+  PatternScroller* secondary = (ps == &ps1 ? &ps2 : &ps1);
+  ScaleParams(params, scaledParams, secondary->dimPeriod, secondary->colorPeriod);
+  secondary->numColors = scaledParams.numColors;
+  secondary->colorThickness = scaledParams.colorThickness;
+  secondary->colorPeriod = scaledParams.colorPeriod;
+  secondary->brightLength = scaledParams.brightLength;
+  secondary->transLength = scaledParams.transLength;
+  secondary->SetDisplayMode(scaledParams.displayMode % NUM_DIM_PATTERNS, scaledParams.displayMode / NUM_DIM_PATTERNS, curTime);
+
+  dimSpeed = scaledParams.dimSpeed;
+  colorSpeed = scaledParams.colorSpeed;
+  WalkSpeeds();
+
+  bool ps1Moved = ps1.Update(curTime);
+  bool ps2Moved = ps2.Update(curTime);
+
+  if(splitDisplay) {
+    ps1.SetCRGBs(&target[splitIndex], &target_b[splitIndex], numLEDs - splitIndex); // debug: check this syntax on &target[]
+    ps2.SetCRGBs(target, target_b, splitIndex);
+    if(ps1Moved) {
+      if(!ps2Moved) { THROW("ps1 moved and ps2 didn't") }
       
-      targetColorPatternIndex = colorPattern;
-      pg.WriteColorPattern(targetColorPatternIndex, targetColorPattern);
-
-      lastColorPatternChange = curTime;
-    }
-
-    if(targetDimPatternIndex != dimPattern) {
-      // New dim pattern target; this was not the cause of a blend completing.  Mark oldIndex as 0xFF to signal this.
-      uint8_t lastDimPattern = oldDimPatternIndex;
-      memcpy(oldDimPattern, curDimPattern, pg.GetDimPeriod());
-      oldDimPatternIndex = 0xFF;// targetDimPatternIndex;
-
-      targetDimPatternIndex = dimPattern;
-
-      if(dimPattern == NUM_DIM_PATTERNS-1) {
-        do { randomDimPatternIndex = random8(NUM_DIM_PATTERNS-1); } while(randomDimPatternIndex == lastDimPattern);
-        pg.WriteDimPattern(randomDimPatternIndex, targetDimPattern);
+      if(dimSpeed > 0) {
+        splitIndex++;
+        if(splitIndex == NUM_LEDS) { EndSplit(); }
+      }
+      else if(dimSpeed < 0) {
+        splitIndex--;
+        if(splitIndex == 0) { EndSplit(); }
       }
       else {
-        pg.WriteDimPattern(targetDimPatternIndex, targetDimPattern);
+        THROW("Error: dimMovedLastUpdate==true while dimSpeed == 0")
       }
-      
-      lastDimPatternChange = curTime;
     }
+    else if(ps2Moved) { THROW("Error: ps2 moved and ps1 didn't") }
+  }
+  else {
+    ps->SetCRGBs(target, target_b, numLEDs);
+  }
 }
 
-void PatternController::ScaleParams(struct_base_show_params& params, uint32_t curTime) {
+void PatternController::ScaleParams(struct_base_show_params& params, struct_base_show_params& output, uint8_t dim_period, uint8_t color_period) {
+  if(dim_period == 0) {
+    #ifdef EXPLICIT_PARAMETERS
+      output.dimPeriod = params.dimPeriod;
+    #else
+      // debug: scale dim period here
+    #endif
+  }
+  else {
+    output.dimPeriod = dim_period;
+  }
+  
+  if(color_period == 0) {
+    #ifdef EXPLICIT_PARAMETERS
+      output.colorPeriod = params.colorPeriod;
+    #else
+      // debug: scale color period here
+    #endif
+  }
+  else {
+    output.colorPeriod = color_period;
+  }
+  
   #ifdef EXPLICIT_PARAMETERS
-    SetDisplayMode(params.displayMode / NUM_DIM_PATTERNS, params.displayMode % NUM_DIM_PATTERNS, curTime);
-    dimSpeed = params.dimSpeed;
-    colorSpeed = params.colorSpeed;
-    numColors = params.numColors;
-    colorThickness = params.colorThickness;
-    transLength = params.transLength;
-    brightLength = params.brightLength;
-    spacing = params.spacing;
-  #else  
-    uint8_t displayMode = scaleParam(params.displayMode, 0, NUM_DIM_PATTERNS * NUM_COLOR_PATTERNS - 1);
-    SetDisplayMode(displayMode / NUM_DIM_PATTERNS, displayMode % NUM_DIM_PATTERNS, curTime);
+    output.displayMode = params.displayMode;
+    output.numColors = params.numColors;
+    output.colorThickness = params.colorThickness;
+    output.transLength = params.transLength;
+    output.brightLength = params.brightLength;
+    output.dimSpeed = params.dimSpeed;
+    output.colorSpeed = params.colorSpeed;
 
+    if(output.brightLength + 2*output.transLength + 2 > output.dimPeriod) {
+      #ifdef DEBUG_ERRORS
+        Serial.println("dimParams exceed the value in dimPeriod");
+        while(output.brightLength + 2*output.transLength + 2 > output.dimPeriod) {
+          if(output.brightLength > 0) { output.brightLength--; }
+          else output.transLength--;
+        }
+      #endif
+    }
+  #else
     uint8_t abs_dimSpeed = scaleParam((uint8_t)abs(params.dimSpeed), 0, 63);
-    dimSpeed = abs_dimSpeed * (params.dimSpeed >= 0 ? 1 : -1);
+    output.dimSpeed = abs_dimSpeed * (params.dimSpeed >= 0 ? 1 : -1);
     
     // Bound colorSpeed based on dimSpeed
     int8_t colorSpeed_lower, colorSpeed_upper;
-    if(dimSpeed > 0) {
+    if(output.dimSpeed > 0) {
       colorSpeed_lower = dimSpeed / -4;
       colorSpeed_upper = dimSpeed * 3/2;
     }
@@ -125,188 +176,132 @@ void PatternController::ScaleParams(struct_base_show_params& params, uint32_t cu
       colorSpeed_upper = dimSpeed / -4;
     }
     
-    colorSpeed = dimSpeed/2;//scaleParam(params.colorSpeed, colorSpeed_lower, colorSpeed_upper);
-    numColors = scaleParam(params.numColors, 2, PALETTE_SIZE-1);
+    output.colorSpeed = output.dimSpeed/2;//scaleParam(params.colorSpeed, colorSpeed_lower, colorSpeed_upper);
+
+    output.displayMode = scaleParam(params.displayMode, 0, NUM_DIM_PATTERNS * NUM_COLOR_PATTERNS - 1);
+    output.numColors = scaleParam(params.numColors, 2, PALETTE_SIZE-1);
     #ifdef DEBUG_ERRORS
       if(NUM_LEDS > 255*2) { Serial.println("ERROR: NUM_LEDS/numColors results in colorThickness > 255"); }
     #endif
-    colorThickness = scaleParam(params.colorThickness, 8, NUM_LEDS/numColors);
-  
-    transLength = scaleParam(params.transLength, 4, 8);
-    brightLength = scaleParam(params.brightLength, 0, brightnessPeriod - 2*transLength - 2);
-    spacing = brightnessPeriod - 2*transLength - brightLength - 2;
+    output.colorThickness = scaleParam(params.colorThickness, 8, NUM_LEDS/numColors);
+
+    output.transLength = scaleParam(params.transLength, 4, 8);
+    output.brightLength = scaleParam(params.brightLength, 0, output.dimPeriod - 2*output.transLength - 2);
   #endif
 }
 
-void PatternController::Update(struct_base_show_params& params, CRGB* target, uint8_t* target_b, uint16_t numLEDs, uint32_t curTime) {
-  ScaleParams(params, curTime);
-  WalkSpeeds();
+void PatternController::StartSplit(struct_base_show_params& params) {
+// Make sure pr1 is always on later pixels than pr2
+  splitDisplay = true;
+  Serial.println("Start Split");
 
-  if(WalkColorParams()) {
-    if(oldColorPatternIndex != 0xFF) { pg.WriteColorPattern(oldColorPatternIndex, curColorPattern); }
-    pg.WriteColorPattern(targetColorPatternIndex, targetColorPattern);
-  }  
-  if(WalkDimParams()) {
-    if(oldDimPatternIndex != 0xFF) { pg.WriteDimPattern(oldDimPatternIndex, curDimPattern); }
-    pg.WriteDimPattern(targetDimPatternIndex, targetDimPattern);
+// debug: unfuck this with ps
+  /*if(dimSpeed > 0) {    
+    if(pr == &pr1) {
+      pg2.numColors = params.numColors;
+      pg2.colorThickness = params.colorThickness;
+      pg2.transLength = params.transLength;
+      pg2.brightLength = params.brightLength;
+    }
+    else {
+      // pr2 is current PatternRepeater
+      pr1.numColors = pg2.numColors;
+      pr1.colorThickness = pg2.colorThickness;
+      pr1.transLength = pg2.transLength;
+      pr1.brightLength = pg2.brightLength;
+
+      pg2.numColors = params.numColors;
+      pg2.colorThickness = params.colorThickness;
+      pg2.transLength = params.transLength;
+      pg2.brightLength = params.brightLength;
+    }
+
+    splitIndex = 0;
+    pr = &pr2;
+    pg = &pg2;
   }
+  else if(dimSpeed < 0) {
+    if(pr == &pr1) {
+      pg2.numColors = pg1.numColors;
+      pg2.colorThickness = pg1.colorThickness;
+      pg2.transLength = pg1.transLength;
+      pg2.brightLength = pg1.brightLength;
+  
+      pg1.numColors = params.numColors;
+      pg1.colorThickness = params.colorThickness;
+      pg1.transLength = params.transLength;
+      pg1.brightLength = params.brightLength;
+    }
+    else {
+      // pr2 is the current PatternRepeater
+      pg1.numColors = params.numColors;
+      pg1.colorThickness = params.colorThickness;
+      pg1.transLength = params.transLength;
+      pg1.brightLength = params.brightLength;
+    }
+    
+    splitIndex = numLEDs;
+    ps = &ps1;
+  }
+  else {
+    #ifdef DEBUG_ERRORS
+      Serial.println("Error: Trying to split while dimSpeed == 0)");
+    #endif
+  }*/
+}
 
-  BlendColorPattern(curTime);
-  BlendDimPattern(curTime);
-  
-  pr.SetColorPattern(curColorPattern, pg.GetColorPeriod(targetColorPatternIndex));
-  pr.SetDimPattern(curDimPattern, pg.GetDimPeriod());
-  
-  pr.Update(curTime);
-  pr.SetCRGBs(target, target_b, numLEDs);
+void PatternController::EndSplit() {
+  splitDisplay = false;
+  Serial.println("Start Split");
 }
 
 void PatternController::WalkSpeeds() {
+// Perform everything on ps1, then copy to ps2. They should always match to be fully sync'd in movements
+
   #ifdef EXPLICIT_PARAMETERS
-    pr.dimSpeed = dimSpeed;
-    pr.colorSpeed = colorSpeed;
+    ps1.dimSpeed = dimSpeed;
+    ps1.colorSpeed = colorSpeed;
   #else
     // Gradually update speeds even if not ready for a pattern change; slow down at lower levels
-    if(pr.dimSpeed != dimSpeed) {
-      uint8_t absSpeed = abs(pr.dimSpeed);
+    if(ps1.dimSpeed != dimSpeed) {
+      uint8_t absSpeed = abs(ps1.dimSpeed);
       if(absSpeed < 5) {
         // From 10% chance to 4%
         if(random8(50) < absSpeed+2) {
-          if(pr.dimSpeed < dimSpeed) { pr.dimSpeed++; }
-          else { pr.dimSpeed--; }
+          if(ps1.dimSpeed < dimSpeed) { ps1.dimSpeed++; }
+          else { ps1.dimSpeed--; }
         }
       }
       else {
         // From 33% chance to 10%
         if(random16(530) < absSpeed+48) {
-          if(pr.dimSpeed < dimSpeed) { pr.dimSpeed++; }
-          else { pr.dimSpeed--; }
+          if(ps1.dimSpeed < dimSpeed) { ps1.dimSpeed++; }
+          else { ps1.dimSpeed--; }
         }
       }
     }
   
-    if(pr.colorSpeed != colorSpeed) {
-      uint8_t absSpeed = abs(pr.colorSpeed);
+    if(ps1.colorSpeed != colorSpeed) {
+      uint8_t absSpeed = abs(ps1.colorSpeed);
       if(absSpeed < 5) {
         // From 10% chance to 4%
         if(random8(50) <= absSpeed+1) {
-          if(pr.colorSpeed < colorSpeed) { pr.colorSpeed++; }
-          else { pr.colorSpeed--; }
+          if(ps1.colorSpeed < colorSpeed) { ps1.colorSpeed++; }
+          else { ps1.colorSpeed = ps1.colorSpeed--; }
         }
       }
       else {
         // From 33% chance to 10%
         if(random16(530) < absSpeed+48) {
-          if(pr.colorSpeed < colorSpeed) { pr.colorSpeed++; }
-          else { pr.colorSpeed--; }
+          if(ps1.colorSpeed < colorSpeed) { ps1.colorSpeed++; }
+          else { ps1.colorSpeed--; }
         }
       }
     }
   #endif
-}
 
-bool PatternController::WalkColorParams() {
-  bool updateMade = false;
-
-  // Change values immediately
-  pg.colorThickness = colorThickness;
-  pg.numColors = numColors;
-  return true;
-
-  if(pr.IsReadyForColorMove(timing.now)) {
-    // Gradually update params in sync with movement
-    if(pg.colorThickness < colorThickness) {
-      pg.colorThickness++;
-      updateMade = true;
-    }
-    else if(pg.colorThickness > colorThickness) {
-      pg.colorThickness--;
-      updateMade = true;
-    }
-  
-    if(pg.numColors < numColors) {
-      pg.numColors++;
-      updateMade = true;
-    }
-    else if(pg.numColors > numColors) {
-      pg.numColors--;
-      updateMade = true;
-    }
-  }
-
-  return updateMade;
-}
-
-bool PatternController::WalkDimParams() {
-  bool updateMade = false;
-  
-  if(pr.IsReadyForDimMove(timing.now)) {
-    // Gradually update params in sync with movement
-    
-    if(pg.brightLength < brightLength) {
-      pg.brightLength++;
-      updateMade = true;
-    }
-    else if(pg.brightLength > brightLength) {
-      pg.brightLength--;
-      updateMade = true;
-    }
-  
-    if(pg.spacing < spacing) {
-      pg.spacing++;
-      updateMade = true;
-    }
-    else if(pg.spacing > spacing) {
-      pg.spacing--;
-      updateMade = true;
-    }
-  
-    if(pg.transLength < transLength) {
-      pg.transLength++;
-      updateMade = true;
-    }
-    else if(pg.transLength > transLength) {
-      pg.transLength--;
-      updateMade = true;
-    }
-  }
-
-  return updateMade;
-}
-
-void PatternController::BlendColorPattern(uint32_t curTime) {
-  memcpy(curColorPattern, targetColorPattern, pg.GetColorPeriod(targetColorPatternIndex));
-}
-
-void PatternController::BlendDimPattern(uint32_t curTime) {
-  if(curTime - lastDimPatternChange >= dimPatternPauseLength) {
-    uint32_t transitionTime = curTime - lastDimPatternChange - dimPatternPauseLength;
-    if(transitionTime < dimPatternBlendLength) {
-      uint8_t blendAmount = 255 * transitionTime / dimPatternBlendLength;//debug: changed from 256, why?
-  
-      for(uint8_t i = 0; i < pg.GetDimPeriod(); i++) {
-        curDimPattern[i] = (255 - blendAmount) * oldDimPattern[i] / 255 + blendAmount * targetDimPattern[i] / 255;
-      }
-  
-      pr.SetDimPattern(targetDimPattern, pg.GetDimPeriod());
-    }
-    else {
-      // Blending just finished
-      oldDimPatternIndex = targetDimPatternIndex;
-      memcpy(oldDimPattern, targetDimPattern, pg.GetDimPeriod());
-      memcpy(curDimPattern, targetDimPattern, pg.GetDimPeriod());
-      
-      if(targetDimPatternIndex == NUM_DIM_PATTERNS-1) {
-        uint8_t lastRandomIndex = randomDimPatternIndex;
-        do { randomDimPatternIndex = random8(NUM_DIM_PATTERNS-1); } while (randomDimPatternIndex == lastRandomIndex);
-        pg.WriteDimPattern(randomDimPatternIndex, targetDimPattern);
-      }
-      else {
-        pg.WriteDimPattern(targetDimPatternIndex, targetDimPattern);
-      }
-
-      lastDimPatternChange = curTime;
-    }
-  }
+  // Always match speeds
+  ps2.dimSpeed = ps1.dimSpeed;
+  ps2.colorSpeed = ps1.colorSpeed;
 }
 

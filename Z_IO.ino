@@ -145,55 +145,57 @@ bool ProcessSerialInput() {
       long value = s.toInt();
   
       if(paramNum == 0) {
-        if(value < 0 || value > NUM_BASE_ANIMATIONS) { return false; }
+        if(value < 0 || value > NUM_BASE_ANIMATIONS) { THROW("OOB baseAnimation") return false; }
       }
-      else if(paramNum == 9) {
-        if(value < 0 || value > NUM_TOP_ANIMATIONS) { return false; }
+      else if(paramNum == 10) {
+        if(value < 0 || value > NUM_TOP_ANIMATIONS) { THROW("OOB topAnimation") return false; }
       }
-      else if(paramNum == 1 || paramNum == 2 || paramNum == 11) {
-        if(value < -128 || value > 127) { return false; }
+      else if(paramNum == 1 || paramNum == 2 || paramNum == 12) {
+        if(value < -128 || value > 127) { THROW("OOB int8_t") return false; }
       }
-      else if((paramNum >= 3 && paramNum <= 8) || (paramNum >= 10 && paramNum <= 10)){ 
-        if(value < 0 || value > 255) { return false; }
+      else if((paramNum >= 3 && paramNum <= 9) || (paramNum >= 11 && paramNum <= 11)){ 
+        if(value < 0 || value > 255) { THROW("OOB uint8_t") return false; }
       }
-      else if((paramNum >= 12 && paramNum <= 19)) {
-        if(value < 0 || value > 4294967) { return false; } // 4294967 is max uint32_t / 1000
+      else if((paramNum >= 13 && paramNum <= 26)) {
+        if(value < 0 || value > 4294967) { THROW("OOB uint32_t") return false; } // 4294967 is max uint32_t / 1000
       }
-  
-      if(paramNum == 0) {
+
+      uint8_t next = 0;
+      if(paramNum == next++) {
         CleanupBaseLayer(baseParams.animation);
         baseParams.animation = value;
         InitBaseLayer();
       }
-      else if(paramNum == 1) { baseParams.colorSpeed = value; }
-      else if(paramNum == 2) { baseParams.dimSpeed = value; }
-      else if(paramNum == 3) { baseParams.spacing = value; }
-      else if(paramNum == 4) { baseParams.colorThickness = value; }
-      else if(paramNum == 5) { baseParams.brightLength = value; }
-      else if(paramNum == 6) { baseParams.transLength = value; }
-      else if(paramNum == 7) { baseParams.numColors = value; }
-      else if(paramNum == 8) { baseParams.displayMode = value; }
-      else if(paramNum == 9) {
+      else if(paramNum == next++) { baseParams.colorSpeed = value; }
+      else if(paramNum == next++) { baseParams.dimSpeed = value; }
+      else if(paramNum == next++) { baseParams.colorThickness = value; }
+      else if(paramNum == next++) { baseParams.brightLength = value; }
+      else if(paramNum == next++) { baseParams.transLength = value; }
+      else if(paramNum == next++) { baseParams.numColors = value; }
+      else if(paramNum == next++) { baseParams.displayMode = value; }
+      else if(paramNum == next++) { baseParams.dimPeriod = value; }
+      else if(paramNum == next++) { baseParams.colorPeriod = value; }
+      else if(paramNum == next++) {
         CleanupTopLayer(topParams.animation);
         topParams.animation = value;
         InitTopLayer();
       }
-      else if(paramNum == 10) { topParams.portion = value; }
-      else if(paramNum == 11) { topParams.speed = value; }
-      else if(paramNum == 12) { pm.SetPauseLength(1000 * value, timing.now); }
-      else if(paramNum == 13) { pm.SetWalkLength(1000 * value, timing.now); }
-      else if(paramNum == 14) { layerConfig.basePauseLength = 1000 * value; }
-      else if(paramNum == 15) { layerConfig.baseTransOutLength = 1000 * value; }
-      else if(paramNum == 16) { layerConfig.baseTransInLength = 1000 * value; }
-      else if(paramNum == 17) { layerConfig.baseParamWalkTime = 1000 * value; }
-      else if(paramNum == 18) { layerConfig.topPauseLength = 1000 * value; }
-      else if(paramNum == 19) { layerConfig.topTransOutLength = 1000 * value; }
-      else if(paramNum == 20) { layerConfig.topTransInLength = 1000 * value; }
-      else if(paramNum == 21) { layerConfig.topParamWalkTime = 1000 * value; }
-      else if(paramNum == 22) { pc.SetColorPauseLength(1000 * value); }
-      else if(paramNum == 23) { pc.SetColorBlendLength(1000 * value); }
-      else if(paramNum == 24) { pc.SetDimPauseLength(1000 * value); }
-      else if(paramNum == 25) { pc.SetDimBlendLength(1000 * value); }
+      else if(paramNum == next++) { topParams.portion = value; }
+      else if(paramNum == next++) { topParams.speed = value; }
+      else if(paramNum == next++) { pm.SetPauseLength(1000 * value, timing.now); }
+      else if(paramNum == next++) { pm.SetWalkLength(1000 * value, timing.now); }
+      else if(paramNum == next++) { layerConfig.basePauseLength = 1000 * value; }
+      else if(paramNum == next++) { layerConfig.baseTransOutLength = 1000 * value; }
+      else if(paramNum == next++) { layerConfig.baseTransInLength = 1000 * value; }
+      else if(paramNum == next++) { layerConfig.baseParamWalkTime = 1000 * value; }
+      else if(paramNum == next++) { layerConfig.topPauseLength = 1000 * value; }
+      else if(paramNum == next++) { layerConfig.topTransOutLength = 1000 * value; }
+      else if(paramNum == next++) { layerConfig.topTransInLength = 1000 * value; }
+      else if(paramNum == next++) { layerConfig.topParamWalkTime = 1000 * value; }
+      else if(paramNum == next++) { pc.SetColorPauseLength(1000 * value); }
+      else if(paramNum == next++) { pc.SetColorBlendLength(1000 * value); }
+      else if(paramNum == next++) { pc.SetDimPauseLength(1000 * value); }
+      else if(paramNum == next++) { pc.SetDimBlendLength(1000 * value); }
       else { return false; }
   
       return true;
@@ -231,12 +233,14 @@ void PrintBaseParams() {
     output += "\t" + String(parameterCounter++) + ".Animation:\t  " + String(baseParams.animation) + "\n";
     output += "\t" + String(parameterCounter++) + ".ColorSpeed:\t  " + String(baseParams.colorSpeed) + "\n";
     output += "\t" + String(parameterCounter++) + ".BrightSpeed:\t  " + String(baseParams.dimSpeed) + "\n";
-    output += "\t" + String(parameterCounter++) + ".Spacing:\t  " + String(baseParams.spacing) + "\n";
     output += "\t" + String(parameterCounter++) + ".ColorThickness: " + String(baseParams.colorThickness) + "\n";
     output += "\t" + String(parameterCounter++) + ".BrightLength:\t  " + String(baseParams.brightLength) + "\n";
     output += "\t" + String(parameterCounter++) + ".TransLength:\t  " + String(baseParams.transLength) + "\n";
     output += "\t" + String(parameterCounter++) + ".NumColors:\t  " + String(baseParams.numColors) + "\n";
     output += "\t" + String(parameterCounter++) + ".DisplayMode:\t  " + String(baseParams.displayMode) + "\n";
+    output += "\t" + String(parameterCounter++) + ".DimPeriod:\t  " + String(baseParams.dimPeriod) + "\n";
+    output += "\t" + String(parameterCounter++) + ".ColorPeriod:\t  " + String(baseParams.colorPeriod) + "\n";
+    
 
     if(parameterCounter != NUM_BASE_PARAMS) { output += "ERROR: PrintBaseParams(), parameter count mismatch.\n"; }
     Serial.print(output);

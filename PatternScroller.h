@@ -1,46 +1,59 @@
 #ifndef PATTERN_SCROLLER_H
 #define PATTERN_SCROLLER_H
 
+#include "GammaManager.h"
+#include "PaletteManager.h"
 #include "PatternRepeater.h"
+#include "PatternGenerator.h"
+#include "ArduinoTrace.h"
 
 class PatternScroller {
+  enum param_change_type { IMMEDIATE, ONCE_PER_MOVE, ONCE_PER_PERIOD };
+   
   public:
     PatternScroller();
-    virtual void SetCRGBs(CRGB* target, uint16_t numLEDs, PaletteManager& pm);
-    virtual void SetColorPattern(PRGB* newPattern, uint16_t newColorPeriod);
-    virtual void SetDimPattern(uint8_t* newPattern, uint16_t newDimPeriod, uint32_t curTime, bool isParamChange);
-    virtual void Init(uint32_t curTime);
-    virtual void Update(uint32_t& newTime);
-    virtual bool IsReadyForColorPatternChange(uint32_t curTime);
-    virtual bool IsReadyForBrightnessChange(uint32_t curTime);
-    virtual void SkipTime(uint32_t amount);
-    virtual void BrightnessParametersChanged();
-    virtual void ColorPatternParametersChanged();
-    
-    int8_t colorSpeed;
-    int8_t dimSpeed;
-    uint8_t myBrightness;
+    void Init(PaletteManager* pm, GammaManager* gm, uint16_t numLEDs, uint8_t dimPatternIndex, uint8_t colorPatternIndex, struct_base_show_params& params, uint32_t curTime);
+    bool Update(uint32_t curTime);
+    void SkipTime(uint32_t amount);
+    void SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs);
+    void SetDisplayMode(uint8_t dimPattern, uint8_t colorPattern, uint32_t curTime);
 
+    param_change_type dimParamChangeType;
+    param_change_type colorParamChangeType;
+    
+    uint16_t colorPeriod, dimPeriod;
+    int8_t dimSpeed, colorSpeed;
+    uint8_t numColors, colorThickness, brightLength, transLength;
+    uint32_t dimBlendLength, colorBlendLength;
+    uint32_t dimPauseLength, colorPauseLength;
+    
   private:
-    virtual void ScrollColorPattern(bool scrollForward);
-    virtual void ScrollDimPattern(bool scrollForward);
+    PatternRepeater pr;
+    PatternGenerator pg;
+
+    bool WalkColorParams(uint32_t curTime);
+    bool WalkDimParams(uint32_t curTime);
+    void BlendColorPattern(uint32_t curTime);
+    void BlendDimPattern(uint32_t curTime);
+    bool IsReadyForDimMove(uint32_t curTime);
+    bool IsReadyForColorMove(uint32_t curTime);
+    bool IsStartOfColorPattern();
+    bool IsStartOfDimPattern();
+    bool ScrollPatterns(uint32_t curTime);
+
+    uint16_t numLEDs;
     
-    PRGB colors[NUM_LEDS];
-    PRGB colorPattern[NUM_LEDS];
-    uint16_t colorPeriod;
-    uint16_t colorIndexFirst;
-    uint16_t colorIndexLast;
-    uint32_t lastColorMove;
-    int16_t colorParamWaitCounter;
-    
-    uint8_t brightnesses[NUM_LEDS];
-    uint8_t brightnessPattern[NUM_LEDS];
-    uint16_t brightnessPeriod;
-    uint16_t brightnessIndexFirst;
-    uint16_t brightnessIndexLast;
-    uint32_t lastDimMove;
-    int16_t brightnessParamWaitCounter;
-    
+    uint8_t oldDimPattern[NUM_LEDS], curDimPattern[NUM_LEDS], targetDimPattern[NUM_LEDS];
+    PRGB oldColorPattern[NUM_LEDS], curColorPattern[NUM_LEDS], targetColorPattern[NUM_LEDS];
+
+    uint8_t targetDimPatternIndex, targetColorPatternIndex;
+    uint8_t oldDimPatternIndex, oldColorPatternIndex;
+    uint8_t randomDimPatternIndex, randomColorPatternIndex;
+
+    //uint32_t lastDimParamChange, lastColorParamChange;
+    uint32_t lastDimPatternChange, lastColorPatternChange;
+    uint32_t lastDimMove, lastColorMove;
 };
 
 #endif
+
