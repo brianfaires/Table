@@ -32,7 +32,6 @@
  *    - colorPeriod changes
  *    - Test param blending modes
  *    - PatternController library
- *    - Merge Git repos
  *    - Tune Palettes
  *      
  */
@@ -125,9 +124,6 @@ void loop() {
         PrintParams();
         SkipTime(micros() - timing.now);
       }
-      else {
-        THROW("PrintParams returned false.")
-      }
       
     #else
       if(timing.now - timing.lastBaseParamWalk >= layerConfig.baseParamWalkTime) {
@@ -161,7 +157,7 @@ void loop() {
 
     FastLED.show();
     timing.lastDraw += US_BETWEEN_DRAWS;
-    if(timing.now > timing.lastDraw + US_BETWEEN_DRAWS) { THROW("ERROR: Drawing clipped by " + String(timing.now - timing.lastDraw) + "us") }
+    //if(timing.now > timing.lastDraw + US_BETWEEN_DRAWS) { THROW("ERROR: Drawing clipped by " + String(timing.now - timing.lastDraw) + "us") }
   }
 
   #ifdef DEBUG_TIMING

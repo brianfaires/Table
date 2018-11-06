@@ -1,7 +1,7 @@
 #pragma once
 #include "PaletteManager.h"
 
-#define NUM_BASE_PARAMS 10
+#define NUM_BASE_PARAMS 9
 struct struct_base_show_params {
   uint8_t animation = INIT_BASE_ANIMATION;
   int8_t dimSpeed = INIT_BASE_BRIGHTNESS_SPEED;

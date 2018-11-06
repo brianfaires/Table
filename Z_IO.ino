@@ -195,7 +195,7 @@ bool ProcessSerialInput() {
       else if(paramNum == next++) { pc.SetColorBlendLength(1000 * value); }
       else if(paramNum == next++) { pc.SetDimPauseLength(1000 * value); }
       else if(paramNum == next++) { pc.SetDimBlendLength(1000 * value); }
-      else { return false; }
+      else { THROW("Invalid paramNum") return false; }
   
       return true;
     }

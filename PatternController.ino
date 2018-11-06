@@ -48,13 +48,11 @@ void PatternController::Init(uint16_t _numLEDs, struct_base_show_params& params,
 
   dimSpeed = scaledParams.dimSpeed;
   colorSpeed = scaledParams.colorSpeed;
-  uint8_t dimPatternIndex = scaledParams.displayMode % NUM_DIM_PATTERNS;
-  uint8_t colorPatternIndex = scaledParams.displayMode / NUM_DIM_PATTERNS;
-
-  ps1.Init(pm, gm, numLEDs, dimPatternIndex, colorPatternIndex, scaledParams, curTime);
-  ps2.Init(pm, gm, numLEDs, dimPatternIndex, colorPatternIndex, scaledParams, curTime);
+  ps1.Init(scaledParams, curTime, pm, gm, numLEDs);
+  ps2.Init(scaledParams, curTime, pm, gm, numLEDs);
 
   ps = &ps1;
+  secondary = &ps2;
 }
 
 void PatternController::SkipTime(uint32_t amount) {
@@ -66,9 +64,8 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
   struct_base_show_params scaledParams;
   ScaleParams(params, scaledParams);
   
-  if(!splitDisplay && ps->dimPeriod != scaledParams.dimPeriod) {
-    // debug: add second part: Only split when dimPeriod changes, and also if dimSpeed is not about to hit 0
-    StartSplit(scaledParams);
+  if(!splitDisplay && ps->dimPeriod != scaledParams.dimPeriod && dimSpeed != 0) {
+    StartSplit(scaledParams, curTime);
   }
 
   // Update primary PatternScroller
@@ -76,34 +73,40 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
   ps->colorPeriod = scaledParams.colorPeriod;
   ps->brightLength = scaledParams.brightLength;
   ps->transLength = scaledParams.transLength;
-  ps->SetDisplayMode(scaledParams.displayMode % NUM_DIM_PATTERNS, scaledParams.displayMode / NUM_DIM_PATTERNS, curTime);
-
-
+  ps->SetDisplayMode(scaledParams, curTime);
+  
   // Update secondary PatternScroller, using its existing periods
-  PatternScroller* secondary = (ps == &ps1 ? &ps2 : &ps1);
   ScaleParams(params, scaledParams, secondary->dimPeriod, secondary->colorPeriod);
   secondary->numColors = scaledParams.numColors;
   secondary->colorPeriod = scaledParams.colorPeriod;
   secondary->brightLength = scaledParams.brightLength;
   secondary->transLength = scaledParams.transLength;
-  secondary->SetDisplayMode(scaledParams.displayMode % NUM_DIM_PATTERNS, scaledParams.displayMode / NUM_DIM_PATTERNS, curTime);
+  secondary->SetDisplayMode(scaledParams, curTime);
 
   dimSpeed = scaledParams.dimSpeed;
   colorSpeed = scaledParams.colorSpeed;
   WalkSpeeds();
 
-  bool ps1Moved = ps1.Update(curTime);
-  bool ps2Moved = ps2.Update(curTime);
+if(ps->dimSpeed != secondary->dimSpeed) { THROW(String(ps->dimSpeed) + " DOES NOT EQUAL " + String(secondary->dimSpeed)); }
+  bool psMoved = ps->Update(curTime);
+  bool secMoved = secondary->Update(curTime);
 
   if(splitDisplay) {
-    ps1.SetCRGBs(&target[splitIndex], &target_b[splitIndex], numLEDs - splitIndex); // debug: check this syntax on &target[]
-    ps2.SetCRGBs(target, target_b, splitIndex);
-    if(ps1Moved) {
-      if(!ps2Moved) { THROW("ps1 moved and ps2 didn't") }
+    if(dimSpeed > 0) {
+      ps->SetCRGBs(&target[splitIndex], &target_b[splitIndex], numLEDs - splitIndex); // debug: check this syntax on &target[]
+      secondary->SetCRGBs(target, target_b, splitIndex);
+    }
+    else {
+      secondary->SetCRGBs(&target[splitIndex], &target_b[splitIndex], numLEDs - splitIndex); // debug: check this syntax on &target[]
+      ps->SetCRGBs(target, target_b, splitIndex);
+    }
+    
+    if(psMoved) {
+      if(!secMoved) { THROW("ps moved and secondary didn't") }
       
       if(dimSpeed > 0) {
         splitIndex++;
-        if(splitIndex == NUM_LEDS) { EndSplit(); }
+        if(splitIndex == numLEDs) { EndSplit(); }
       }
       else if(dimSpeed < 0) {
         splitIndex--;
@@ -113,7 +116,7 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
         THROW("Error: dimMovedLastUpdate==true while dimSpeed == 0")
       }
     }
-    else if(ps2Moved) { THROW("Error: ps2 moved and ps1 didn't") }
+    else if(secMoved) { THROW("Error: secondary moved and ps didn't") }
   }
   else {
     ps->SetCRGBs(target, target_b, numLEDs);
@@ -178,61 +181,26 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_base
   #endif
 }
 
-void PatternController::StartSplit(struct_base_show_params& params) {
-// Make sure pr1 is always on later pixels than pr2
-  splitDisplay = true;
+void PatternController::StartSplit(struct_base_show_params& params, uint32_t curTime) {
   Serial.println("Start Split");
-
-// debug: unfuck this with ps
-  /*if(dimSpeed > 0) {    
-    if(pr == &pr1) {
-      pg2.numColors = params.numColors;
-      pg2.transLength = params.transLength;
-      pg2.brightLength = params.brightLength;
-    }
-    else {
-      // pr2 is current PatternRepeater
-      pr1.numColors = pg2.numColors;
-      pr1.transLength = pg2.transLength;
-      pr1.brightLength = pg2.brightLength;
-
-      pg2.numColors = params.numColors;
-      pg2.transLength = params.transLength;
-      pg2.brightLength = params.brightLength;
-    }
-
-    splitIndex = 0;
-    pr = &pr2;
-    pg = &pg2;
-  }
-  else if(dimSpeed < 0) {
-    if(pr == &pr1) {
-      pg2.numColors = pg1.numColors;
-      pg2.transLength = pg1.transLength;
-      pg2.brightLength = pg1.brightLength;
+  splitDisplay = true;
+  splitIndex = dimSpeed > 0 ? 0 : numLEDs-1;
   
-      pg1.numColors = params.numColors;
-      pg1.transLength = params.transLength;
-      pg1.brightLength = params.brightLength;
-    }
-    else {
-      // pr2 is the current PatternRepeater
-      pg1.numColors = params.numColors;
-      pg1.transLength = params.transLength;
-      pg1.brightLength = params.brightLength;
-    }
-    
-    splitIndex = numLEDs;
-    ps = &ps1;
-  }
-  else {
-    THROW("Error: Trying to split while dimSpeed == 0)")
-  }*/
+  secondary->Init(params, curTime);
+  secondary->SyncMovement(ps);
+
+  secondaryScrollerIsLow = dimSpeed > 0;
 }
 
 void PatternController::EndSplit() {
   splitDisplay = false;
-  Serial.println("Start Split");
+  if(dimSpeed > 0 && secondaryScrollerIsLow || dimSpeed < 0 && !secondaryScrollerIsLow) {
+    PatternScroller* swap = ps;
+    ps = secondary;
+    secondary = swap;
+    Serial.println("SWAP!");
+  }
+  Serial.println("End Split");
 }
 
 void PatternController::WalkSpeeds() {

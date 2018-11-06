@@ -12,10 +12,15 @@ PatternScroller::PatternScroller() {
   randomColorPatternIndex = 0;
 }
 
-void PatternScroller::Init(PaletteManager* pm, GammaManager* gm, uint16_t _numLEDs, uint8_t dimPatternIndex, uint8_t colorPatternIndex, struct_base_show_params& params, uint32_t curTime) {
-  pr.Init(pm, gm);
+void PatternScroller::SyncMovement(PatternScroller* source) {
+  lastDimMove = source->lastDimMove;
+  lastColorMove = source->lastColorMove;
+}
 
-  numLEDs = _numLEDs;
+void PatternScroller::Init(struct_base_show_params& params, uint32_t curTime, PaletteManager* pm, GammaManager* gm, uint16_t _numLEDs) {
+  pr.Init(pm, gm);
+  if(_numLEDs > 0) { numLEDs = _numLEDs; }
+
   dimSpeed = params.dimSpeed;
   colorSpeed = params.colorSpeed;
   
@@ -23,13 +28,13 @@ void PatternScroller::Init(PaletteManager* pm, GammaManager* gm, uint16_t _numLE
   colorPeriod = pg.colorPeriod = params.colorPeriod;
   numColors = pg.numColors = params.numColors;
   brightLength = pg.brightLength = params.brightLength;
-  
   transLength = pg.transLength = params.transLength;
-  SetDisplayMode(dimPatternIndex, colorPatternIndex, curTime);
 
-  pg.WriteDimPattern(dimPatternIndex, targetDimPattern);
+  SetDisplayMode(params, curTime);
+
+  pg.WriteDimPattern(targetDimPatternIndex, targetDimPattern);
   pr.SetDimPattern(targetDimPattern, dimPeriod);
-  pg.WriteColorPattern(colorPatternIndex, targetColorPattern);
+  pg.WriteColorPattern(targetColorPatternIndex, targetColorPattern);
   pr.SetColorPattern(targetColorPattern, colorPeriod);
 
   //lastDimParamChange = curTime;
@@ -43,6 +48,7 @@ void PatternScroller::Init(PaletteManager* pm, GammaManager* gm, uint16_t _numLE
 bool PatternScroller::Update(uint32_t curTime) {
 // Returns true if dim pattern moved
   if(WalkColorParams(curTime)) {
+    
     if(oldColorPatternIndex != 0xFF) { pg.WriteColorPattern(oldColorPatternIndex, oldColorPattern); }
     pg.WriteColorPattern(targetColorPatternIndex, targetColorPattern);
     BlendColorPattern(curTime);
@@ -81,7 +87,10 @@ void PatternScroller::SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs
   pr.SetCRGBs(target, target_b, numLEDs);
 }
 
-void PatternScroller::SetDisplayMode(uint8_t dimPatternIndex, uint8_t colorPatternIndex, uint32_t curTime) {
+void PatternScroller::SetDisplayMode(struct_base_show_params& params, uint32_t curTime) {
+  uint8_t dimPatternIndex = params.displayMode % NUM_DIM_PATTERNS;
+  uint8_t colorPatternIndex = params.displayMode / NUM_DIM_PATTERNS;
+  
   if(targetColorPatternIndex != colorPatternIndex) {
     // New dim pattern target; this was not the cause of a blend completing.  Mark oldIndex as 0xFF to signal this.
     memcpy(oldColorPattern, curColorPattern, colorPeriod);
@@ -118,9 +127,10 @@ bool PatternScroller::WalkColorParams(uint32_t curTime) {
 
   if(colorParamChangeType == IMMEDIATE) {
     // Instantly update params
-    if(pg.numColors != numColors) {
+    if(pg.numColors != numColors || pg.colorPeriod != colorPeriod) {
       updateMade = true;
       pg.numColors = numColors;
+      pg.colorPeriod = colorPeriod;
     }
   }
   else if(IsReadyForColorMove(curTime)) {
@@ -135,6 +145,8 @@ bool PatternScroller::WalkColorParams(uint32_t curTime) {
         updateMade = true;
       }
     }
+
+    if(pg.colorPeriod != colorPeriod) { THROW(colorPeriod mismatch!) }
   }
 
   return updateMade;
@@ -149,6 +161,7 @@ bool PatternScroller::WalkDimParams(uint32_t curTime) {
       updateMade = true;
       pg.brightLength = brightLength;
       pg.transLength = transLength;
+      pg.dimPeriod = dimPeriod;
     }
   }
   else if(IsReadyForDimMove(curTime)) {
@@ -170,6 +183,8 @@ bool PatternScroller::WalkDimParams(uint32_t curTime) {
         pg.transLength--;
         updateMade = true;
       }
+
+      if(pg.dimPeriod != dimPeriod) { THROW(dimPeriod mismatch without a split!) }
     }
   }
 

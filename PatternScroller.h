@@ -10,11 +10,12 @@ class PatternScroller {
    
   public:
     PatternScroller();
-    void Init(PaletteManager* pm, GammaManager* gm, uint16_t numLEDs, uint8_t dimPatternIndex, uint8_t colorPatternIndex, struct_base_show_params& params, uint32_t curTime);
+    void Init(struct_base_show_params& params, uint32_t curTime, PaletteManager* pm = NULL, GammaManager* gm = NULL, uint16_t _numLEDs = 0);
     bool Update(uint32_t curTime);
     void SkipTime(uint32_t amount);
     void SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs);
-    void SetDisplayMode(uint8_t dimPattern, uint8_t colorPattern, uint32_t curTime);
+    void SetDisplayMode(struct_base_show_params& params, uint32_t curTime);
+    void SyncMovement(PatternScroller* source);
 
     param_change_type dimParamChangeType;
     param_change_type colorParamChangeType;
@@ -24,7 +25,7 @@ class PatternScroller {
     uint8_t numColors, brightLength, transLength;
     uint32_t dimBlendLength, colorBlendLength;
     uint32_t dimPauseLength, colorPauseLength;
-    
+        
   private:
     PatternRepeater pr;
     PatternGenerator pg;
@@ -49,7 +50,7 @@ class PatternScroller {
     uint8_t randomDimPatternIndex, randomColorPatternIndex;
 
     //uint32_t lastDimParamChange, lastColorParamChange;
-    uint32_t lastDimPatternChange, lastColorPatternChange;
     uint32_t lastDimMove, lastColorMove;
+    uint32_t lastDimPatternChange, lastColorPatternChange;
 };
 

@@ -25,12 +25,14 @@ class PatternController {
   private:
     PatternScroller ps1, ps2;
     PatternScroller *ps;
+    PatternScroller *secondary;
     void ScaleParams(struct_base_show_params& params, struct_base_show_params& output, uint8_t dimPeriod = 0, uint8_t colorPeriod = 0);
     void WalkSpeeds();
-    void StartSplit(struct_base_show_params& params);
+    void StartSplit(struct_base_show_params& params, uint32_t curTime);
     void EndSplit();
 
     bool splitDisplay = false;
+    bool secondaryScrollerIsLow = true;
     uint16_t splitIndex = 0;
     uint16_t numLEDs;
     int8_t colorSpeed, dimSpeed;
