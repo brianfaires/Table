@@ -15,7 +15,9 @@ class PatternScroller {
     void SkipTime(uint32_t amount);
     void SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs);
     void SetDisplayMode(struct_base_show_params& params, uint32_t curTime);
-    void SyncMovement(PatternScroller* source);
+    void Clone(PatternScroller* source, struct_base_show_params& params, uint32_t curTime);
+    bool IsStartOfColorPattern();
+    bool IsStartOfDimPattern();
 
     param_change_type dimParamChangeType;
     param_change_type colorParamChangeType;
@@ -36,8 +38,6 @@ class PatternScroller {
     void BlendDimPattern(uint32_t curTime);
     bool IsReadyForDimMove(uint32_t curTime);
     bool IsReadyForColorMove(uint32_t curTime);
-    bool IsStartOfColorPattern();
-    bool IsStartOfDimPattern();
     bool ScrollPatterns(uint32_t curTime);
 
     uint16_t numLEDs;

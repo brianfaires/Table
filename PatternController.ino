@@ -64,43 +64,53 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
   struct_base_show_params scaledParams;
   ScaleParams(params, scaledParams);
   
-  if(!splitDisplay && ps->dimPeriod != scaledParams.dimPeriod && dimSpeed != 0) {
-    StartSplit(scaledParams, curTime);
-  }
-
-  // Update primary PatternScroller
-  ps->numColors = scaledParams.numColors;
-  ps->colorPeriod = scaledParams.colorPeriod;
-  ps->brightLength = scaledParams.brightLength;
-  ps->transLength = scaledParams.transLength;
-  ps->SetDisplayMode(scaledParams, curTime);
-  
-  // Update secondary PatternScroller, using its existing periods
-  ScaleParams(params, scaledParams, secondary->dimPeriod, secondary->colorPeriod);
-  secondary->numColors = scaledParams.numColors;
-  secondary->colorPeriod = scaledParams.colorPeriod;
-  secondary->brightLength = scaledParams.brightLength;
-  secondary->transLength = scaledParams.transLength;
-  secondary->SetDisplayMode(scaledParams, curTime);
-
   dimSpeed = scaledParams.dimSpeed;
   colorSpeed = scaledParams.colorSpeed;
   WalkSpeeds();
 
-if(ps->dimSpeed != secondary->dimSpeed) { THROW(String(ps->dimSpeed) + " DOES NOT EQUAL " + String(secondary->dimSpeed)); }
-  bool psMoved = ps->Update(curTime);
-  bool secMoved = secondary->Update(curTime);
+  // Check for changes in dimPeriod and colorPeriod. If so, start splitting to bring in the new pattern
+  if(!splitDisplay)
+  if(ps->IsStartOfDimPattern() && dimSpeed != 0) {
+    if((ps->dimPeriod != scaledParams.dimPeriod) || (ps->colorPeriod != scaledParams.colorPeriod)) {
+      StartSplit(scaledParams, curTime);
+    }
+  }
 
-  if(splitDisplay) {
-    if(dimSpeed > 0) {
-      ps->SetCRGBs(&target[splitIndex], &target_b[splitIndex], numLEDs - splitIndex); // debug: check this syntax on &target[]
-      secondary->SetCRGBs(target, target_b, splitIndex);
+  if(ps->dimSpeed != secondary->dimSpeed) { THROW(String(ps->dimSpeed) + " DOES NOT EQUAL " + String(secondary->dimSpeed)); }
+
+  // Update primary PatternScroller
+  ps->numColors = scaledParams.numColors;
+  //ps->colorPeriod = scaledParams.colorPeriod;
+  ps->brightLength = scaledParams.brightLength;
+  ps->transLength = scaledParams.transLength;
+  ps->SetDisplayMode(scaledParams, curTime);
+  bool psMoved = ps->Update(curTime);
+
+  if(!splitDisplay) {
+    ps->SetCRGBs(target, target_b, numLEDs);
+  }
+  else {
+    // Update secondary PatternScroller, using its existing periods
+    ScaleParams(params, scaledParams, secondary->dimPeriod, secondary->colorPeriod);
+    secondary->numColors = scaledParams.numColors;
+    //secondary->colorPeriod = scaledParams.colorPeriod; // Don't update colorPeriod if already splitting
+    secondary->brightLength = scaledParams.brightLength;
+    secondary->transLength = scaledParams.transLength;
+    secondary->SetDisplayMode(scaledParams, curTime);
+    bool secMoved = secondary->Update(curTime);
+
+    if(secondaryScrollerIsLow) {
+      //ps->SetCRGBs(&target[splitIndex], &target_b[splitIndex], numLEDs - splitIndex);
+      ps->SetCRGBs(target, target_b, numLEDs); // debug: this is wasteful but simple. Otherwise pattern will move 2 pixels per move. Just overwrite the pixels in next line
+      secondary->SetCRGBs(target, target_b, splitIndex+1);
     }
     else {
-      secondary->SetCRGBs(&target[splitIndex], &target_b[splitIndex], numLEDs - splitIndex); // debug: check this syntax on &target[]
-      ps->SetCRGBs(target, target_b, splitIndex);
+      //secondary->SetCRGBs(&target[splitIndex], &target_b[splitIndex], numLEDs - splitIndex);
+      secondary->SetCRGBs(target, target_b, numLEDs); // debug: this is wasteful but simple. Otherwise pattern will move 2 pixels per move. Just overwrite the pixels in next line
+      ps->SetCRGBs(target, target_b, splitIndex+1);
     }
-    
+
+    // Always move the split point with the dim pattern, even if a change in colorPeriod is being applied
     if(psMoved) {
       if(!secMoved) { THROW("ps moved and secondary didn't") }
       
@@ -117,9 +127,6 @@ if(ps->dimSpeed != secondary->dimSpeed) { THROW(String(ps->dimSpeed) + " DOES NO
       }
     }
     else if(secMoved) { THROW("Error: secondary moved and ps didn't") }
-  }
-  else {
-    ps->SetCRGBs(target, target_b, numLEDs);
   }
 }
 
@@ -173,7 +180,6 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_base
     }
     
     output.colorSpeed = output.dimSpeed/2;//scaleParam(params.colorSpeed, colorSpeed_lower, colorSpeed_upper);
-
     output.displayMode = scaleParam(params.displayMode, 0, NUM_DIM_PATTERNS * NUM_COLOR_PATTERNS - 1);
     output.numColors = scaleParam(params.numColors, 2, PALETTE_SIZE-1);
     output.transLength = scaleParam(params.transLength, 4, 8);
@@ -185,9 +191,10 @@ void PatternController::StartSplit(struct_base_show_params& params, uint32_t cur
   Serial.println("Start Split");
   splitDisplay = true;
   splitIndex = dimSpeed > 0 ? 0 : numLEDs-1;
-  
-  secondary->Init(params, curTime);
-  secondary->SyncMovement(ps);
+
+  secondary->Clone(ps, params, curTime);
+  //secondary->Init(params, curTime);
+  //secondary->SyncMovement(ps);
 
   secondaryScrollerIsLow = dimSpeed > 0;
 }

@@ -12,7 +12,11 @@ PatternScroller::PatternScroller() {
   randomColorPatternIndex = 0;
 }
 
-void PatternScroller::SyncMovement(PatternScroller* source) {
+void PatternScroller::Clone(PatternScroller* source, struct_base_show_params& params, uint32_t curTime) {
+  randomDimPatternIndex = source->randomDimPatternIndex;
+  randomColorPatternIndex = source->randomColorPatternIndex;
+  
+  Init(params, curTime);
   lastDimMove = source->lastDimMove;
   lastColorMove = source->lastColorMove;
 }
@@ -32,9 +36,17 @@ void PatternScroller::Init(struct_base_show_params& params, uint32_t curTime, Pa
 
   SetDisplayMode(params, curTime);
 
-  pg.WriteDimPattern(targetDimPatternIndex, targetDimPattern);
+  uint8_t trueIndex = targetDimPatternIndex == NUM_DIM_PATTERNS-1 ? randomDimPatternIndex : targetDimPatternIndex;
+  oldDimPatternIndex = trueIndex;
+  oldColorPatternIndex = targetColorPatternIndex;
+  
+  pg.WriteDimPattern(trueIndex, targetDimPattern);
+  pg.WriteDimPattern(trueIndex, curDimPattern);
+  pg.WriteDimPattern(trueIndex, oldDimPattern);
   pr.SetDimPattern(targetDimPattern, dimPeriod);
   pg.WriteColorPattern(targetColorPatternIndex, targetColorPattern);
+  pg.WriteColorPattern(targetColorPatternIndex, curColorPattern);
+  pg.WriteColorPattern(targetColorPatternIndex, oldColorPattern);
   pr.SetColorPattern(targetColorPattern, colorPeriod);
 
   //lastDimParamChange = curTime;
@@ -245,13 +257,13 @@ bool PatternScroller::IsReadyForColorMove(uint32_t curTime) {
 bool PatternScroller::IsStartOfDimPattern() {
   if(dimSpeed == 0) { return false; }
   else if(dimSpeed > 0) { return pr.GetDimIndexFirst() == 0; }
-  else { return pr.GetDimIndexFirst() == dimPeriod - (numLEDs % dimPeriod); }
+  else { return pr.GetDimIndexFirst() == numLEDs % dimPeriod; }
 }
 
 bool PatternScroller::IsStartOfColorPattern() {
   if(colorSpeed == 0) { return false; }
   else if(colorSpeed > 0) { return pr.GetColorIndexFirst() == 0; }
-  else { return pr.GetDimIndexFirst() == colorPeriod - (numLEDs % colorPeriod); }
+  else { return pr.GetColorIndexFirst() == numLEDs % colorPeriod; }
 }
 
 bool PatternScroller::ScrollPatterns(uint32_t curTime) {
