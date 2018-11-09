@@ -27,10 +27,11 @@
  *    
  *    
  *  To do:
- *    - PatternScroller testing
- *    - dimPeriod changes
- *    - colorPeriod changes
- *    - Test param blending modes
+ *    - Remove superfluous PatternRepeater class
+ *    - Test PatternScroller param blending modes
+ *    - PatternScroller colorBlending logic
+ *      - Blending between PRGBs; requires computing the actual RGB and then blending that
+ *    - Blending between patterns between perdiods that are factors
  *    - PatternController library
  *    - Tune Palettes
  *      

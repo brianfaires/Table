@@ -4,13 +4,14 @@
 #include "PatternRepeater.h"
 #include "PatternGenerator.h"
 #include "ArduinoTrace.h"
+#include "PatternCommon.h"
 
 class PatternScroller {
   enum param_change_type { IMMEDIATE, ONCE_PER_MOVE, ONCE_PER_PERIOD };
    
   public:
     PatternScroller();
-    void Init(struct_base_show_params& params, uint32_t curTime, PaletteManager* pm = NULL, GammaManager* gm = NULL, uint16_t _numLEDs = 0);
+    void Init(struct_base_show_params& params, uint32_t curTime, PaletteManager* _pm = NULL, GammaManager* gm = NULL, uint16_t _numLEDs = 0);
     bool Update(uint32_t curTime);
     void SkipTime(uint32_t amount);
     void SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs);
@@ -29,6 +30,8 @@ class PatternScroller {
     uint32_t dimPauseLength, colorPauseLength;
         
   private:
+    PaletteManager* pm;
+    GammaManager* Gamma;
     PatternRepeater pr;
     PatternGenerator pg;
 
@@ -42,8 +45,8 @@ class PatternScroller {
 
     uint16_t numLEDs;
     
-    uint8_t oldDimPattern[NUM_LEDS], curDimPattern[NUM_LEDS], targetDimPattern[NUM_LEDS];
-    PRGB oldColorPattern[NUM_LEDS], curColorPattern[NUM_LEDS], targetColorPattern[NUM_LEDS];
+    uint8_t oldDimPattern[MAX_PERIOD], curDimPattern[MAX_PERIOD], targetDimPattern[MAX_PERIOD];
+    CRGB oldColorPattern[MAX_PERIOD], curColorPattern[MAX_PERIOD], targetColorPattern[MAX_PERIOD];
 
     uint8_t targetDimPatternIndex, targetColorPatternIndex;
     uint8_t oldDimPatternIndex, oldColorPatternIndex;
