@@ -1,7 +1,6 @@
 #pragma once
 #include "GammaManager.h"
 #include "PaletteManager.h"
-#include "PatternRepeater.h"
 #include "PatternGenerator.h"
 #include "ArduinoTrace.h"
 #include "PatternCommon.h"
@@ -23,6 +22,7 @@ class PatternScroller {
     param_change_type dimParamChangeType;
     param_change_type colorParamChangeType;
     
+    uint8_t myBrightness;
     uint16_t colorPeriod, dimPeriod;
     int8_t dimSpeed, colorSpeed;
     uint8_t numColors, brightLength, transLength;
@@ -32,7 +32,6 @@ class PatternScroller {
   private:
     PaletteManager* pm;
     GammaManager* Gamma;
-    PatternRepeater pr;
     PatternGenerator pg;
 
     bool WalkColorParams(uint32_t curTime);
@@ -41,15 +40,24 @@ class PatternScroller {
     void BlendDimPattern(uint32_t curTime);
     bool IsReadyForDimMove(uint32_t curTime);
     bool IsReadyForColorMove(uint32_t curTime);
+    uint8_t GetDimPatternIndex();
+    bool IsRandomDimPattern();
     bool ScrollPatterns(uint32_t curTime);
+    bool ScrollPatternsWithoutTimer(bool moveForward);
+
+
+    bool dimBlendOn = false;
+    bool colorBlendOn = false;
 
     uint16_t numLEDs;
+    
+    uint8_t colorIndexFirst;
+    uint8_t dimIndexFirst;
     
     uint8_t oldDimPattern[MAX_PERIOD], curDimPattern[MAX_PERIOD], targetDimPattern[MAX_PERIOD];
     CRGB oldColorPattern[MAX_PERIOD], curColorPattern[MAX_PERIOD], targetColorPattern[MAX_PERIOD];
 
     uint8_t targetDimPatternIndex, targetColorPatternIndex;
-    uint8_t oldDimPatternIndex, oldColorPatternIndex;
     uint8_t randomDimPatternIndex, randomColorPatternIndex;
 
     //uint32_t lastDimParamChange, lastColorParamChange;
