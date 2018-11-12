@@ -27,14 +27,18 @@
  *    
  *    
  *  To do:
- *    - Remove superfluous PatternRepeater class
- *    - Test PatternScroller param blending modes
- *    - PatternScroller colorBlending logic
- *      - Blending between PRGBs; requires computing the actual RGB and then blending that
+ *    - Adjust transLength to move only 1 at a time
  *    - Blending between patterns between perdiods that are factors
+ *    - Select different ways to walk params; remove corrective moves, or attach to a timer instead of per move.
  *    - PatternController library
  *    - Tune Palettes
+ *    - Remove memcpy from PatternGenerator
  *      
+ *      
+ *      
+ *  Notes:
+ *    - When blending from one pattern to another, if a new target is selected, blend timer resets and moves from current point.  Could instead wait for blending to complete, pause, then blend again.
+ *    - When blending between patterns, only the target pattern's params are updated - cannot always know the pattern or combination of patterns that led to the last pattern
  */
 
 #include <PaletteManager.h>
@@ -103,7 +107,9 @@ void setup() {
     PrintParams();
   #endif
   
-  SkipTime(micros());
+  #ifdef SKIP_TIME_ON_SERIAL_WRITE
+    SkipTime(micros());
+  #endif
 }
 
 void loop() {
