@@ -27,7 +27,6 @@
  *    
  *    
  *  To do:
- *    - Adjust transLength to move only 1 at a time
  *    - Blending between patterns between perdiods that are factors
  *    - Select different ways to walk params; remove corrective moves, or attach to a timer instead of per move.
  *    - PatternController library

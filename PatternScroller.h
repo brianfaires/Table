@@ -1,9 +1,13 @@
 #pragma once
+#include "Arduino.h"
+#include "FastLED.h"
 #include "GammaManager.h"
 #include "PaletteManager.h"
 #include "PatternGenerator.h"
+
 #include "ArduinoTrace.h"
-#include "PatternCommon.h"
+
+#define MAX_PERIOD 210
 
 class PatternScroller {
   enum param_change_type { IMMEDIATE, ONCE_PER_MOVE, ONCE_PER_PERIOD };
