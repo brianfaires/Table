@@ -160,10 +160,6 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_base
     output.brightLength = params.brightLength;
     output.dimSpeed = params.dimSpeed;
     output.colorSpeed = params.colorSpeed;
-
-    if(output.brightLength + 2*output.transLength + 2 > output.dimPeriod) {
-      THROW("dimParams exceed the value in dimPeriod");
-    }
   #else
     uint8_t abs_dimSpeed = scaleParam((uint8_t)abs(params.dimSpeed), 0, 63);
     output.dimSpeed = abs_dimSpeed * (params.dimSpeed >= 0 ? 1 : -1);

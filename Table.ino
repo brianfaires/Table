@@ -27,11 +27,12 @@
  *    
  *    
  *  To do:
- *    - Blending between patterns between perdiods that are factors
+ *    - Clarify movement modes: non-worm behaves differently moving forward/back. Maybe an always pause vs worm vs reverse worm?
+ *    - HalfwayToDimMove will fire several times.  Make sure it only happens once per actual move.
  *    - Select different ways to walk params; remove corrective moves, or attach to a timer instead of per move.
+ *    - Blending between patterns between perdiods that are factors
  *    - PatternController library
  *    - Tune Palettes
- *    - Remove memcpy from PatternGenerator
  *      
  *      
  *      

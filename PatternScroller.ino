@@ -1,8 +1,7 @@
 #include "PatternScroller.h"
 
 PatternScroller::PatternScroller() {
-  dimParamChangeType = ONCE_PER_PERIOD;//ONCE_PER_MOVE;//IMMEDIATE;
-  colorParamChangeType = IMMEDIATE;//ONCE_PER_MOVE;//ONCE_PER_PERIOD;
+  dimParamChangeType = TIMED; //BETWEEN_MOVES_WORM;//BETWEEN_MOVES;//PER_PERIOD_WORM;//PER_PERIOD;//PER_MOVE_WORM;//PER_MOVE;//IMMEDIATE;//PER_UPDATE;//PER_UPDATE_WORM;
   
   targetColorPatternIndex = 0;
   targetDimPatternIndex = 0;
@@ -18,14 +17,6 @@ PatternScroller::PatternScroller() {
   dimIndexFirst = 0;
   
   myBrightness = 255;
-}
-
-void PatternScroller::Clone(PatternScroller* source, struct_base_show_params& params, uint32_t curTime) {
-  randomDimPatternIndex = source->randomDimPatternIndex;
-  randomColorPatternIndex = source->randomColorPatternIndex;
-  Init(params, curTime);
-  lastDimMove = source->lastDimMove;
-  lastColorMove = source->lastColorMove;
 }
 
 void PatternScroller::Init(struct_base_show_params& params, uint32_t curTime, PaletteManager* _pm, GammaManager* gm, uint16_t _numLEDs) {
@@ -61,6 +52,14 @@ void PatternScroller::Init(struct_base_show_params& params, uint32_t curTime, Pa
   lastColorPatternChange = curTime;
   lastDimMove = curTime;
   lastColorMove = curTime;
+}
+
+void PatternScroller::Clone(PatternScroller* source, struct_base_show_params& params, uint32_t curTime) {
+  randomDimPatternIndex = source->randomDimPatternIndex;
+  randomColorPatternIndex = source->randomColorPatternIndex;
+  Init(params, curTime);
+  lastDimMove = source->lastDimMove;
+  lastColorMove = source->lastColorMove;
 }
 
 bool PatternScroller::Update(uint32_t curTime) {
@@ -166,73 +165,74 @@ void PatternScroller::SetDisplayMode(struct_base_show_params& params, uint32_t c
 bool PatternScroller::WalkColorParams(uint32_t curTime) {
   bool updateMade = false;
 
-  if(colorParamChangeType == IMMEDIATE) {
-    // Instantly update params
-    if(pg.numColors != numColors) {
-      updateMade = true;
-      pg.numColors = numColors;
-    }
+  // Instantly update params
+  if(pg.numColors != numColors) {
+    updateMade = true;
+    pg.numColors = numColors;
   }
-  else if(IsReadyForColorMove(curTime)) {
-    if(colorParamChangeType == ONCE_PER_MOVE || IsStartOfDimPattern()) {
-      // Gradually update params in sync with movement
-      if(pg.numColors < numColors) {
-        pg.numColors++;
-        updateMade = true;
-      }
-      else if(pg.numColors > numColors) {
-        pg.numColors--;
-        updateMade = true;
-      }
-    }
 
-    if(pg.colorPeriod != colorPeriod) { THROW(colorPeriod mismatch!) }
-  }
+  if(pg.colorPeriod != colorPeriod) { THROW(colorPeriod mismatch!) }
 
   return updateMade;
 }
 
 bool PatternScroller::WalkDimParams(uint32_t curTime) {
-  bool updateMade = false;
-  
   if(dimParamChangeType == IMMEDIATE) {
     // Instantly update params
     if((pg.brightLength != brightLength) || (pg.transLength != transLength)) {
-      updateMade = true;
       pg.brightLength = brightLength;
       pg.transLength = transLength;
       pg.dimPeriod = dimPeriod;
+      return true;
     }
   }
-  else if(IsReadyForDimMove(curTime)) {
-    if(dimParamChangeType == ONCE_PER_MOVE || IsStartOfDimPattern()) {
+  else if(dimParamChangeType == TIMED) {
+    //debug: code this
+    return true;
+  }
+  else {
+    // Walk params by +/- 1
+    int8_t delta = 0;
+    bool doUpdate = false;
+    if(dimParamChangeType == PER_UPDATE || dimParamChangeType == PER_UPDATE_WORM) { doUpdate = true; }
+    else if(IsReadyForDimMove(curTime)) {
+      if(dimParamChangeType == PER_MOVE || dimParamChangeType == PER_MOVE_WORM) { doUpdate = true; }
+      else if(IsStartOfDimPattern() && (dimParamChangeType == PER_PERIOD || dimParamChangeType == PER_PERIOD_WORM)) { doUpdate = true; }
+    }
+    else if((dimParamChangeType == BETWEEN_MOVES || dimParamChangeType == BETWEEN_MOVES_WORM) && IsHalfwayToDimMove(curTime) && !dimParamWalkedThisCycle) { doUpdate = true; dimParamWalkedThisCycle = true; }
+
+    if(doUpdate) {
       // Gradually update params in sync with movement    
       if(pg.brightLength < brightLength) {
         pg.brightLength++;
-        updateMade = true;
-        if(dimSpeed < 0) { ScrollPatternsWithoutTimer(true); }
+        delta++;
       }
       else if(pg.brightLength > brightLength) {
         pg.brightLength--;
-        updateMade = true;
-        if(dimSpeed > 0) { ScrollPatternsWithoutTimer(false); }
+        delta--;
       }
-      else if(pg.transLength < transLength) {
+      
+      if(pg.transLength < transLength && delta <= 0) {
         pg.transLength++;
-        updateMade = true;
-        if(dimSpeed < 0) { ScrollPatternsWithoutTimer(true); }
+        delta++;
       }
-      else if(pg.transLength > transLength) {
+      else if(pg.transLength > transLength && delta >= 0) {
         pg.transLength--;
-        updateMade = true;
-        if(dimSpeed > 0) { ScrollPatternsWithoutTimer(false); }
+        delta--;
       }
 
+      // Positive delta appears to move pixels forward
+      if(delta > 0 && dimSpeed < 0) {
+        if(dimParamChangeType == PER_MOVE_WORM || dimParamChangeType == PER_UPDATE_WORM || dimParamChangeType == PER_PERIOD_WORM || dimParamChangeType == BETWEEN_MOVES_WORM) { ScrollPatternsWithoutTimer(false); }
+      }
+      else if(delta < 0 && dimSpeed > 0) {
+        if(dimParamChangeType == PER_MOVE_WORM || dimParamChangeType == PER_UPDATE_WORM || dimParamChangeType == PER_PERIOD_WORM || dimParamChangeType == BETWEEN_MOVES_WORM) { ScrollPatternsWithoutTimer(true); }      
+      }
+      
       if(pg.dimPeriod != dimPeriod) { THROW(dimPeriod mismatch without a split!) }
     }
+    return delta != 0;
   }
-
-  return updateMade;
 }
 
 void PatternScroller::BlendColorPattern(uint32_t curTime) {
@@ -292,6 +292,13 @@ bool PatternScroller::IsReadyForDimMove(uint32_t curTime) {
   return curTime - lastDimMove >= stepSize;
 }
 
+bool PatternScroller::IsHalfwayToDimMove(uint32_t curTime) {
+  if(dimSpeed == 0) { return false; }
+    
+  uint32_t stepSize = ONE_SEC_US / abs(dimSpeed);
+  return curTime - lastDimMove >= stepSize/2;
+}
+
 bool PatternScroller::IsReadyForColorMove(uint32_t curTime) {
   // Returns true if this cycle is going to move the pattern (i.e. only change pattern on the same draw cycle as a move)
   if(colorSpeed == 0) { return false; }
@@ -329,6 +336,7 @@ bool PatternScroller::ScrollPatterns(uint32_t curTime) {
     lastDimMove = curTime;
   }
   else if(IsReadyForDimMove(curTime)) {
+    dimParamWalkedThisCycle = false;
     dimMoved = true;
     // Scroll dim pattern
     if(dimSpeed > 0) {

@@ -10,21 +10,20 @@
 #define MAX_PERIOD 210
 
 class PatternScroller {
-  enum param_change_type { IMMEDIATE, ONCE_PER_MOVE, ONCE_PER_PERIOD };
+  enum param_change_type { IMMEDIATE, PER_UPDATE, PER_UPDATE_WORM, PER_MOVE, PER_MOVE_WORM, BETWEEN_MOVES, BETWEEN_MOVES_WORM, PER_PERIOD, PER_PERIOD_WORM, TIMED };
    
   public:
     PatternScroller();
     void Init(struct_base_show_params& params, uint32_t curTime, PaletteManager* _pm = NULL, GammaManager* gm = NULL, uint16_t _numLEDs = 0);
+    void Clone(PatternScroller* source, struct_base_show_params& params, uint32_t curTime);
     bool Update(uint32_t curTime);
     void SkipTime(uint32_t amount);
     void SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs);
     void SetDisplayMode(struct_base_show_params& params, uint32_t curTime);
-    void Clone(PatternScroller* source, struct_base_show_params& params, uint32_t curTime);
     bool IsStartOfColorPattern();
     bool IsStartOfDimPattern();
 
     param_change_type dimParamChangeType;
-    param_change_type colorParamChangeType;
     
     uint8_t myBrightness;
     uint16_t colorPeriod, dimPeriod;
@@ -43,6 +42,7 @@ class PatternScroller {
     void BlendColorPattern(uint32_t curTime);
     void BlendDimPattern(uint32_t curTime);
     bool IsReadyForDimMove(uint32_t curTime);
+    bool IsHalfwayToDimMove(uint32_t curTime);
     bool IsReadyForColorMove(uint32_t curTime);
     uint8_t GetDimPatternIndex();
     bool IsRandomDimPattern();
@@ -52,6 +52,7 @@ class PatternScroller {
 
     bool dimBlendOn = false;
     bool colorBlendOn = false;
+    bool dimParamWalkedThisCycle = false;
 
     uint16_t numLEDs;
     
