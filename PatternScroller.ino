@@ -1,7 +1,7 @@
 #include "PatternScroller.h"
 
 PatternScroller::PatternScroller() {
-  dimParamChangeType = TIMED; //BETWEEN_MOVES_WORM;//BETWEEN_MOVES;//PER_PERIOD_WORM;//PER_PERIOD;//PER_MOVE_WORM;//PER_MOVE;//IMMEDIATE;//PER_UPDATE;//PER_UPDATE_WORM;
+  dimParamChangeType = SPLIT_F;//SPLIT_F;//SPLIT_R;//WORM_F;//FREEZE_F;//REWIND_F;
   
   targetColorPatternIndex = 0;
   targetDimPatternIndex = 0;
@@ -176,6 +176,7 @@ bool PatternScroller::WalkColorParams(uint32_t curTime) {
   return updateMade;
 }
 
+/*
 bool PatternScroller::WalkDimParams(uint32_t curTime) {
   if(dimParamChangeType == IMMEDIATE) {
     // Instantly update params
@@ -223,16 +224,93 @@ bool PatternScroller::WalkDimParams(uint32_t curTime) {
 
       // Positive delta appears to move pixels forward
       if(delta > 0 && dimSpeed < 0) {
-        if(dimParamChangeType == PER_MOVE_WORM || dimParamChangeType == PER_UPDATE_WORM || dimParamChangeType == PER_PERIOD_WORM || dimParamChangeType == BETWEEN_MOVES_WORM) { ScrollPatternsWithoutTimer(false); }
+        //if(dimParamChangeType == PER_MOVE_WORM || dimParamChangeType == PER_UPDATE_WORM || dimParamChangeType == PER_PERIOD_WORM || dimParamChangeType == BETWEEN_MOVES_WORM) { ScrollPatternsWithoutTimer(false); }
       }
       else if(delta < 0 && dimSpeed > 0) {
-        if(dimParamChangeType == PER_MOVE_WORM || dimParamChangeType == PER_UPDATE_WORM || dimParamChangeType == PER_PERIOD_WORM || dimParamChangeType == BETWEEN_MOVES_WORM) { ScrollPatternsWithoutTimer(true); }      
+        //if(dimParamChangeType == PER_MOVE_WORM || dimParamChangeType == PER_UPDATE_WORM || dimParamChangeType == PER_PERIOD_WORM || dimParamChangeType == BETWEEN_MOVES_WORM) { ScrollPatternsWithoutTimer(true); }      
+      }
+
+      // TESTING
+      if(delta > 0) {
+        // Grow (expand front)
+        ScrollPatternsWithoutTimer(false);
+        //ScrollPatternsWithoutTimer(false);
+      }
+      else if(delta < 0) {
+        // Shrink (retract front of)
+        //ScrollPatternsWithoutTimer(true);
       }
       
       if(pg.dimPeriod != dimPeriod) { THROW(dimPeriod mismatch without a split!) }
     }
     return delta != 0;
   }
+}
+*/
+
+#define ADJUST_UP() if(pg.brightLength < brightLength) { pg.brightLength++; delta+=bFact; if(bFact > 1) { ScrollPatternsWithoutTimer(false); } } \
+                    else if(pg.transLength < transLength) { pg.transLength++; delta+=tFact; if(tFact > 1) { ScrollPatternsWithoutTimer(false);} }
+#define ADJUST_DOWN() if(pg.brightLength > brightLength) { pg.brightLength--; delta-=bFact; if(bFact > 1) { ScrollPatternsWithoutTimer(true);} } \
+                      else if(pg.transLength > transLength) { pg.transLength--; delta-=tFact; if(tFact > 1) { ScrollPatternsWithoutTimer(true);} }
+#define ADJUST_BOTH() if(pg.brightLength < brightLength) { pg.brightLength++; delta+-bFact; if(bFact > 1) { ScrollPatternsWithoutTimer(false);} } \
+                      else if(pg.brightLength > brightLength) { pg.brightLength--; delta-=bFact; if(bFact > 1) { ScrollPatternsWithoutTimer(true);} } \
+                      if(pg.transLength < transLength && delta <= 0) { pg.transLength++; delta+=tFact; if(tFact > 1) { ScrollPatternsWithoutTimer(false); } } \
+                      else if(pg.transLength > transLength && delta >= 0) { pg.transLength--; delta-=tFact; if(tFact > 1) { ScrollPatternsWithoutTimer(true);} }
+
+bool PatternScroller::WalkDimParams(uint32_t curTime) {
+  int8_t delta = 0;
+  uint8_t bFact = pg.GetBrightFactor(targetDimPatternIndex);
+  uint8_t tFact = pg.GetTransFactor(targetDimPatternIndex);
+  
+  if(dimParamChangeType == SPLIT_F) {
+    if(IsReadyForDimMove(curTime)) {
+      //ADJUST_DOWN()
+      ADJUST_BOTH()
+    }
+    else if(IsHalfwayToDimMove(curTime)) {
+      //ADJUST_UP()
+    }
+  }
+  else if(dimParamChangeType == SPLIT_R) {
+    if(IsReadyForDimMove(curTime)) {
+      ADJUST_UP()
+      if(delta > 0 && dimSpeed > 0) { ScrollPatternsWithoutTimer(false); }
+    }
+    else if(IsHalfwayToDimMove(curTime)) {
+      ADJUST_DOWN()
+      if(delta < 0 && dimSpeed > 0) { ScrollPatternsWithoutTimer(true); }
+    }
+  }
+  else if(dimParamChangeType == WORM_F) {
+    //if(IsHalfwayToDimMove(curTime)) {
+    if(IsReadyForDimMove(curTime)) {
+      ADJUST_BOTH()
+      if(delta < 0 && dimSpeed > 0) { ScrollPatternsWithoutTimer(true); }
+    }
+  }
+  else if(dimParamChangeType == FREEZE_F) {
+    if(IsReadyForDimMove(curTime)) {
+      ADJUST_BOTH()      
+      if(delta > 0 && dimSpeed > 0) { ScrollPatternsWithoutTimer(false); }
+    }
+  }
+  else if(dimParamChangeType == REWIND_F) {
+    if(IsReadyForDimMove(curTime)) {
+      //ADJUST_DOWN()
+      ADJUST_BOTH()
+      if(delta < 0 && dimSpeed > 0) { ScrollPatternsWithoutTimer(false); }
+    }
+    else if(IsHalfwayToDimMove(curTime)) {
+      //ADJUST_UP()
+    }
+  }
+  else {
+    THROW(unknown dimParamChangeType!)
+    DUMP(dimParamChangeType)
+  }
+
+  if(pg.dimPeriod != dimPeriod) { THROW(dimPeriod mismatch without a split!) }
+  return delta != 0;
 }
 
 void PatternScroller::BlendColorPattern(uint32_t curTime) {
@@ -293,10 +371,13 @@ bool PatternScroller::IsReadyForDimMove(uint32_t curTime) {
 }
 
 bool PatternScroller::IsHalfwayToDimMove(uint32_t curTime) {
+  // Only return true once per cycle
   if(dimSpeed == 0) { return false; }
-    
+  if(dimParamWalkedThisCycle) { return false; }
+  
   uint32_t stepSize = ONE_SEC_US / abs(dimSpeed);
-  return curTime - lastDimMove >= stepSize/2;
+  if(curTime - lastDimMove >= stepSize/2) { dimParamWalkedThisCycle = true; }
+  return dimParamWalkedThisCycle;
 }
 
 bool PatternScroller::IsReadyForColorMove(uint32_t curTime) {

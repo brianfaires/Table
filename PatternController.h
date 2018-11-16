@@ -4,7 +4,7 @@
 #include "PaletteManager.h"
 #include "PatternScroller.h"
 
-#define NUM_PATTERN_PARAMS 4
+#define NUM_PATTERN_PARAMS 5
 
 class PatternController {
   public:
@@ -21,6 +21,8 @@ class PatternController {
     void SetDimPauseLength(uint32_t value);
     uint32_t GetDimBlendLength();
     void SetDimBlendLength(uint32_t value);
+    param_change_type GetDimParamChangeType();
+    void SetDimParamChangeType(param_change_type value);
     
   private:
     PatternScroller ps1, ps2;

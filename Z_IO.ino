@@ -195,6 +195,7 @@ bool ProcessSerialInput() {
       else if(paramNum == next++) { pc.SetColorBlendLength(1000 * value); }
       else if(paramNum == next++) { pc.SetDimPauseLength(1000 * value); }
       else if(paramNum == next++) { pc.SetDimBlendLength(1000 * value); }
+      else if(paramNum == next++) { pc.SetDimParamChangeType((param_change_type)value); }
       else { THROW("Invalid paramNum") return false; }
   
       return true;
@@ -238,7 +239,6 @@ void PrintBaseParams() {
     output += "\t" + String(parameterCounter++) + ".DisplayMode:\t  " + String(baseParams.displayMode) + "\n";
     output += "\t" + String(parameterCounter++) + ".DimPeriod:\t  " + String(baseParams.dimPeriod) + "\n";
     output += "\t" + String(parameterCounter++) + ".ColorPeriod:\t  " + String(baseParams.colorPeriod) + "\n";
-    
 
     if(parameterCounter != NUM_BASE_PARAMS) { output += "ERROR: PrintBaseParams(), parameter count mismatch.\n"; }
     Serial.print(output);
@@ -301,6 +301,7 @@ void PrintPatternControllerParams() {
     output += "\t" + String(parameterCounter++) + ".ColorBlendLength:\t  " + String(pc.GetColorBlendLength()/1000) + "\n";
     output += "\t" + String(parameterCounter++) + ".DimPauseLength:\t  " + String(pc.GetDimPauseLength()/1000) + "\n";
     output += "\t" + String(parameterCounter++) + ".DimBlendLength:\t  " + String(pc.GetDimBlendLength()/1000) + "\n";
+    output += "\t" + String(parameterCounter++) + ".DimParamChangeType:\t  " + String(pc.GetDimParamChangeType()) + "\n";
     
     if(parameterCounter != NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS + NUM_LAYER_PARAMS + NUM_PATTERN_PARAMS) { output += "ERROR: PrintPaletteManagerParams(), parameter count mismatch.\n"; }
     Serial.print(output);

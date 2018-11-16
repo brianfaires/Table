@@ -10,8 +10,10 @@
 #define MAX_PERIOD 210
 
 class PatternScroller {
-  enum param_change_type { IMMEDIATE, PER_UPDATE, PER_UPDATE_WORM, PER_MOVE, PER_MOVE_WORM, BETWEEN_MOVES, BETWEEN_MOVES_WORM, PER_PERIOD, PER_PERIOD_WORM, TIMED };
-   
+  struct changeParams {
+    uint32_t dimBlendLength, colorBlendLength, dimPauseLength, colorPauseLength, dimParamWalkLength;    
+  };
+  
   public:
     PatternScroller();
     void Init(struct_base_show_params& params, uint32_t curTime, PaletteManager* _pm = NULL, GammaManager* gm = NULL, uint16_t _numLEDs = 0);

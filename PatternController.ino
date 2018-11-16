@@ -35,6 +35,14 @@ void PatternController::SetDimBlendLength(uint32_t value) {
   ps2.dimBlendLength = value;
 }
 
+param_change_type PatternController::GetDimParamChangeType() {
+  return ps1.dimParamChangeType;
+}
+void PatternController::SetDimParamChangeType(param_change_type value) {
+  ps1.dimParamChangeType = value;
+  ps2.dimParamChangeType = value;
+}
+    
 void PatternController::Init(uint16_t _numLEDs, struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, uint32_t curTime) {
   SetDimBlendLength(INIT_PATTERN_CONTROLLER_DIM_BLEND_LENGTH);
   SetColorBlendLength(INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH);

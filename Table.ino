@@ -27,9 +27,9 @@
  *    
  *    
  *  To do:
- *    - Clarify movement modes: non-worm behaves differently moving forward/back. Maybe an always pause vs worm vs reverse worm?
- *    - HalfwayToDimMove will fire several times.  Make sure it only happens once per actual move.
- *    - Select different ways to walk params; remove corrective moves, or attach to a timer instead of per move.
+ *    - Make Serial IO menu 2/3 columns
+ *    - Smooth out 2&3 steps in param changing
+ *    - Apply param changes when dimSpeed < 0
  *    - Blending between patterns between perdiods that are factors
  *    - PatternController library
  *    - Tune Palettes
