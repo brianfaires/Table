@@ -74,7 +74,7 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
   
   dimSpeed = scaledParams.dimSpeed;
   colorSpeed = scaledParams.colorSpeed;
-  WalkSpeeds();
+  WalkSpeeds(curTime);
 
   // Check for changes in dimPeriod and colorPeriod. If so, start splitting to bring in the new pattern
   if(!splitDisplay)
@@ -84,7 +84,7 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
     }
   }
 
-  if(ps->dimSpeed != secondary->dimSpeed) { THROW(String(ps->dimSpeed) + " DOES NOT EQUAL " + String(secondary->dimSpeed)); }
+  if(ps->GetDimSpeed() != secondary->GetDimSpeed()) { THROW(String(ps->GetDimSpeed()) + " DOES NOT EQUAL " + String(secondary->GetDimSpeed())); }
 
   // Update primary PatternScroller
   ps->numColors = scaledParams.numColors;
@@ -214,53 +214,55 @@ void PatternController::EndSplit() {
   Serial.println("End Split");
 }
 
-void PatternController::WalkSpeeds() {
+void PatternController::WalkSpeeds(uint32_t curTime) {
 // Perform everything on ps1, then copy to ps2. They should always match to be fully sync'd in movements
 
   #ifdef EXPLICIT_PARAMETERS
-    ps1.dimSpeed = dimSpeed;
-    ps1.colorSpeed = colorSpeed;
+    ps1.SetDimSpeed(dimSpeed, curTime);
+    ps1.SetColorSpeed(colorSpeed, curTime);
   #else
     // Gradually update speeds even if not ready for a pattern change; slow down at lower levels
-    if(ps1.dimSpeed != dimSpeed) {
-      uint8_t absSpeed = abs(ps1.dimSpeed);
+    int8_t initSpeed = ps1.GetDimSpeed();
+    if(initSpeed != dimSpeed) {
+      uint8_t absSpeed = abs(initSpeed);
       if(absSpeed < 5) {
         // From 10% chance to 4%
         if(random8(50) < absSpeed+2) {
-          if(ps1.dimSpeed < dimSpeed) { ps1.dimSpeed++; }
-          else { ps1.dimSpeed--; }
+          if(initSpeed < dimSpeed) { ps1.SetDimSpeed(initSpeed+1, curTime); }
+          else { ps1.SetDimSpeed(initSpeed-1, curTime); }
         }
       }
       else {
         // From 33% chance to 10%
         if(random16(530) < absSpeed+48) {
-          if(ps1.dimSpeed < dimSpeed) { ps1.dimSpeed++; }
-          else { ps1.dimSpeed--; }
+          if(initSpeed < dimSpeed) { ps1.SetDimSpeed(initSpeed+1, curTime); }
+          else { ps1.SetDimSpeed(initSpeed-1, curTime); }
         }
       }
     }
-  
-    if(ps1.colorSpeed != colorSpeed) {
-      uint8_t absSpeed = abs(ps1.colorSpeed);
+
+    initSpeed = ps1.GetColorSpeed();
+    if(initSpeed != colorSpeed) {
+      uint8_t absSpeed = abs(initSpeed);
       if(absSpeed < 5) {
         // From 10% chance to 4%
-        if(random8(50) <= absSpeed+1) {
-          if(ps1.colorSpeed < colorSpeed) { ps1.colorSpeed++; }
-          else { ps1.colorSpeed = ps1.colorSpeed--; }
+        if(random8(50) <= absSpeed+2) {
+          if(initSpeed < colorSpeed) { ps1.SetColorSpeed(initSpeed+1, curTime); }
+          else { ps1.colorSpeed = ps1.SetColorSpeed(initSpeed-1, curTime); }
         }
       }
       else {
         // From 33% chance to 10%
         if(random16(530) < absSpeed+48) {
-          if(ps1.colorSpeed < colorSpeed) { ps1.colorSpeed++; }
-          else { ps1.colorSpeed--; }
+          if(initSpeed < colorSpeed) { ps1.SetColorSpeed(initSpeed+1, curTime); }
+          else { ps1.SetColorSpeed(initSpeed-1, curTime); }
         }
       }
     }
   #endif
 
   // Always match speeds
-  ps2.dimSpeed = ps1.dimSpeed;
-  ps2.colorSpeed = ps1.colorSpeed;
+  ps2.SetDimSpeed(ps1.GetDimSpeed(), curTime);
+  ps2.SetColorSpeed(ps1.GetColorSpeed(), curTime);
 }
 

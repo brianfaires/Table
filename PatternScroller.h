@@ -25,14 +25,18 @@ class PatternScroller {
     bool IsStartOfColorPattern();
     bool IsStartOfDimPattern();
 
+    int8_t GetColorSpeed();
+    int8_t GetDimSpeed();
+    void SetColorSpeed(int8_t value, uint32_t curTime);
+    void SetDimSpeed(int8_t value, uint32_t curTime);
+    
     param_change_type dimParamChangeType;
     
     uint8_t myBrightness;
-    uint16_t colorPeriod, dimPeriod;
-    int8_t dimSpeed, colorSpeed;
     uint8_t numColors, brightLength, transLength;
     uint32_t dimBlendLength, colorBlendLength;
     uint32_t dimPauseLength, colorPauseLength;
+    uint16_t colorPeriod, dimPeriod;
         
   private:
     PaletteManager* pm;
@@ -51,7 +55,8 @@ class PatternScroller {
     bool ScrollPatterns(uint32_t curTime);
     bool ScrollPatternsWithoutTimer(bool moveForward);
 
-
+    int8_t dimSpeed, colorSpeed;
+    
     bool dimBlendOn = false;
     bool colorBlendOn = false;
     bool dimParamWalkedThisCycle = false;

@@ -29,7 +29,7 @@ class PatternController {
     PatternScroller *ps;
     PatternScroller *secondary;
     void ScaleParams(struct_base_show_params& params, struct_base_show_params& output, uint8_t dimPeriod = 0, uint8_t colorPeriod = 0);
-    void WalkSpeeds();
+    void WalkSpeeds(uint32_t curTime);
     void StartSplit(struct_base_show_params& params, uint32_t curTime);
     void EndSplit();
 

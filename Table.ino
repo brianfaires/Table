@@ -31,7 +31,6 @@
  *    - Make a SnakeOffset with half spacing; Fade between snake, snake2, and snakeOffset
  *    - Check patterns for fades that should end in full brightness.  That needs a SINGLE_BRIGHT() endcap.
  *    - Bug: param changes while blending
- *    - Bug: changing speed up at tail end of a move moves several times (catching up on time since last move)
  *    - Blending between patterns between perdiods that are factors
  *    - Blending params based on time
  *    - PatternController library

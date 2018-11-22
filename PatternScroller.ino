@@ -19,6 +19,25 @@ PatternScroller::PatternScroller() {
   myBrightness = 255;
 }
 
+int8_t PatternScroller::GetColorSpeed() { return colorSpeed; }
+int8_t PatternScroller::GetDimSpeed() { return dimSpeed; }
+void PatternScroller::SetColorSpeed(int8_t value, uint32_t curTime) {
+  if(abs(value) > abs(colorSpeed)) {
+    // Watch out for rapidly making multiple moves when increasing speed
+    uint32_t stepSize = ONE_SEC_US / abs(value);
+    if(curTime - lastColorMove >= stepSize) { lastColorMove = curTime - stepSize; }
+  }
+  colorSpeed = value;
+}
+void PatternScroller::SetDimSpeed(int8_t value, uint32_t curTime) {
+  if(abs(value) > abs(dimSpeed)) {
+    // Watch out for rapidly making multiple moves when increasing speed
+    uint32_t stepSize = ONE_SEC_US / abs(value);
+    if(curTime - lastDimMove >= stepSize) { lastDimMove = curTime - stepSize; }
+  }
+  dimSpeed = value;
+}
+    
 void PatternScroller::Init(struct_base_show_params& params, uint32_t curTime, PaletteManager* _pm, GammaManager* gm, uint16_t _numLEDs) {
   if(_pm) { pm = _pm; }
   if(gm) { Gamma = gm; }
@@ -192,8 +211,8 @@ bool PatternScroller::WalkColorParams(uint32_t curTime) {
 #define ADJ_UPBEAT_INC() if(IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() }
 #define ADJ_UPBEAT_DEC() if(IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() }
 
-// debug: For cases 3/-3, consider 1,-2/-2,1
 bool PatternScroller::WalkDimParams(uint32_t curTime) {
+// debug: For cases 3/-3, consider 1,-2/-2,1
   int8_t delta = 0;
   if     (pg.brightLength < brightLength)             { delta+=pg.GetBrightFactor(targetDimPatternIndex); }
   else if(pg.brightLength > brightLength)             { delta-=pg.GetBrightFactor(targetDimPatternIndex); }
