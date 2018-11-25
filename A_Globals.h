@@ -7,9 +7,7 @@
 #include "PatternController.h"
 #include "ArduinoTrace.h"
 
-#define FPS_TO_US(x) (ONE_SEC_US / x)
-#define FPS_TO_MS(x) (ONE_SEC_MS / x)
-
+#define FPS_TO_TIME(x) (ONE_SEC / x)
 
 #define NUM_PM_PARAMS 2
 

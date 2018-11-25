@@ -207,11 +207,8 @@ bool ProcessSerialInput() {
 
 void PrintParams() {
   #ifdef DEBUG_SERIAL
-    Serial.println("\nCommands: np (NextPalette), nb (NextBase), nt (NextTop)");
-    Serial.println("\t\tsp # ### ### ### (SetPalette)");
-    PrintBaseParams();
-    PrintTopParams();
-    PrintPaletteManagerParams();
+    Serial.println("\nCommands: np (NextPalette), nb (NextBase), nt (NextTop)\n\t  sp # ### ### ### (SetPalette)");
+    PrintBaseTopAndPMParams();
     PrintLayerParams();
     PrintPatternControllerParams();
 
@@ -222,6 +219,30 @@ void PrintParams() {
       }
       Serial.print(output);
     #endif
+  #endif
+}
+
+void PrintBaseTopAndPMParams() {
+  #ifdef DEBUG_SERIAL
+    uint8_t parameterCounter = 0;
+    uint8_t topParameterCounter = NUM_BASE_PARAMS;
+    uint8_t pmParameterCounter = NUM_BASE_PARAMS + NUM_TOP_PARAMS;
+    String output = "Base Parameters:\t\tTop Parameters:\n";
+    
+    output += String(parameterCounter++) + ".Animation:\t  " + String(baseParams.animation) + "\t\t" + String(topParameterCounter++) + ".Animation:\t  " + String(topParams.animation) + "\n";
+    output += String(parameterCounter++) + ".ColorSpeed:\t  " + String(baseParams.colorSpeed) + "\t\t" + String(topParameterCounter++) + ".Portion:\t  " + String(topParams.portion) + "\n";
+    output += String(parameterCounter++) + ".BrightSpeed:\t  " + String(baseParams.dimSpeed) + "\t\t" + String(topParameterCounter++) + ".Speed:\t  " + String(topParams.speed) + "\n";
+    output += String(parameterCounter++) + ".BrightLength:\t  " + String(baseParams.brightLength) + "\n";
+    output += String(parameterCounter++) + ".TransLength:\t  " + String(baseParams.transLength) + "\t\tPaletteManager Parameters:\n";
+    output += String(parameterCounter++) + ".NumColors:\t  " + String(baseParams.numColors) + "\t\t" + String(pmParameterCounter++) + ".PauseLength:\t  " + String(pm.GetPauseLength()/1000) + "\n";
+    output += String(parameterCounter++) + ".DisplayMode:\t  " + String(baseParams.displayMode) + "\t\t" + String(pmParameterCounter++) + ".WalkLength:\t  " + String(pm.GetWalkLength()/1000) + "\n";
+    output += String(parameterCounter++) + ".DimPeriod:\t  " + String(baseParams.dimPeriod) + "\n";
+    output += String(parameterCounter++) + ".ColorPeriod:\t  " + String(baseParams.colorPeriod) + "\n";
+
+    if(parameterCounter != NUM_BASE_PARAMS) { DUMP(parameterCounter) }
+    if(topParameterCounter != NUM_BASE_PARAMS + NUM_TOP_PARAMS) { DUMP(topParameterCounter) }
+    if(pmParameterCounter != NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS) { DUMP(pmParameterCounter) }
+    Serial.println(output);
   #endif
 }
 
@@ -275,20 +296,15 @@ void PrintPaletteManagerParams() {
 void PrintLayerParams() {
   #ifdef DEBUG_SERIAL
     uint8_t parameterCounter = NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS;
-    String output = "Base Layer Parameters:\n";
+    String output = "Base Layer Parameters:\t\tTop Layer Parameters:\n";
 
-    output += "\t" + String(parameterCounter++) + ".PauseLength:\t   " + String(layerConfig.basePauseLength/1000) + "\n";
-    output += "\t" + String(parameterCounter++) + ".TransOutLength: " + String(layerConfig.baseTransOutLength/1000) + "\n";
-    output += "\t" + String(parameterCounter++) + ".TransInLength:  " + String(layerConfig.baseTransInLength/1000) + "\n";
-    output += "\t" + String(parameterCounter++) + ".ParamWalkTime:  " + String(layerConfig.baseParamWalkTime/1000) + "\n";
-    output += "Top Layer Parameters:\n";
-    output += "\t" + String(parameterCounter++) + ".PauseLength:\t   " + String(layerConfig.topPauseLength/1000) + "\n";
-    output += "\t" + String(parameterCounter++) + ".TransOutLength: " + String(layerConfig.topTransOutLength/1000) + "\n";
-    output += "\t" + String(parameterCounter++) + ".TransInLength:  " + String(layerConfig.topTransInLength/1000) + "\n";
-    output += "\t" + String(parameterCounter++) + ".ParamWalkTime:  " + String(layerConfig.topParamWalkTime/1000) + "\n";
+    output += String(parameterCounter++) + ".PauseLength:\t   " + String(layerConfig.basePauseLength/1000) + "   \t" + String(parameterCounter+4) + ".PauseLength:\t   " + String(layerConfig.topPauseLength/1000) + "\n";
+    output += String(parameterCounter++) + ".TransOutLength: " + String(layerConfig.baseTransOutLength/1000) + "   \t" + String(parameterCounter+4) + ".TransOutLength: " + String(layerConfig.topTransOutLength/1000) + "\n";
+    output += String(parameterCounter++) + ".TransInLength:  " + String(layerConfig.baseTransInLength/1000) + "   \t" + String(parameterCounter+4) + ".TransInLength:  " + String(layerConfig.topTransInLength/1000) + "\n";
+    output += String(parameterCounter++) + ".ParamWalkTime:  " + String(layerConfig.baseParamWalkTime/1000) + "   \t" + String(parameterCounter+4) + ".ParamWalkTime:  " + String(layerConfig.topParamWalkTime/1000) + "\n";
     
-    if(parameterCounter != NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS + NUM_LAYER_PARAMS) { output += "ERROR: PrintLayerParams(), parameter count mismatch.\n"; }
-    Serial.print(output);
+    if(parameterCounter+4 != NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS + NUM_LAYER_PARAMS) { DUMP(parameterCounter) }
+    Serial.println(output);
   #endif
 }
 
@@ -297,11 +313,11 @@ void PrintPatternControllerParams() {
     uint8_t parameterCounter = NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS + NUM_LAYER_PARAMS;
     String output = "Pattern Controller Parameters:\n";
     
-    output += "\t" + String(parameterCounter++) + ".ColorPauseLength:\t  " + String(pc.GetColorPauseLength()/1000) + "\n";
-    output += "\t" + String(parameterCounter++) + ".ColorBlendLength:\t  " + String(pc.GetColorBlendLength()/1000) + "\n";
-    output += "\t" + String(parameterCounter++) + ".DimPauseLength:\t  " + String(pc.GetDimPauseLength()/1000) + "\n";
-    output += "\t" + String(parameterCounter++) + ".DimBlendLength:\t  " + String(pc.GetDimBlendLength()/1000) + "\n";
-    output += "\t" + String(parameterCounter++) + ".DimParamChangeType:\t  " + String(pc.GetDimParamChangeType()) + "\n";
+    output += String(parameterCounter++) + ".ColorPauseLength:\t  " + String(pc.GetColorPauseLength()/1000) + "\n";
+    output += String(parameterCounter++) + ".ColorBlendLength:\t  " + String(pc.GetColorBlendLength()/1000) + "\n";
+    output += String(parameterCounter++) + ".DimPauseLength:\t  " + String(pc.GetDimPauseLength()/1000) + "\n";
+    output += String(parameterCounter++) + ".DimBlendLength:\t  " + String(pc.GetDimBlendLength()/1000) + "\n";
+    output += String(parameterCounter++) + ".DimParamChangeType:\t  " + String(pc.GetDimParamChangeType()) + "\n";
     
     if(parameterCounter != NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS + NUM_LAYER_PARAMS + NUM_PATTERN_PARAMS) { output += "ERROR: PrintPaletteManagerParams(), parameter count mismatch.\n"; }
     Serial.print(output);

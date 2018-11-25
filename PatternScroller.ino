@@ -61,7 +61,7 @@ int8_t PatternScroller::GetColorSpeed() { return colorSpeed; }
 void PatternScroller::SetColorSpeed(int8_t value, uint32_t curTime) {
   if(abs(value) > abs(colorSpeed)) {
     // Watch out for rapidly making multiple moves when increasing speed
-    uint32_t stepSize = ONE_SEC_US / abs(value);
+    uint32_t stepSize = FPS_TO_TIME(abs(value));
     if(curTime - lastColorMove >= stepSize) { lastColorMove = curTime - stepSize; }
   }
   colorSpeed = value;
@@ -70,7 +70,7 @@ int8_t PatternScroller::GetDimSpeed() { return dimSpeed; }
 void PatternScroller::SetDimSpeed(int8_t value, uint32_t curTime) {
   if(abs(value) > abs(dimSpeed)) {
     // Watch out for rapidly making multiple moves when increasing speed
-    uint32_t stepSize = ONE_SEC_US / abs(value);
+    uint32_t stepSize = FPS_TO_TIME(abs(value));
     if(curTime - lastDimMove >= stepSize) { lastDimMove = curTime - stepSize; }
   }
   dimSpeed = value;
@@ -376,7 +376,7 @@ bool PatternScroller::IsReadyForDimMove(uint32_t curTime) {
   // Returns true if this cycle is going to move the pattern (i.e. only change pattern on the same draw cycle as a move)
   if(dimSpeed == 0) { return false; }
   
-  uint32_t stepSize = ONE_SEC_US / abs(dimSpeed);
+  uint32_t stepSize = FPS_TO_TIME(abs(dimSpeed));
   return curTime - lastDimMove >= stepSize;
 }
 
@@ -385,7 +385,7 @@ bool PatternScroller::IsHalfwayToDimMove(uint32_t curTime) {
   if(dimSpeed == 0) { return false; }
   if(dimParamWalkedThisCycle) { return false; }
   
-  uint32_t stepSize = ONE_SEC_US / abs(dimSpeed);
+  uint32_t stepSize = FPS_TO_TIME(abs(dimSpeed));
   if(curTime - lastDimMove >= stepSize/2) { dimParamWalkedThisCycle = true; }
   return dimParamWalkedThisCycle;
 }
@@ -423,14 +423,14 @@ bool PatternScroller::ScrollPatterns(uint32_t curTime) {
       if(++dimIndexFirst == dimPeriod) { dimIndexFirst = 0; }
     }
     
-    lastDimMove += ONE_SEC_US / abs(dimSpeed);
+    lastDimMove += FPS_TO_TIME(abs(dimSpeed));
   }
 
   // Move color pattern
   if(colorSpeed == 0) {
     lastColorMove = curTime;
   }
-  else if(curTime - lastColorMove >= ONE_SEC_US / abs(colorSpeed)) {
+  else if(curTime - lastColorMove >= FPS_TO_TIME(abs(colorSpeed))) {
     if(colorSpeed > 0) {
       if(--colorIndexFirst == 0xFF) { colorIndexFirst = colorPeriod - 1; }
     }
@@ -438,7 +438,7 @@ bool PatternScroller::ScrollPatterns(uint32_t curTime) {
       if(++colorIndexFirst == colorPeriod) { colorIndexFirst = 0; }
     }
     
-    lastColorMove += ONE_SEC_US / abs(colorSpeed);
+    lastColorMove += FPS_TO_TIME(abs(colorSpeed));
   }
 
   return dimMoved;

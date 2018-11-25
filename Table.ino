@@ -4,7 +4,7 @@
  *    Blend out/in animations at same time
  *    Overlay blendAmount: base on Luma(), or brightness of top layer only
  *    PaletteManager random walk palettes
- *    Use fastmath function scale8() in  scaleParam() functions
+ *    Use fastmath function scale8() in scaleParam() functions
  *  
  *  Button IO:
  *    Medium-long press into tap doesn't do double click
@@ -29,7 +29,6 @@
  *    
  *    
  *  To do:
- *    - Make Serial IO menu 2/3 columns
  *    - Blending between patterns between perdiods that are factors
  *    
  *    - PatternScroller and PatternController library(s)
@@ -48,7 +47,7 @@ extern const uint8_t gamma8[];
 extern const uint8_t reverseGamma8[];
 void setup() {
   #ifdef DEBUG_TIMING
-    uint32_t startupTime = micros();
+    uint32_t startupTime = SYSTEM_TIME;
   #endif
 
   delay(STARTUP_DELAY_MS); // sanity delay
@@ -92,7 +91,7 @@ void setup() {
     Serial.println("setup() complete.");
     #ifdef DEBUG_TIMING
       Serial.print("setup() time: ");
-      Serial.println((uint32_t)(micros() - startupTime));
+      Serial.println((uint32_t)(SYSTEM_TIME - startupTime));
     #endif
   
   #endif
@@ -102,10 +101,8 @@ void setup() {
     Serial.setTimeout(100);
     PrintParams();
   #endif
-  
-  #ifdef SKIP_TIME_ON_SERIAL_WRITE
-    SkipTime(micros());
-  #endif
+
+  SkipTime(SYSTEM_TIME);
 }
 
 void loop() {
@@ -116,16 +113,16 @@ void loop() {
   #endif
 
   
-  timing.now = micros();
+  timing.now = SYSTEM_TIME;
 
   UpdateIO();
 
-  if(timing.now - timing.lastDraw >= US_BETWEEN_DRAWS) {
+  if(timing.now - timing.lastDraw >= FPS_TO_TIME(REFRESH_RATE)) {
     // Update animation parameters
     #ifdef MANUAL_PARAMS
       if(ProcessSerialInput()) { 
         PrintParams();
-        SkipTime(micros() - timing.now);
+        SkipTime(SYSTEM_TIME - timing.now);
       }
       
     #else
@@ -159,12 +156,12 @@ void loop() {
     #endif
 
     FastLED.show();
-    timing.lastDraw += US_BETWEEN_DRAWS;
-    //if(timing.now > timing.lastDraw + US_BETWEEN_DRAWS) { THROW("ERROR: Drawing clipped by " + String(timing.now - timing.lastDraw) + "us") }
+    timing.lastDraw += FPS_TO_TIME(REFRESH_RATE);
+    //if(timing.now > timing.lastDraw + FPS_TO_TIME(REFRESH_RATE)) { THROW("ERROR: Drawing clipped by " + String(timing.now - timing.lastDraw) + "us") }
   }
 
   #ifdef DEBUG_TIMING
-    Serial.println("Total loop time = " + String(micros() - timing.now) + "us");
+    Serial.println("Total loop time = " + String(SYSTEM_TIME - timing.now) + "us");
   #endif
 }
 
