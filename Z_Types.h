@@ -2,9 +2,6 @@
 #include "PaletteManager.h"
 
 
-enum param_change_type { SPLIT_F, SPLIT_R, WORM_F, FREEZE_F };//REWIND_F, IMMEDIATE, PER_UPDATE, PER_UPDATE_WORM, PER_MOVE, PER_MOVE_WORM, BETWEEN_MOVES, BETWEEN_MOVES_WORM, PER_PERIOD, PER_PERIOD_WORM, TIMED };
-
-
 #define NUM_BASE_PARAMS 9
 struct struct_base_show_params {
   uint8_t animation = INIT_BASE_ANIMATION;

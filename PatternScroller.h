@@ -9,6 +9,8 @@
 
 #define MAX_PERIOD 210
 
+enum param_change_type { SPLIT_F, SPLIT_R, WORM_F, FREEZE_F };//REWIND_F, IMMEDIATE, PER_UPDATE, PER_UPDATE_WORM, PER_MOVE, PER_MOVE_WORM, BETWEEN_MOVES, BETWEEN_MOVES_WORM, PER_PERIOD, PER_PERIOD_WORM, TIMED };
+
 class PatternScroller {
   struct changeParams {
     uint32_t dimBlendLength, colorBlendLength, dimPauseLength, colorPauseLength;
@@ -26,20 +28,27 @@ class PatternScroller {
     bool IsStartOfDimPattern();
 
     // Getters/Setters
-    int8_t GetDimSpeed();
-    int8_t GetColorSpeed();
-    void SetDimSpeed(int8_t value, uint32_t curTime);
-    void SetColorSpeed(int8_t value, uint32_t curTime);
     void SetDisplayMode(uint8_t displayMode, uint32_t curTime);
+    uint8_t GetColorPeriod();
+    uint8_t GetDimPeriod();
+    uint32_t GetDimBlendLength();
+    void SetDimBlendLength(uint32_t value);
+    uint32_t GetColorBlendLength();
+    void SetColorBlendLength(uint32_t value);
+    uint32_t GetDimPauseLength();
+    void SetDimPauseLength(uint32_t value);
+    uint32_t GetColorPauseLength();
+    void SetColorPauseLength(uint32_t value);
+    int8_t GetDimSpeed();
+    void SetDimSpeed(int8_t value, uint32_t curTime);
+    int8_t GetColorSpeed();
+    void SetColorSpeed(int8_t value, uint32_t curTime);
     
     // Params
     param_change_type dimParamChangeType;
     bool changeDimParamASAP;
     uint8_t brightness;
     uint8_t numColors, brightLength, transLength;
-    uint8_t colorPeriod, dimPeriod;
-    uint32_t dimBlendLength, colorBlendLength;
-    uint32_t dimPauseLength, colorPauseLength;
         
   private:
     // Objects
@@ -58,7 +67,7 @@ class PatternScroller {
     // Utility
     bool IsReadyForDimMove(uint32_t curTime);
     bool IsHalfwayToDimMove(uint32_t curTime);
-    uint8_t GetDimPatternIndex();
+    uint8_t GetTargetDimPatternIndex();
     bool IsRandomDimPattern();
     
     // Blending
@@ -67,14 +76,21 @@ class PatternScroller {
     bool dimParamWalkedThisCycle = false;
 
     // Params
+    uint8_t colorPeriod, dimPeriod;
     int8_t dimSpeed, colorSpeed;
     uint16_t numLEDs;
-    uint8_t colorIndexFirst;
-    uint8_t dimIndexFirst;
+    uint32_t dimPauseLength, colorPauseLength;
+    uint32_t dimBlendLength, colorBlendLength, dimBlendLength_q, colorBlendLength_q;
+    bool dimBlendLength_queued, colorBlendLength_queued; // debug: these could be replaced by determining current blendAmount and adjusting last___PatternChange accordingly
+
+    // Display mode
+    uint8_t oldDimPatternIndex;
     uint8_t targetDimPatternIndex, targetColorPatternIndex;
     uint8_t randomDimPatternIndex, randomColorPatternIndex;
 
-    // Patterns
+    // Scrolling patterns
+    uint8_t colorIndexFirst;
+    uint8_t dimIndexFirst;
     uint8_t oldDimPattern[MAX_PERIOD], curDimPattern[MAX_PERIOD], targetDimPattern[MAX_PERIOD];
     CRGB oldColorPattern[MAX_PERIOD], curColorPattern[MAX_PERIOD], targetColorPattern[MAX_PERIOD];
 

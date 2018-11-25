@@ -9,7 +9,7 @@
 class PatternController {
   public:
     PatternController();
-    void Init(uint16_t _numLEDs, struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, uint32_t curTime);
+    void Init(uint16_t _numLEDs, struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, const uint16_t* _allowedDimPeriods, const uint16_t* allowedColorPeriods, uint32_t curTime);
     void Update(struct_base_show_params& params, CRGB* target, uint8_t* target_b, uint32_t curTime);
     void SkipTime(uint32_t amount);
 
@@ -23,6 +23,7 @@ class PatternController {
     void SetDimBlendLength(uint32_t value);
     param_change_type GetDimParamChangeType();
     void SetDimParamChangeType(param_change_type value);
+    void SetBrightness(uint8_t brightness);
     
   private:
     PatternScroller ps1, ps2;
@@ -38,5 +39,8 @@ class PatternController {
     uint16_t splitIndex = 0;
     uint16_t numLEDs;
     int8_t colorSpeed, dimSpeed;
+    
+    const uint16_t* allowedDimPeriods;
+    const uint16_t* allowedColorPeriods;
 };
 

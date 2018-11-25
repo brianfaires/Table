@@ -14,7 +14,9 @@
  *  Patterns:
  *    Things that change/twinkle as they scroll
  *    Patterns that set the color of their pixels
- *  
+ *    Animations that fade in/out of subsets (like 3comets into 1 comet)
+ *    Blending/oscillating params based on time
+ *    
  *  To do:
  *    Test 71-minute time rollover
  *    Base animations - based on time
@@ -28,21 +30,11 @@
  *    
  *  To do:
  *    - Make Serial IO menu 2/3 columns
- *    - Make a SnakeOffset with half spacing; Fade between snake, snake2, and snakeOffset
  *    - Blending between patterns between perdiods that are factors
- *    - PatternScroller library
  *    
- *    
- *    - PatternController: Blending/oscillating params based on time
- *    - PatternController library
+ *    - PatternScroller and PatternController library(s)
  *    - Tune Palettes
  *      
- *      
- *      
- *  Notes:
- *    - Blending between patterns looks better if roughly same pixels are colored: means setting consistent dimPeriod like bright + 2*trans + 2
- *    - When blending between patterns, if a new target is selected, blend timer resets and moves from current point.  Could instead wait for blending to complete, pause, then blend again.
- *    - When blending between patterns, only the target pattern's params are updated - cannot always know the pattern or combination of patterns that led to the last pattern
  */
 
 #include <PaletteManager.h>

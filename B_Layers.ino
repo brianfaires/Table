@@ -44,7 +44,7 @@ void InitBaseLayer() {
   
   switch(baseParams.animation) {
     case SCROLLER:
-      pc.Init(NUM_LEDS, baseParams, &pm, &Gamma, timing.now);
+      pc.Init(NUM_LEDS, baseParams, &pm, &Gamma, allowedDimPeriods, allowedColorPeriods, timing.now);
       break;
 
     default:
