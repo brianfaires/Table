@@ -91,7 +91,7 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
   //ps->colorPeriod = scaledParams.colorPeriod;
   ps->brightLength = scaledParams.brightLength;
   ps->transLength = scaledParams.transLength;
-  ps->SetDisplayMode(scaledParams, curTime);
+  ps->SetDisplayMode(scaledParams.displayMode, curTime);
   bool psMoved = ps->Update(curTime);
 
   if(!splitDisplay) {
@@ -104,7 +104,7 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
     //secondary->colorPeriod = scaledParams.colorPeriod; // Don't update colorPeriod if already splitting
     secondary->brightLength = scaledParams.brightLength;
     secondary->transLength = scaledParams.transLength;
-    secondary->SetDisplayMode(scaledParams, curTime);
+    secondary->SetDisplayMode(scaledParams.displayMode, curTime);
     bool secMoved = secondary->Update(curTime);
 
     if(secondaryScrollerIsLow) {
