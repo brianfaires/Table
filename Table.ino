@@ -16,6 +16,7 @@
  *    Patterns that set the color of their pixels
  *    Animations that fade in/out of subsets (like 3comets into 1 comet)
  *    Blending/oscillating params based on time
+ *    Blending between patterns with perdiods that are factors
  *    
  *  To do:
  *    Test 71-minute time rollover
@@ -29,8 +30,6 @@
  *    
  *    
  *  To do:
- *    - Blending between patterns between perdiods that are factors
- *    
  *    - PatternScroller and PatternController library(s)
  *    - Tune Palettes
  *      
@@ -40,11 +39,6 @@
 #include <FastLED.h>
 #include "A_Globals.h"
 
-uint8_t baseTransitionProgress;
-uint8_t topTransitionProgress;
-
-extern const uint8_t gamma8[];
-extern const uint8_t reverseGamma8[];
 void setup() {
   #ifdef DEBUG_TIMING
     uint32_t startupTime = SYSTEM_TIME;
@@ -118,25 +112,7 @@ void loop() {
   UpdateIO();
 
   if(timing.now - timing.lastDraw >= FPS_TO_TIME(REFRESH_RATE)) {
-    // Update animation parameters
-    #ifdef MANUAL_PARAMS
-      if(ProcessSerialInput()) { 
-        PrintParams();
-        SkipTime(SYSTEM_TIME - timing.now);
-      }
-      
-    #else
-      if(timing.now - timing.lastBaseParamWalk >= layerConfig.baseParamWalkTime) {
-        WalkBaseParams();
-        timing.lastBaseParamWalk = timing.now;
-      }
-      if(timing.now - timing.lastTopParamWalk >= layerConfig.topParamWalkTime) {
-        WalkTopParams();
-        timing.lastTopParamWalk = timing.now;
-      }
-    #endif 
-
-
+    UpdateAnimationParameters(timing.now);
     pm.Update(timing.now);
     
     #ifdef TEST_PALETTES

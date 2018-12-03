@@ -29,8 +29,12 @@ PaletteManager pm;
 GammaManager Gamma;
 PatternController pc;
 
+// Config and params
 struct_timers timing;
 struct_config layerConfig;
 struct_base_show_params baseParams;
 struct_top_show_params topParams;
 
+// Layer counters
+uint8_t baseTransitionProgress;
+uint8_t topTransitionProgress;

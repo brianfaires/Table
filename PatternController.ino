@@ -6,17 +6,17 @@ PatternController::PatternController() {
 uint32_t PatternController::GetColorPauseLength() {
   return ps1.GetColorPauseLength();
 }
-void PatternController::SetColorPauseLength(uint32_t value) {
-  ps1.SetColorPauseLength(value);
-  ps2.SetColorPauseLength(value);
+void PatternController::SetColorPauseLength(uint32_t value, uint32_t curTime) {
+  ps1.SetColorPauseLength(value, curTime);
+  ps2.SetColorPauseLength(value, curTime);
 }
 
 uint32_t PatternController::GetDimPauseLength() {
   return ps1.GetDimPauseLength();
 }
-void PatternController::SetDimPauseLength(uint32_t value) {
-  ps1.SetDimPauseLength(value);
-  ps2.SetDimPauseLength(value);
+void PatternController::SetDimPauseLength(uint32_t value, uint32_t curTime) {
+  ps1.SetDimPauseLength(value, curTime);
+  ps2.SetDimPauseLength(value, curTime);
 }
 
 uint32_t PatternController::GetColorBlendLength() {
@@ -52,8 +52,8 @@ void PatternController::Init(uint16_t _numLEDs, struct_base_show_params& params,
   // Init PatternRepeaters
   SetDimBlendLength(INIT_PATTERN_CONTROLLER_DIM_BLEND_LENGTH);
   SetColorBlendLength(INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH);
-  SetDimPauseLength(INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH);
-  SetColorPauseLength(INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH);
+  SetDimPauseLength(INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH, curTime);
+  SetColorPauseLength(INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH, curTime);
   SetDimParamChangeType(INIT_DIM_PARAM_CHANGE_TYPE);
   SetBrightness(INIT_PATTERN_SCROLLER_BRIGHTNESS);
 

@@ -36,9 +36,9 @@ class PatternScroller {
     uint32_t GetColorBlendLength();
     void SetColorBlendLength(uint32_t value);
     uint32_t GetDimPauseLength();
-    void SetDimPauseLength(uint32_t value);
+    void SetDimPauseLength(uint32_t value, uint32_t curTime);
     uint32_t GetColorPauseLength();
-    void SetColorPauseLength(uint32_t value);
+    void SetColorPauseLength(uint32_t value, uint32_t curTime);
     int8_t GetDimSpeed();
     void SetDimSpeed(int8_t value, uint32_t curTime);
     int8_t GetColorSpeed();

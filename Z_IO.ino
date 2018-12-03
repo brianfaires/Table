@@ -191,9 +191,9 @@ bool ProcessSerialInput() {
       else if(paramNum == next++) { layerConfig.topTransOutLength = 1000 * value; }
       else if(paramNum == next++) { layerConfig.topTransInLength = 1000 * value; }
       else if(paramNum == next++) { layerConfig.topParamWalkTime = 1000 * value; }
-      else if(paramNum == next++) { pc.SetColorPauseLength(1000 * value); }
+      else if(paramNum == next++) { pc.SetColorPauseLength(1000 * value, timing.now); }
       else if(paramNum == next++) { pc.SetColorBlendLength(1000 * value); }
-      else if(paramNum == next++) { pc.SetDimPauseLength(1000 * value); }
+      else if(paramNum == next++) { pc.SetDimPauseLength(1000 * value, timing.now); }
       else if(paramNum == next++) { pc.SetDimBlendLength(1000 * value); }
       else if(paramNum == next++) { pc.SetDimParamChangeType((param_change_type)value); }
       else { THROW("Invalid paramNum") return false; }

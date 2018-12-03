@@ -3,7 +3,7 @@
 
 PatternScroller::PatternScroller() {
   dimParamChangeType = SPLIT_F;//SPLIT_F;//SPLIT_R;//WORM_F;//FREEZE_F;
-  changeDimParamASAP = false;
+  changeDimParamASAP = true;
   
   oldDimPatternIndex = 0;
   targetColorPatternIndex = 0;
@@ -48,13 +48,15 @@ void PatternScroller::SetColorBlendLength(uint32_t value) {
   }
 }
 uint32_t PatternScroller::GetDimPauseLength() { return dimPauseLength; }
-void PatternScroller::SetDimPauseLength(uint32_t value) {
-  if(dimBlendOn && value > dimPauseLength) { lastDimPatternChange -= (value - dimPauseLength); }
+void PatternScroller::SetDimPauseLength(uint32_t value, uint32_t curTime) {
+  if(curTime - dimPauseLength > lastDimPatternChange) { if(dimBlendOn) { lastDimPatternChange -= (value - dimPauseLength); } }// if blending already
+  else { if(curTime - value >= lastDimPatternChange) { lastDimPatternChange = curTime - value; } } // if paused and reducing pause past the start point
   dimPauseLength = value;
 }
 uint32_t PatternScroller::GetColorPauseLength() { return colorPauseLength; }
-void PatternScroller::SetColorPauseLength(uint32_t value) {
-  if(colorBlendOn && value > colorPauseLength) { lastColorPatternChange -= (value - colorPauseLength); }
+void PatternScroller::SetColorPauseLength(uint32_t value, uint32_t curTime) {
+  if(curTime - colorPauseLength > lastColorPatternChange) { if(colorBlendOn) { lastColorPatternChange -= (value - colorPauseLength); } }// if blending already
+  else { if(curTime - value >= lastColorPatternChange) { lastColorPatternChange = curTime - value; } } // if paused and reducing pause past the start point
   colorPauseLength = value;
 }
 int8_t PatternScroller::GetColorSpeed() { return colorSpeed; }
@@ -205,21 +207,26 @@ void PatternScroller::SetDisplayMode(uint8_t displayMode, uint32_t curTime) {
     lastColorPatternChange = curTime - colorPauseLength;
   }
 
-  if(targetDimPatternIndex != dimPatternIndex && (curTime - lastDimPatternChange >= dimPauseLength) && !dimBlendOn) {
-    oldDimPatternIndex = GetTargetDimPatternIndex();
-    memcpy(oldDimPattern, targetDimPattern, dimPeriod);
-    targetDimPatternIndex = dimPatternIndex;
-
+  if(targetDimPatternIndex != dimPatternIndex) {
     if(IsRandomDimPattern()) {
-      do { randomDimPatternIndex = random8(NUM_DIM_PATTERNS); } while(randomDimPatternIndex == oldDimPatternIndex);
-      pg.WriteDimPattern(randomDimPatternIndex, targetDimPattern);
+      if(curTime - lastDimPatternChange < dimPauseLength) {
+        targetDimPatternIndex = oldDimPatternIndex;
+        memcpy(targetDimPattern, oldDimPattern, dimPeriod);
+        dimBlendOn = false;
+      }
+      else {
+        targetDimPatternIndex = randomDimPatternIndex;
+      }
     }
-    else {
-      pg.WriteDimPattern(targetDimPatternIndex, targetDimPattern);
+    else if(curTime - lastDimPatternChange >= dimPauseLength && !dimBlendOn) {
+      oldDimPatternIndex = GetTargetDimPatternIndex();
+      memcpy(oldDimPattern, targetDimPattern, dimPeriod);
+      targetDimPatternIndex = dimPatternIndex;
+      if(IsRandomDimPattern()) { do { randomDimPatternIndex = random8(NUM_DIM_PATTERNS); } while (randomDimPatternIndex == oldDimPatternIndex); }
+      pg.WriteDimPattern(GetTargetDimPatternIndex(), targetDimPattern);
+      dimBlendOn = true;
+      lastDimPatternChange = curTime - dimPauseLength;
     }
-    
-    dimBlendOn = true;
-    lastDimPatternChange = curTime - dimPauseLength;
   }
 }
 
@@ -351,6 +358,11 @@ void PatternScroller::BlendDimPattern(uint32_t curTime) {
   }
   else {
     // Blending just finished
+    if(dimBlendLength_queued) {
+      dimBlendLength = dimBlendLength_q;
+      dimBlendLength_queued = false;
+    }
+    
     if(IsRandomDimPattern()) {
       oldDimPatternIndex = randomDimPatternIndex;
       do { randomDimPatternIndex = random8(NUM_DIM_PATTERNS); } while (randomDimPatternIndex == oldDimPatternIndex);
@@ -358,10 +370,6 @@ void PatternScroller::BlendDimPattern(uint32_t curTime) {
     }
     else {
       dimBlendOn = false;
-      if(dimBlendLength_queued) {
-        dimBlendLength = dimBlendLength_q;
-        dimBlendLength_queued = false;
-      }
       oldDimPatternIndex = targetDimPatternIndex;
       pg.WriteDimPattern(targetDimPatternIndex, targetDimPattern);
     }
