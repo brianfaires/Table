@@ -2,7 +2,7 @@
 // debug: Speed up by only do pg.WriteDimPattern() during blend function if possible; or also when not calling blend on an update
 
 PatternScroller::PatternScroller() {
-  dimParamChangeType = SPLIT_F;//SPLIT_F;//SPLIT_R;//WORM_F;//FREEZE_F;
+  dimParamChangeType = CENTER;//GROW_F;//GROW_R;//WORM;//FREEZE;
   changeDimParamASAP = true;
   
   oldDimPatternIndex = 0;
@@ -248,7 +248,7 @@ bool PatternScroller::WalkDimParams(uint32_t curTime) {
 #define ADJUST_BOTH() if(pg.brightLength < brightLength) { pg.brightLength++; } \
                       else if(pg.brightLength > brightLength) { pg.brightLength--; } \
                       if(pg.transLength < transLength && pg.brightLength >= brightLength) { pg.transLength++; } \
-                      else if(pg.transLength > transLength && pg.brightLength <= brightLength) { pg.transLength--; }
+                      else if(pg.transLength > transLength && pg.brightLength <= brightLength) { pg.transLength--; } // debug: should remove second half of if so moves of 3 are allowed?
 
 #define SCROLL_BACK() ScrollPatternsWithoutTimer(false);
 #define SCROLL_FORWARD() ScrollPatternsWithoutTimer(true);
@@ -269,47 +269,62 @@ bool PatternScroller::WalkDimParams(uint32_t curTime) {
   else if(pg.transLength > transLength && delta >= 0) { delta-=2;  }
   
   if(delta == 0) { ADJ_DOWNBEAT() }
-  else if(dimParamChangeType == SPLIT_F) {
+  else if(dimParamChangeType == GROW_F) {
     switch(delta) {
       case 1:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC() } break;
       case -1: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC() } break;
-      case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC() } break;
-      case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC() } break;
-      case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT_DEC() } break;
-      case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
+      case 2:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_DOWNBEAT_DEC2() } break; // debug: in this and worm, should you use upbeat when moving 2 ever?
+      case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC2() } break;
+      //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT_DEC() } break;
+      //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
       default: DUMP(delta)
     }
   }
-  else if(dimParamChangeType == SPLIT_R) {
+  else if(dimParamChangeType == GROW_R) {
     switch(delta) {
       case 1:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT() } break;
       case -1: if(dimSpeed > 0) { ADJ_UPBEAT_INC() } else { ADJ_UPBEAT() } break;
-      case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC() } break;
-      case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC() } break;
-      case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
-      case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC2() } break;
+      case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT() } break;
+      case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT() } break;
+      //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
+      //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC2() } break;
       default: DUMP(delta)
     }
   }
-  else if(dimParamChangeType == WORM_F) {
+  else if(dimParamChangeType == WORM) {
     switch(delta) {
       case 1:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC() } break;
       case -1: if(dimSpeed > 0) { ADJ_UPBEAT_INC() } else { ADJ_UPBEAT() } break;
-      case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC() } break;
-      case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC() } break;
-      case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
-      case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
+      case 2:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_DOWNBEAT_DEC2() } break;
+      case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT() } break;
+      //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
+      //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
       default: DUMP(delta)
     }
   }
-  else if(dimParamChangeType == FREEZE_F) {
+  else if(dimParamChangeType == FREEZE) {
     switch(delta) {
       case 1:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT() } break;
       case -1: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC() } break;
       case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT() } break;
       case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC2() } break;
-      case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT_DEC() } break;
-      case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC2() } break;
+      //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT_DEC() } break;
+      //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC2() } break;
+      default: DUMP(delta)
+    }
+  }
+  else if(dimParamChangeType == CENTER) {
+    switch(delta) {
+      case 1:
+        if(pg.brightLength % 2 == 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_DEC() } break;
+      case -1: 
+        if(pg.brightLength % 2 == 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT() } break;
+      case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC() } break;
+      case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC() } break;
+      //case 3:
+        //if(pg.brightLength % 2 == 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
+      //case -3:
+        //if(pg.brightLength % 2 == 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
       default: DUMP(delta)
     }
   }

@@ -9,7 +9,7 @@ void UpdateAnimationParameters(uint32_t curTime) {
     timing.lastTopParamWalk = timing.now;
   }
 
-  PulseBaseParams(curTime);
+  //PulseBaseParams(curTime);
   
   #ifdef MANUAL_PARAMS
     if(ProcessSerialInput()) { 

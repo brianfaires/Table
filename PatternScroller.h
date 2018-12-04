@@ -9,7 +9,7 @@
 
 #define MAX_PERIOD 210
 
-enum param_change_type { SPLIT_F, SPLIT_R, WORM_F, FREEZE_F };//REWIND_F, IMMEDIATE, PER_UPDATE, PER_UPDATE_WORM, PER_MOVE, PER_MOVE_WORM, BETWEEN_MOVES, BETWEEN_MOVES_WORM, PER_PERIOD, PER_PERIOD_WORM, TIMED };
+enum param_change_type { GROW_F, GROW_R, WORM, FREEZE, CENTER, MIX_F }; // debug: use MIX_F and MIX_R; worm on bright and freeze on trans, and vice versa
 
 class PatternScroller {
   struct changeParams {
