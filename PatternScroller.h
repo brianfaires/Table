@@ -9,14 +9,15 @@
 
 #define MAX_PERIOD 210
 
-#define NUM_DIM_PARAM_CHANGE_TYPES 5
-enum param_change_type { GROW_F, GROW_R, WORM, FREEZE, CENTER, MIX_F }; // debug: use MIX_F and MIX_R; worm on bright and freeze on trans, and vice versa
+#define NUM_DIM_PARAM_CHANGE_TYPES 6
+enum param_change_type { PREFERRED, GROW_F, GROW_R, WORM, FREEZE, CENTER, MIX_F }; // debug: use MIX_F and MIX_R; worm on bright and freeze on trans, and vice versa
 
 class PatternScroller {
   struct changeParams {
     uint32_t dimBlendLength, colorBlendLength, dimPauseLength, colorPauseLength;
     uint8_t brightness;
     param_change_type dimParamChangeMode;
+    bool changeDimParamsWithMovement;
   };
   
   public:
@@ -64,6 +65,7 @@ class PatternScroller {
     void BlendDimPattern(uint32_t curTime);
     bool ScrollPatterns(uint32_t curTime);
     bool ScrollPatternsWithoutTimer(bool moveForward);
+    param_change_type GetPreferredDimParamChangeType(uint8_t patternIndex, int8_t delta);
 
     // Utility
     bool IsReadyForDimMove(uint32_t curTime);

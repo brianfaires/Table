@@ -2,7 +2,7 @@
 // debug: Speed up by only do pg.WriteDimPattern() during blend function if possible; or also when not calling blend on an update
 
 PatternScroller::PatternScroller() {
-  dimParamChangeType = CENTER;//GROW_F;//GROW_R;//WORM;//FREEZE;
+  dimParamChangeType = PREFERRED;//CENTER;//GROW_F;//GROW_R;//WORM;//FREEZE;
   changeDimParamsWithMovement = true;
   
   oldDimPatternIndex = 0;
@@ -269,20 +269,24 @@ bool PatternScroller::WalkDimParams(uint32_t curTime) {
   else if(pg.brightLength > brightLength)             { delta--; }
   if     (pg.transLength < transLength && delta <= 0) { delta+=2;  }
   else if(pg.transLength > transLength && delta >= 0) { delta-=2;  }
-  
+
+  param_change_type changeType;
+  if(dimParamChangeType == PREFERRED) { changeType = GetPreferredDimParamChangeType(GetTargetDimPatternIndex(), delta); }
+  else { changeType = dimParamChangeType; }
+
   if(delta == 0) { ADJ_DOWNBEAT() }
-  else if(dimParamChangeType == GROW_F) {
+  else if(changeType == GROW_F) {
     switch(delta) {
       case 1:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC() } break;
       case -1: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC() } break;
-      case 2:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC2() } break; // debug: in this and worm, should you use upbeat when moving 2 ever?
+      case 2:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC2() } break;
       case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC2() } break;
       //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT_DEC() } break;
       //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
       default: DUMP(delta)
     }
   }
-  else if(dimParamChangeType == GROW_R) {
+  else if(changeType == GROW_R) {
     switch(delta) {
       case 1:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT() } break;
       case -1: if(dimSpeed > 0) { ADJ_UPBEAT_INC() } else { ADJ_UPBEAT() } break;
@@ -293,7 +297,7 @@ bool PatternScroller::WalkDimParams(uint32_t curTime) {
       default: DUMP(delta)
     }
   }
-  else if(dimParamChangeType == WORM) {
+  else if(changeType == WORM) {
     switch(delta) {
       case 1:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC() } break;
       case -1: if(dimSpeed > 0) { ADJ_UPBEAT_INC() } else { ADJ_UPBEAT() } break;
@@ -304,7 +308,7 @@ bool PatternScroller::WalkDimParams(uint32_t curTime) {
       default: DUMP(delta)
     }
   }
-  else if(dimParamChangeType == FREEZE) {
+  else if(changeType == FREEZE) {
     switch(delta) {
       case 1:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT() } break;
       case -1: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC() } break;
@@ -315,7 +319,7 @@ bool PatternScroller::WalkDimParams(uint32_t curTime) {
       default: DUMP(delta)
     }
   }
-  else if(dimParamChangeType == CENTER) {
+  else if(changeType == CENTER) {
     switch(delta) {
       case 1:
         if(pg.brightLength % 2 == 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_DEC() } break;
@@ -476,5 +480,28 @@ bool PatternScroller::ScrollPatternsWithoutTimer(bool moveForward) {
   else {
     if(++dimIndexFirst == dimPeriod) { dimIndexFirst = 0; }
   }
+}
+
+param_change_type PatternScroller::GetPreferredDimParamChangeType(uint8_t patternIndex, int8_t delta) {
+  switch(patternIndex) {
+    case COMET_F:         return dimSpeed > 0 ? GROW_R : GROW_F;
+    case COMET_R:         return dimSpeed < 0 ? GROW_R : GROW_F;
+    case TWO_SIDED:       return CENTER;
+    case BARBELL:         return CENTER;
+    case SLOPED_TOWERS_H: return CENTER;
+    case SLOPED_TOWERS_L: return CENTER;
+    case SLIDE_H:         return CENTER;
+    case SLIDE_L:         return CENTER;
+    case BOWTIES_F:       return CENTER;
+    case BOWTIES_R:       return CENTER;
+    case TOWERS:          return CENTER;
+    case SNAKE:           return CENTER;
+    case SNAKE3:          return CENTER;
+    case THREE_COMETS_F:  return abs(delta)==1 ? (dimSpeed > 0 ? GROW_R : GROW_F) : CENTER;
+    case THREE_COMETS_R:  return abs(delta)==1 ? (dimSpeed < 0 ? GROW_R : GROW_F) : CENTER;
+    default: THROW("Unrecognized patternIndex") DUMP(patternIndex); break;
+  }
+  
+  return delta == 1 ? WORM : CENTER;
 }
 

@@ -62,7 +62,7 @@ void PatternController::Init(uint16_t _numLEDs, struct_base_show_params& params,
   SetColorBlendLength(INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH);
   SetDimPauseLength(INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH, curTime);
   SetColorPauseLength(INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH, curTime);
-  SetDimParamChangeType(INIT_DIM_PARAM_CHANGE_TYPE);
+  SetDimParamChangeType(INIT_DIM_PARAM_CHANGE_TYPE, INIT_CHANGE_DIM_PARAMS_WITH_MOVEMENT);
   SetBrightness(INIT_PATTERN_SCROLLER_BRIGHTNESS);
 
   numLEDs = _numLEDs;
