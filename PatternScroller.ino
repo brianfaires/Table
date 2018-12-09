@@ -3,7 +3,7 @@
 
 PatternScroller::PatternScroller() {
   dimParamChangeType = CENTER;//GROW_F;//GROW_R;//WORM;//FREEZE;
-  changeDimParamASAP = true;
+  changeDimParamsWithMovement = true;
   
   oldDimPatternIndex = 0;
   targetColorPatternIndex = 0;
@@ -252,16 +252,18 @@ bool PatternScroller::WalkDimParams(uint32_t curTime) {
 
 #define SCROLL_BACK() ScrollPatternsWithoutTimer(false);
 #define SCROLL_FORWARD() ScrollPatternsWithoutTimer(true);
-#define ADJ_DOWNBEAT() if(changeDimParamASAP || IsReadyForDimMove(curTime)) { ADJUST_BOTH() }
-#define ADJ_UPBEAT() if(changeDimParamASAP || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() }
-#define ADJ_DOWNBEAT_INC() if(changeDimParamASAP || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() }
-#define ADJ_DOWNBEAT_INC2() if(changeDimParamASAP || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() SCROLL_FORWARD() }
-#define ADJ_DOWNBEAT_DEC() if(changeDimParamASAP || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() }
-#define ADJ_DOWNBEAT_DEC2() if(changeDimParamASAP || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK()  }
-#define ADJ_UPBEAT_INC() if(changeDimParamASAP || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() }
-#define ADJ_UPBEAT_DEC() if(changeDimParamASAP || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() }
+#define ADJ_DOWNBEAT() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() }
+#define ADJ_UPBEAT() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() }
+#define ADJ_DOWNBEAT_INC() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() }
+#define ADJ_DOWNBEAT_INC2() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() SCROLL_FORWARD() }
+#define ADJ_DOWNBEAT_DEC() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() }
+#define ADJ_DOWNBEAT_DEC2() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK()  }
+#define ADJ_UPBEAT_INC() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() }
+#define ADJ_UPBEAT_INC2() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() SCROLL_FORWARD() }
+#define ADJ_UPBEAT_DEC() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() }
+#define ADJ_UPBEAT_DEC2() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK() }
 
-// debug: For cases 3/-3, consider 1,-2/-2,1
+// debug: For cases 3/-3, consider 1,-2/-2,1... Also, consider cases 3/-3 as even things you want possible; if so, edit ADJUST_BOTH()
   int8_t delta = 0;
   if     (pg.brightLength < brightLength)             { delta++; }
   else if(pg.brightLength > brightLength)             { delta--; }
@@ -273,7 +275,7 @@ bool PatternScroller::WalkDimParams(uint32_t curTime) {
     switch(delta) {
       case 1:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC() } break;
       case -1: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC() } break;
-      case 2:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_DOWNBEAT_DEC2() } break; // debug: in this and worm, should you use upbeat when moving 2 ever?
+      case 2:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC2() } break; // debug: in this and worm, should you use upbeat when moving 2 ever?
       case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC2() } break;
       //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT_DEC() } break;
       //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
@@ -285,7 +287,7 @@ bool PatternScroller::WalkDimParams(uint32_t curTime) {
       case 1:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT() } break;
       case -1: if(dimSpeed > 0) { ADJ_UPBEAT_INC() } else { ADJ_UPBEAT() } break;
       case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT() } break;
-      case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT() } break;
+      case -2: if(dimSpeed > 0) { ADJ_UPBEAT_INC2() } else { ADJ_UPBEAT() } break;
       //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
       //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC2() } break;
       default: DUMP(delta)
@@ -295,8 +297,8 @@ bool PatternScroller::WalkDimParams(uint32_t curTime) {
     switch(delta) {
       case 1:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC() } break;
       case -1: if(dimSpeed > 0) { ADJ_UPBEAT_INC() } else { ADJ_UPBEAT() } break;
-      case 2:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_DOWNBEAT_DEC2() } break;
-      case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT() } break;
+      case 2:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC2() } break;
+      case -2: if(dimSpeed > 0) { ADJ_UPBEAT_INC2() } else { ADJ_UPBEAT() } break;
       //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
       //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
       default: DUMP(delta)
