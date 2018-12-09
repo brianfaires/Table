@@ -271,7 +271,7 @@ bool PatternScroller::WalkDimParams(uint32_t curTime) {
   else if(pg.transLength > transLength && delta >= 0) { delta-=2;  }
 
   param_change_type changeType;
-  if(dimParamChangeType == PREFERRED) { changeType = GetPreferredDimParamChangeType(GetTargetDimPatternIndex(), delta); }
+  if(dimParamChangeType == PREFERRED) { changeType = GetPreferredDimParamChangeType(oldDimPatternIndex, delta); } // debug: how to decide when blending?
   else { changeType = dimParamChangeType; }
 
   if(delta == 0) { ADJ_DOWNBEAT() }

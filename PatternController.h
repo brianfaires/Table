@@ -24,6 +24,7 @@ class PatternController {
     param_change_type GetDimParamChangeType();
     bool GetChangeDimParamsWithMovement();
     void SetDimParamChangeType(param_change_type value);
+    void SetDimParamChangeType(bool changeDimParamsWithMovement);
     void SetDimParamChangeType(param_change_type value, bool changeDimParamsWithMovement);
     void SetBrightness(uint8_t brightness);
     

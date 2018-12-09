@@ -44,6 +44,9 @@ bool PatternController::GetChangeDimParamsWithMovement() {
 void PatternController::SetDimParamChangeType(param_change_type value) {
   SetDimParamChangeType(value, ps1.changeDimParamsWithMovement);
 }
+void PatternController::SetDimParamChangeType(bool changeDimParamsWithMovement) {
+  SetDimParamChangeType(ps1.dimParamChangeType, changeDimParamsWithMovement);
+}
 void PatternController::SetDimParamChangeType(param_change_type value, bool changeDimParamsWithMovement) {
   ps1.dimParamChangeType = value;
   ps1.changeDimParamsWithMovement = changeDimParamsWithMovement;
