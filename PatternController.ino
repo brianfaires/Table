@@ -38,9 +38,17 @@ void PatternController::SetDimBlendLength(uint32_t value) {
 param_change_type PatternController::GetDimParamChangeType() {
   return ps1.dimParamChangeType;
 }
+bool PatternController::GetChangeDimParamsWithMovement() {
+  return ps1.changeDimParamsWithMovement;
+}
 void PatternController::SetDimParamChangeType(param_change_type value) {
+  SetDimParamChangeType(value, ps1.changeDimParamsWithMovement);
+}
+void PatternController::SetDimParamChangeType(param_change_type value, bool changeDimParamsWithMovement) {
   ps1.dimParamChangeType = value;
+  ps1.changeDimParamsWithMovement = changeDimParamsWithMovement;
   ps2.dimParamChangeType = value;
+  ps2.changeDimParamsWithMovement = changeDimParamsWithMovement;
 }
 
 void PatternController::SetBrightness(uint8_t brightness) {

@@ -22,7 +22,9 @@ class PatternController {
     uint32_t GetDimBlendLength();
     void SetDimBlendLength(uint32_t value);
     param_change_type GetDimParamChangeType();
+    bool GetChangeDimParamsWithMovement();
     void SetDimParamChangeType(param_change_type value);
+    void SetDimParamChangeType(param_change_type value, bool changeDimParamsWithMovement);
     void SetBrightness(uint8_t brightness);
     
   private:

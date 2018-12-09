@@ -9,6 +9,7 @@
 
 #define MAX_PERIOD 210
 
+#define NUM_DIM_PARAM_CHANGE_TYPES 5
 enum param_change_type { GROW_F, GROW_R, WORM, FREEZE, CENTER, MIX_F }; // debug: use MIX_F and MIX_R; worm on bright and freeze on trans, and vice versa
 
 class PatternScroller {
@@ -46,7 +47,7 @@ class PatternScroller {
     
     // Params
     param_change_type dimParamChangeType;
-    bool changeDimParamASAP;
+    bool changeDimParamsWithMovement;
     uint8_t brightness;
     uint8_t numColors, brightLength, transLength;
         

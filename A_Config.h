@@ -26,9 +26,11 @@
 #ifdef USE_MILLIS_TIMER
   #define SYSTEM_TIME millis()
   #define ONE_SEC 1000
+  #define IO_TIME_FACTOR 1
 #else
   #define SYSTEM_TIME micros()
   #define ONE_SEC 1000000L
+  #define IO_TIME_FACTOR 1000
 #endif
 #define ONE_MIN 60 * ONE_SEC
 
