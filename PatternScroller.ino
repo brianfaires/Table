@@ -4,6 +4,7 @@
 PatternScroller::PatternScroller() {
   dimParamChangeType = PREFERRED;//CENTER;//GROW_F;//GROW_R;//WORM;//FREEZE;
   changeDimParamsWithMovement = true;
+  enableDoubleBrightMove = false;
   
   oldDimPatternIndex = 0;
   targetColorPatternIndex = 0;
@@ -245,98 +246,132 @@ bool PatternScroller::WalkColorParams(uint32_t curTime) {
 }
 
 bool PatternScroller::WalkDimParams(uint32_t curTime) {
-#define ADJUST_BOTH() if(pg.brightLength < brightLength) { pg.brightLength++; } \
-                      else if(pg.brightLength > brightLength) { pg.brightLength--; } \
-                      if(pg.transLength < transLength && pg.brightLength >= brightLength) { pg.transLength++; } \
-                      else if(pg.transLength > transLength && pg.brightLength <= brightLength) { pg.transLength--; } // debug: should remove second half of if so moves of 3 are allowed?
+  static bool blendParamsOn = false;
+  static param_change_type changeType = CENTER;
 
-#define SCROLL_BACK() ScrollPatternsWithoutTimer(false);
-#define SCROLL_FORWARD() ScrollPatternsWithoutTimer(true);
-#define ADJ_DOWNBEAT() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() }
-#define ADJ_UPBEAT() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() }
-#define ADJ_DOWNBEAT_INC() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() }
-#define ADJ_DOWNBEAT_INC2() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() SCROLL_FORWARD() }
-#define ADJ_DOWNBEAT_DEC() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() }
-#define ADJ_DOWNBEAT_DEC2() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK()  }
-#define ADJ_UPBEAT_INC() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() }
-#define ADJ_UPBEAT_INC2() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() SCROLL_FORWARD() }
-#define ADJ_UPBEAT_DEC() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() }
-#define ADJ_UPBEAT_DEC2() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK() }
+  #define ADJUST_BOTH() if(pg.brightLength < brightLength) { pg.brightLength++; } \
+                        else if(pg.brightLength > brightLength) { pg.brightLength--; } \
+                        if(pg.transLength < transLength && pg.brightLength >= brightLength) { pg.transLength++; if(enableDoubleBrightMove && pg.brightLength > brightLength) { pg.brightLength--; } } \
+                        else if(pg.transLength > transLength && pg.brightLength <= brightLength) { pg.transLength--; if(enableDoubleBrightMove && pg.brightLength < brightLength) { pg.brightLength++; } } 
+  
+  #define SCROLL_BACK() ScrollPatternsWithoutTimer(false);
+  #define SCROLL_FORWARD() ScrollPatternsWithoutTimer(true);
+  #define ADJ_DOWNBEAT() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() }
+  #define ADJ_UPBEAT() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() }
+  #define ADJ_DOWNBEAT_INC() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() }
+  #define ADJ_DOWNBEAT_INC2() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() SCROLL_FORWARD() }
+  #define ADJ_DOWNBEAT_DEC() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() }
+  #define ADJ_DOWNBEAT_DEC2() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK()  }
+  #define ADJ_UPBEAT_INC() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() }
+  #define ADJ_UPBEAT_INC2() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() SCROLL_FORWARD() }
+  #define ADJ_UPBEAT_DEC() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() }
+  #define ADJ_UPBEAT_DEC2() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK() }
 
-// debug: For cases 3/-3, consider 1,-2/-2,1... Also, consider cases 3/-3 as even things you want possible; if so, edit ADJUST_BOTH()
+  // debug: For cases 3/-3, consider 1,-2/-2,1... Also, consider cases 3/-3 as even things you want possible; if so, edit ADJUST_BOTH()
+  // Using delta = 3/-3 to signal an actual change of 1/-1, but with both bright and trans changing
+  // Allow brightLength to be double updated only when offsetting transLength so delta=0
   int8_t delta = 0;
-  if     (pg.brightLength < brightLength)             { delta++; }
-  else if(pg.brightLength > brightLength)             { delta--; }
-  if     (pg.transLength < transLength && delta <= 0) { delta+=2;  }
-  else if(pg.transLength > transLength && delta >= 0) { delta-=2;  }
+  if     (pg.brightLength < brightLength)             { delta = 1; }
+  else if(pg.brightLength > brightLength)             { delta = -1; }
+  if     (pg.transLength < transLength && delta <= 0) { if(delta==0) { delta = 2; } else { delta = 3; } }
+  else if(pg.transLength > transLength && delta >= 0) { if(delta==0) { delta = -2; } else { delta = -3; } }
+  if(enableDoubleBrightMove) {
+    if(delta == 3 && pg.brightLength > brightLength + 1) { delta = 4; }
+    else if(delta == -3 && pg.brightLength + 1 < brightLength) { delta = 4; }
+  }
 
-  param_change_type changeType;
-  if(dimParamChangeType == PREFERRED) { changeType = GetPreferredDimParamChangeType(oldDimPatternIndex, delta); } // debug: how to decide when blending?
-  else { changeType = dimParamChangeType; }
-
-  if(delta == 0) { ADJ_DOWNBEAT() }
-  else if(changeType == GROW_F) {
-    switch(delta) {
-      case 1:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC() } break;
-      case -1: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC() } break;
-      case 2:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC2() } break;
-      case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC2() } break;
-      //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT_DEC() } break;
-      //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
-      default: DUMP(delta)
-    }
+  if(delta == 0) {
+    // No changes
+    blendParamsOn = false;
   }
-  else if(changeType == GROW_R) {
-    switch(delta) {
-      case 1:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT() } break;
-      case -1: if(dimSpeed > 0) { ADJ_UPBEAT_INC() } else { ADJ_UPBEAT() } break;
-      case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT() } break;
-      case -2: if(dimSpeed > 0) { ADJ_UPBEAT_INC2() } else { ADJ_UPBEAT() } break;
-      //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
-      //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC2() } break;
-      default: DUMP(delta)
-    }
-  }
-  else if(changeType == WORM) {
-    switch(delta) {
-      case 1:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC() } break;
-      case -1: if(dimSpeed > 0) { ADJ_UPBEAT_INC() } else { ADJ_UPBEAT() } break;
-      case 2:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC2() } break;
-      case -2: if(dimSpeed > 0) { ADJ_UPBEAT_INC2() } else { ADJ_UPBEAT() } break;
-      //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
-      //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
-      default: DUMP(delta)
-    }
-  }
-  else if(changeType == FREEZE) {
-    switch(delta) {
-      case 1:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT() } break;
-      case -1: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC() } break;
-      case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT() } break;
-      case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC2() } break;
-      //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT_DEC() } break;
-      //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC2() } break;
-      default: DUMP(delta)
-    }
-  }
-  else if(changeType == CENTER) {
-    switch(delta) {
-      case 1:
-        if(pg.brightLength % 2 == 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_DEC() } break;
-      case -1: 
-        if(pg.brightLength % 2 == 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT() } break;
-      case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC() } break;
-      case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC() } break;
-      //case 3:
-        //if(pg.brightLength % 2 == 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
-      //case -3:
-        //if(pg.brightLength % 2 == 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
-      default: DUMP(delta)
-    }
+  else if(delta == 4) {
+    // Trading 2 brightLength for 1 transLength
+    ADJ_DOWNBEAT()
   }
   else {
-    THROW(unknown dimParamChangeType!)
-    DUMP(dimParamChangeType)
+    if(!blendParamsOn) {
+      // Lock in the changeType at the start of the blend
+      blendParamsOn = true;
+      if(dimParamChangeType != PREFERRED) { changeType = dimParamChangeType; }
+      else if(dimBlendOn && curTime - lastDimPatternChange >= dimPauseLength + dimBlendLength/2) {
+        changeType = GetPreferredDimParamChangeType(GetTargetDimPatternIndex(), delta);
+      }
+      else {
+        changeType = GetPreferredDimParamChangeType(oldDimPatternIndex, delta);
+      }
+    }
+  
+    if(changeType == GROW_F) {
+      switch(delta) {
+        case 3:
+        case 1:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC() } break;
+        case -3:
+        case -1: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC() } break;
+        case 2:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC2() } break;
+        case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC2() } break;
+        //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT_DEC() } break;
+        //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
+        default: DUMP(delta)
+      }
+    }
+    else if(changeType == GROW_R) {
+      switch(delta) {
+        case 3:
+        case 1:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT() } break;
+        case -3:
+        case -1: if(dimSpeed > 0) { ADJ_UPBEAT_INC() } else { ADJ_UPBEAT() } break;
+        case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT() } break;
+        case -2: if(dimSpeed > 0) { ADJ_UPBEAT_INC2() } else { ADJ_UPBEAT() } break;
+        //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
+        //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC2() } break;
+        default: DUMP(delta)
+      }
+    }
+    else if(changeType == WORM) {
+      switch(delta) {
+        case 3:
+        case 1:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC() } break;
+        case -3:
+        case -1: if(dimSpeed > 0) { ADJ_UPBEAT_INC() } else { ADJ_UPBEAT() } break;
+        case 2:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC2() } break;
+        case -2: if(dimSpeed > 0) { ADJ_UPBEAT_INC2() } else { ADJ_UPBEAT() } break;
+        //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
+        //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
+        default: DUMP(delta)
+      }
+    }
+    else if(changeType == FREEZE) {
+      switch(delta) {
+        case 3:
+        case 1:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT() } break;
+        case -3:
+        case -1: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC() } break;
+        case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT() } break;
+        case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC2() } break;
+        //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT_DEC() } break;
+        //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC2() } break;
+        default: DUMP(delta)
+      }
+    }
+    else if(changeType == CENTER) {
+      switch(delta) {
+        case 3:
+        case 1: if(pg.brightLength % 2 == 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_DEC() } break;
+        case -3:
+        case -1: if(pg.brightLength % 2 == 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT() } break;
+        case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC() } break;
+        case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC() } break;
+        //case 3:
+          //if(pg.brightLength % 2 == 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
+        //case -3:
+          //if(pg.brightLength % 2 == 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
+        default: DUMP(delta)
+      }
+    }
+    else {
+      THROW(unknown dimParamChangeType!)
+      DUMP(dimParamChangeType)
+    }
   }
       
   if(pg.dimPeriod != dimPeriod) { THROW(dimPeriod mismatch without a split!) }
@@ -483,22 +518,23 @@ bool PatternScroller::ScrollPatternsWithoutTimer(bool moveForward) {
 }
 
 param_change_type PatternScroller::GetPreferredDimParamChangeType(uint8_t patternIndex, int8_t delta) {
+  // delta can be +/- 3. If so, the actual change was +/- 1, but both bright and trans were updated
   switch(patternIndex) {
     case COMET_F:         return dimSpeed > 0 ? GROW_R : GROW_F;
     case COMET_R:         return dimSpeed < 0 ? GROW_R : GROW_F;
-    case TWO_SIDED:       return CENTER;
-    case BARBELL:         return CENTER;
-    case SLOPED_TOWERS_H: return CENTER;
-    case SLOPED_TOWERS_L: return CENTER;
-    case SLIDE_H:         return CENTER;
-    case SLIDE_L:         return CENTER;
-    case BOWTIES_F:       return CENTER;
-    case BOWTIES_R:       return CENTER;
-    case TOWERS:          return CENTER;
-    case SNAKE:           return CENTER;
-    case SNAKE3:          return CENTER;
-    case THREE_COMETS_F:  return abs(delta)==1 ? (dimSpeed > 0 ? GROW_R : GROW_F) : CENTER;
-    case THREE_COMETS_R:  return abs(delta)==1 ? (dimSpeed < 0 ? GROW_R : GROW_F) : CENTER;
+    case TWO_SIDED:       return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM; // 2
+    case BARBELL:         return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM;
+    case SLOPED_TOWERS_H: return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM; // 4
+    case SLOPED_TOWERS_L: return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM;
+    case SLIDE_H:         return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM; // 6
+    case SLIDE_L:         return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM;
+    case BOWTIES_F:       return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM; // 8
+    case BOWTIES_R:       return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM;
+    case TOWERS:          return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM; // 10
+    case SNAKE:           return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? WORM : WORM;
+    case SNAKE3:          return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM; // 12
+    case THREE_COMETS_F:  return abs(delta)==3 ? WORM : abs(delta)==2 ? CENTER : (dimSpeed > 0 ? GROW_R : WORM);
+    case THREE_COMETS_R:  return abs(delta)==3 ? WORM : abs(delta)==2 ? CENTER : (dimSpeed < 0 ? GROW_R : WORM);
     default: THROW("Unrecognized patternIndex") DUMP(patternIndex); break;
   }
   

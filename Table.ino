@@ -7,11 +7,14 @@
  *    Use fastmath function scale8() in scaleParam() functions
  *  
  *  Button IO:
- *    Medium-long press into tap doesn't do double click
- *    Double-click long hold throws away first click
- *    Sets values to 0 to signal off; this will error out 1us every 71 hours
+ *    - Medium-long press into tap doesn't do double click
+ *    - Double-click long hold throws away first click
+ *    - Sets values to 0 to signal off; this will error out 1us every 71 hours
  *    
  *  Patterns:
+ *    - changeType not remembered when oscillating params through PatternController
+ *    - Only WORM doesn't flicker when decoupled from movement
+ *    - Bright spots on ends look weird cause they draw attention and are frozen
  *    Things that change/twinkle as they scroll
  *    Patterns that set the color of their pixels
  *    Animations that fade in/out of subsets (like 3comets into 1 comet)
@@ -26,8 +29,7 @@
  *    Serial output: buffer large outputs to avoid one big delay
  *    
  *  Bugs:
- *    Flickering happens at 100FPS and greater. No idea why.
- *    
+ *    - Flickering happens at 100FPS and greater. No idea why.
  *    
  *  To do:
  *    - PatternScroller and PatternController library(s)

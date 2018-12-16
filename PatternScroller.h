@@ -49,6 +49,7 @@ class PatternScroller {
     // Params
     param_change_type dimParamChangeType;
     bool changeDimParamsWithMovement;
+    bool enableDoubleBrightMove;
     uint8_t brightness;
     uint8_t numColors, brightLength, transLength;
         

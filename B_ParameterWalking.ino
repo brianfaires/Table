@@ -9,7 +9,7 @@ void UpdateAnimationParameters(uint32_t curTime) {
     timing.lastTopParamWalk = timing.now;
   }
 
-  //PulseBaseParams(curTime);
+  PulseBaseParams(curTime);
   
   #ifdef MANUAL_PARAMS
     if(ProcessSerialInput()) { 
@@ -20,7 +20,7 @@ void UpdateAnimationParameters(uint32_t curTime) {
 }
 
 void PulseBaseParams(uint32_t curTime) {
-  const uint32_t pulseLength = 5*ONE_SEC;//MIN / 128;
+  const uint32_t pulseLength = 2.3*ONE_SEC;//MIN / 128;
   
   static uint32_t curCycle = 0;
   static bool brightLow = false;
@@ -39,9 +39,15 @@ void PulseBaseParams(uint32_t curTime) {
     //else if(brightLow != transLow) { transMove = random8(2); }
   }
 
-  baseParams.transLength = transLow ? 0 : 255;
+  //baseParams.transLength = transLow ? 0 : 255;
+  //baseParams.brightLength = transLow ? 255 : 0;
 
-  //uint8_t curPulseLength = (curTime % pulseLength) * 255 / pulseLength;
+  uint8_t curPulseLength = (curTime % pulseLength) * uint64_t(255) / pulseLength;
+  baseParams.brightLength = transLow ? curPulseLength : 255-curPulseLength;
+  if(baseParams.brightLength < 255) { baseParams.brightLength++; } // To sync up the changes in brightLength and transLength after they're scaled from 0:dimPeriod/3, (at least at default value) debug: does this work for all dimPeriods?
+  baseParams.transLength = transLow ? 255-curPulseLength : curPulseLength;
+  
+  
   //if(brightMove) { baseParams.brightLength = brightLow ? curPulseLength : 255 - curPulseLength; }
   //if(transMove)  { baseParams.transLength  = transLow  ? curPulseLength : 255 - curPulseLength; }
 }

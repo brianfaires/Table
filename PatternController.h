@@ -23,6 +23,8 @@ class PatternController {
     void SetDimBlendLength(uint32_t value);
     param_change_type GetDimParamChangeType();
     bool GetChangeDimParamsWithMovement();
+    bool GetEnableDoubleBrightMove();
+    void SetEnableDoubleBrightMove(bool value);
     void SetDimParamChangeType(param_change_type value);
     void SetDimParamChangeType(bool changeDimParamsWithMovement);
     void SetDimParamChangeType(param_change_type value, bool changeDimParamsWithMovement);

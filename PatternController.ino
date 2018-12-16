@@ -53,6 +53,8 @@ void PatternController::SetDimParamChangeType(param_change_type value, bool chan
   ps2.dimParamChangeType = value;
   ps2.changeDimParamsWithMovement = changeDimParamsWithMovement;
 }
+bool PatternController::GetEnableDoubleBrightMove() { return ps1.enableDoubleBrightMove; }
+void PatternController::SetEnableDoubleBrightMove(bool value) { ps1.enableDoubleBrightMove = value; ps2.enableDoubleBrightMove = value; }
 
 void PatternController::SetBrightness(uint8_t brightness) {
   ps1.brightness = brightness;
@@ -67,6 +69,7 @@ void PatternController::Init(uint16_t _numLEDs, struct_base_show_params& params,
   SetColorPauseLength(INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH, curTime);
   SetDimParamChangeType(INIT_DIM_PARAM_CHANGE_TYPE, INIT_CHANGE_DIM_PARAMS_WITH_MOVEMENT);
   SetBrightness(INIT_PATTERN_SCROLLER_BRIGHTNESS);
+  SetEnableDoubleBrightMove(INIT_ENABLE_DOUBLE_BRIGHT_MOVE);
 
   numLEDs = _numLEDs;
   allowedDimPeriods = _allowedDimPeriods;
@@ -192,7 +195,7 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_base
     output.dimSpeed = params.dimSpeed;
     output.colorSpeed = params.colorSpeed;
   #else
-    uint8_t abs_dimSpeed = scaleParam((uint8_t)abs(params.dimSpeed), 0, 100);
+    uint8_t abs_dimSpeed = scaleParam((uint8_t)abs(params.dimSpeed), 20, 127);
     output.dimSpeed = abs_dimSpeed * (params.dimSpeed >= 0 ? 1 : -1);
     
     // Bound colorSpeed based on dimSpeed
@@ -209,8 +212,9 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_base
     output.colorSpeed = output.dimSpeed/2;//scaleParam(params.colorSpeed, colorSpeed_lower, colorSpeed_upper);
     output.displayMode = scaleParam(params.displayMode, 0, (NUM_DIM_PATTERNS+1) * NUM_COLOR_PATTERNS - 1);
     output.numColors = scaleParam(params.numColors, 2, PALETTE_SIZE-1);
-    output.transLength = scaleParam(params.transLength, 0, (output.dimPeriod-10) / 4);
-    output.brightLength = scaleParam(params.brightLength, 0, (output.dimPeriod-10) / 2);
+    output.transLength = scaleParam(params.transLength, 0, (output.dimPeriod-10) / 3);
+    output.brightLength = scaleParam(params.brightLength, 0, (output.dimPeriod-10) / 3);
+    //Serial.println(String(params.brightLength)+"/"+String(output.brightLength) + ", " + String(params.transLength)+"/"+String(output.transLength));
   #endif
 }
 
