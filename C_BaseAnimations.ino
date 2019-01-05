@@ -144,11 +144,6 @@ void DiscoFire() {
   
 }
 
-
-void ColorExplosion() {
-  
-}
-
 void Orbs() {
   const uint8_t centerPoint = 51;
   const uint8_t minRadius = 3;
@@ -218,4 +213,192 @@ void CenterSpawn() {
   leds[NUM_LEDS/2] = leds[NUM_LEDS/2 - 1];
   leds_b[NUM_LEDS/2] = leds_b[NUM_LEDS/2 - 1];
 }
+
+void Stacks(uint32_t curTime) {
+  const uint8_t numStackers = 4;
+  // Bands of color flow from spawn point to end point and stack up
+  // numColors, dimSpeed=moveSpeed, colorSpeed=pauseBetweenBands, brightLength=bandThickness, transLength=spacing
+  // displayMode, dimPeriod, colorPeriod
+  uint8_t nCol = scaleParam(baseParams.numColors, 1, 4);
+  uint8_t stackSize = scaleParam(baseParams.brightLength, 5, 15);
+  uint8_t mySpeed = scaleParam((uint8_t)2*abs(baseParams.dimSpeed), (uint8_t)20, uint8_t(REFRESH_RATE));
+  uint8_t rotationSpeed = 0;//scaleParam((uint8_t)2*abs(baseParams.colorSpeed), (uint8_t)20, uint8_t(REFRESH_RATE));
+  
+  static uint8_t stackColors[20]; // max stacks
+  static uint8_t numStacks = 0;
+  static uint16_t movingStackIndex = 0;
+  static uint16_t rotationIndex = NUM_LEDS-18;
+  static uint32_t lastMoveTime = 0;
+  static uint32_t lastRotationTime = 0;
+  static uint8_t curStackSize = stackSize;
+
+  for(uint16_t i = 0; i < NUM_LEDS; i++) { leds[i] = CRGB::Black; leds_b[i] = 255; }
+
+  if(numStacks == NUM_LEDS / (numStackers*curStackSize)) {
+    // Reset
+    curStackSize = stackSize;
+    numStacks = 0;
+  }
+
+  for(uint8_t segment = 0; segment < numStackers; segment++) {
+    bool moveForward;
+    uint16_t startPos, endPos;
+    if(segment == 0) { startPos = 0; endPos = NUM_LEDS/4 - 1; moveForward = true; }
+    else if(segment == 1) { startPos = NUM_LEDS-1; endPos = NUM_LEDS*3/4; moveForward = false; }
+    else if(segment == 2) { startPos = NUM_LEDS/2; endPos = NUM_LEDS*3/4-1; moveForward = true; }
+    else { startPos = NUM_LEDS/2-1; endPos = NUM_LEDS/4; moveForward = false; }
+
+    startPos = (startPos + rotationIndex) % NUM_LEDS;
+    endPos = (endPos + rotationIndex) % NUM_LEDS;
+    
+    // Draw stationary stacks
+    uint16_t curPixel = endPos;
+    if(moveForward) {
+      for(uint8_t i = 0; i < numStacks; i++) {
+        for(uint8_t j = 0; j < curStackSize; j++) {
+          leds[curPixel--] = pm.palette[stackColors[i]];
+          if(curPixel == 0xFFFF) { curPixel = NUM_LEDS-1; }
+        }
+      }
+    }
+    else {
+      for(uint8_t i = 0; i < numStacks; i++) {
+        for(uint8_t j = 0; j < curStackSize; j++) {
+          leds[curPixel++] = pm.palette[stackColors[i]];
+          if(curPixel == NUM_LEDS) { curPixel = 0; }
+        }
+      }
+    }
+  
+    // Draw moving stack
+    if(moveForward) {
+      for(uint8_t i = 0; i < curStackSize; i++) {
+        uint16_t idx = (startPos + movingStackIndex - i + NUM_LEDS) % NUM_LEDS;
+        leds[idx] = pm.palette[stackColors[numStacks]];
+        if(idx == startPos) { break; }
+      }
+    }
+    else {
+      for(uint8_t i = 0; i < curStackSize; i++) {
+        uint16_t idx = (startPos - movingStackIndex + i + NUM_LEDS) % NUM_LEDS;
+        leds[idx] = pm.palette[stackColors[numStacks]];
+        if(idx == startPos) { break; }
+      }
+    }
+  }
+
+  // Move new stack and check for move completion
+  if((curTime - lastMoveTime) > FPS_TO_TIME(mySpeed)) {
+    lastMoveTime = curTime;
+    movingStackIndex++;
+    if(movingStackIndex == NUM_LEDS/numStackers - numStacks*curStackSize) {
+      numStacks++;
+      movingStackIndex = 0;
+      stackColors[numStacks] = numStacks % nCol;
+    }
+  }
+
+  // Rotate entire display
+  if(abs(rotationSpeed) > 0 && (curTime - lastRotationTime) > FPS_TO_TIME(abs(rotationSpeed))) {
+    lastRotationTime = curTime;
+    if(rotationSpeed > 0) { rotationIndex = (rotationIndex+1) % NUM_LEDS; }
+    else { rotationIndex = (rotationIndex+NUM_LEDS-1) % NUM_LEDS; }
+  }
+}
+
+void Collision() {
+  // Comets flow from spawn point to end point and explode in a flash of white
+  // numColors, brightSpeed, colorThickness
+}
+
+void PulseInPlace() {
+  
+}
+
+void ColorExplosion(uint32_t curTime) {
+  static uint32_t lastSpawnTime = curTime;
+  
+//dimPeriod, colorPeriod / splitPoint
+#ifdef EXPLICIT_PARAMETERS
+  uint8_t nCol = baseParams.numColors;
+  uint8_t growRate = baseParams.colorSpeed;
+  uint8_t fadeRate = baseParams.dimSpeed;
+  uint8_t spawnRate = baseParams.brightLength;
+  uint8_t growChance = baseParams.transLength;
+  uint8_t growPoint = baseParams.displayMode;
+  uint8_t overridePoint = baseParams.dimPeriod; // Hardly matters
+#else
+  uint8_t nCol = scaleParam(baseParams.numColors, 2, 5);
+  uint8_t growRate = scaleParam(2*(uint8_t)abs(baseParams.colorSpeed), (uint8_t)2, (uint8_t)16);
+  growRate += growRate % 2;
+  uint8_t fadeRate = scaleParam(2*(uint8_t)abs(baseParams.dimSpeed), (uint8_t)2, min(6, growRate+2));
+  fadeRate += fadeRate % 2;
+  uint8_t spawnRate = scaleParam(baseParams.brightLength, 6, 120);
+  uint8_t growChance = scaleParam(baseParams.transLength, 220, 250);
+  uint8_t growPoint = growRate * scaleParam(baseParams.displayMode, 4, 15);
+  uint8_t overridePoint = scaleParam(baseParams.dimPeriod, 1, 32); // Hardly matters
+#endif
+
+  for(uint16_t i = 0; i < NUM_LEDS; i++) {
+    if(leds_b[i] % 2 == 1) {
+      // Increasing brightness with odd numbers
+      if(leds_b[i] >= 255 - growRate) { leds_b[i] = 254; }
+      else { leds_b[i] += growRate; }
+      // debug: move the 0 and NUM_LEDS checks to single cases outside the loop, to avoid checking every pixel
+      if(leds_b[i] >= growPoint && leds_b[i] - growRate < growPoint) {
+        // Spread outward
+        #define SPREAD_EXPLODE(x,y) if(leds_b[x] % 2 == 0 && leds_b[x] <= overridePoint) { leds_b[x] = 1; leds[x] = leds[y]; }
+        if(random8() < growChance) {
+          // Spread up
+          if(i == NUM_LEDS-1) { SPREAD_EXPLODE(0, NUM_LEDS-1) }
+          else { SPREAD_EXPLODE(i+1, i) }
+        }
+        if(random8() < growChance) {
+          // Spread down
+          if(i == 0) { SPREAD_EXPLODE(NUM_LEDS-1, 0) }
+          else { SPREAD_EXPLODE(i-1, i) }
+        }
+      }
+    }
+    else if(leds_b[i] != 0){
+      // Fade down even brightnesses
+      if(leds_b[i] <= fadeRate) { leds_b[i] = 0; }
+      else { leds_b[i] -= fadeRate; }
+    }
+  }
+
+  // Randomly light spawnRate LEDs
+  uint8_t nSpawn = (curTime - lastSpawnTime) * spawnRate / ONE_SEC;
+  if(nSpawn > 0) {
+    lastSpawnTime = curTime;
+    for(uint8_t i = 0; i < nSpawn; i++) {
+      uint16_t newCenter = random16(NUM_LEDS);
+      if(leds_b[newCenter] == 0) {
+        leds_b[newCenter] = 1;
+        leds[newCenter] = pm.palette[random8(nCol)];
+      }
+    }
+  }
+}
+
+void MovingStrobe() {
+  
+}
+
+void ExpandingStackingDark() {
+  
+}
+
+void StutterStepBands() {
+  
+}
+
+void ColorCycle() {
+  
+}
+
+void HotGlow() {
+  
+}
+
 

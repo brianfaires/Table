@@ -123,6 +123,13 @@ bool ProcessSerialInput() {
         if(v < 0 || v > 255) { return false; }
         
         pm.palette[colorNum] = CHSV(h,sat,v);
+        String output = "";
+        for(uint8_t i = 0; i < PALETTE_SIZE; i++) {
+          output += String(i) + ": (" + String(pm.palette[i].h) + ", " +  String(pm.palette[i].s) + ", " +  String(pm.palette[i].v) + ")";
+          CRGB temp = pm.palette[i];
+          output += "\tRGB:(" + String(temp.r) + ", " +  String(temp.g) + ", " +  String(temp.b) + ")\n";
+        }
+        Serial.print(output);
         return true;
       }
       else if(s.startsWith("np")) {
@@ -135,6 +142,29 @@ bool ProcessSerialInput() {
       }
       else if(s.startsWith("nt")) {
         NextTopAnimation(timing.now);
+        return true;
+      }
+      else if(s.startsWith("sb")) {
+        s = s.substring(2);
+        long b = s.toInt();
+        if(b < 0 || b > 255) { return false; }
+        globalBrightness = b;
+        return true;
+      }
+      else if(s.startsWith("rb")) {
+        baseParams.numColors = random8();
+        baseParams.colorSpeed = random8();
+        baseParams.dimSpeed = random8();
+        baseParams.brightLength = random8();
+        baseParams.transLength = random8();
+        baseParams.displayMode = random8();
+        baseParams.dimPeriod = random8();
+        baseParams.colorPeriod = random8();
+        return true;
+      }
+      else if(s.startsWith("rt")) {
+        topParams.portion = random8();
+        topParams.speed = random8();
         return true;
       }
       
@@ -207,17 +237,11 @@ bool ProcessSerialInput() {
 
 void PrintParams() {
   #ifdef DEBUG_SERIAL
-    Serial.println("\nCommands: np (NextPalette), nb (NextBase), nt (NextTop)\n\t  sp # ### ### ### (SetPalette)");
-    PrintBaseTopAndPMParams();
-    PrintLayerParams();
-    PrintPatternControllerParams();
-
-    #ifdef TEST_PALETTES
-      String output = "";
-      for(uint8_t i = 0; i < PALETTE_SIZE; i++) {
-        output += String(i) + ": (" + String(pm.palette[i].h) + ", " +  String(pm.palette[i].s) + ", " +  String(pm.palette[i].v) + ")\n";
-      }
-      Serial.print(output);
+    #ifndef TEST_PALETTES
+      Serial.println("\nCommands: np (NextPalette), nb (NextBase), nt (NextTop)\n\t  rb (RandomizeBaseParams), rt (RandomizeTopParams)\n\t  sp # ### ### ### (SetPalette)");
+      PrintBaseTopAndPMParams();
+      PrintLayerParams();
+      PrintPatternControllerParams(); 
     #endif
   #endif
 }

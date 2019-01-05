@@ -105,7 +105,6 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
     if(!splitDisplay && dimSpeed != 0 && ps->IsStartOfDimPattern()) {
       StartSplit(scaledParams, curTime);
     }
-
     ScaleParams(params, scaledParams, ps->GetDimPeriod(), ps->GetColorPeriod()); // Re-scale params with old periods
   }
 
@@ -221,18 +220,18 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_base
 void PatternController::StartSplit(struct_base_show_params& params, uint32_t curTime) {
   Serial.println("Start Split");
   splitDisplay = true;
-  splitIndex = dimSpeed > 0 ? 0 : numLEDs-1;
+  splitIndex = ps->GetDimSpeed() > 0 ? 0 : numLEDs-1;
 
   secondary->Clone(ps, params, curTime);
   //secondary->Init(params, curTime);
   //secondary->SyncMovement(ps);
 
-  secondaryScrollerIsLow = dimSpeed > 0;
+  secondaryScrollerIsLow = ps->GetDimSpeed() > 0;
 }
 
 void PatternController::EndSplit() {
   splitDisplay = false;
-  if(dimSpeed > 0 && secondaryScrollerIsLow || dimSpeed < 0 && !secondaryScrollerIsLow) {
+  if(ps->GetDimSpeed() > 0 && secondaryScrollerIsLow || ps->GetDimSpeed() < 0 && !secondaryScrollerIsLow) {
     PatternScroller* swap = ps;
     ps = secondary;
     secondary = swap;

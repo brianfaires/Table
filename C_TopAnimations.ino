@@ -140,7 +140,4 @@ void Comets() {
   
 }
 
-void Collision() {
-  
-}
 

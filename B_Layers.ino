@@ -13,7 +13,7 @@ void DrawBaseLayer() {
       break;
 
     case COLOR_EXPLOSION:
-      ColorExplosion();
+      ColorExplosion(timing.now);
       break;
 
     case ORBS:
@@ -26,6 +26,10 @@ void DrawBaseLayer() {
 
     case CENTER_SPAWN:
       CenterSpawn();
+      break;
+
+    case STACKS:
+      Stacks(timing.now);
       break;
 
     default:

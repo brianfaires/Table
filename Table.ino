@@ -18,7 +18,6 @@
  *    Things that change/twinkle as they scroll
  *    Patterns that set the color of their pixels
  *    Animations that fade in/out of subsets (like 3comets into 1 comet)
- *    Blending/oscillating params based on time
  *    Blending between patterns with perdiods that are factors
  *    
  *  To do:
@@ -28,12 +27,10 @@
  *    Make standard snake work with blackness; overlayed with dimming pattern too maybe
  *    Serial output: buffer large outputs to avoid one big delay
  *    
- *  Bugs:
- *    - Flickering happens at 100FPS and greater. No idea why.
- *    
  *  To do:
  *    - PatternScroller and PatternController library(s)
  *    - Tune Palettes
+ *    - Get rid of int8_t's for baseParams
  *      
  */
 
@@ -56,7 +53,7 @@ void setup() {
 
   pinMode(BTN1_PIN, INPUT_PULLUP);
   FastLED.addLeds<APA102, LED_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(leds, NUM_LEDS, 0, leds_b, colorCorrections, &globalBrightness, gammaDim, gammaDim_5bit);
-  //FastLED.addLeds<APA102, LED_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(leds, NUM_LEDS, 0).setCorrection(COLOR_CORRECTION);
+  //FastLED.addLeds<SK9822, LED_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(leds, NUM_LEDS, 0);
   //FastLED.setBrightness(BRIGHTNESS);
   leds = CRGB::Black;
   leds_top = CRGB::Black;
@@ -71,18 +68,18 @@ void setup() {
   #ifdef DEBUG_SERIAL
     Serial.println("PaletteManager init complete.");
   #endif
-  
+
   Gamma.Init(gammaR, gammaG, gammaB, reverseGammaR, reverseGammaG, reverseGammaB, &globalBrightness);
   #ifdef DEBUG_SERIAL
     Serial.println("Gamma init complete.");
   #endif
-  
+
   InitBaseLayer();
   InitTopLayer();
   #ifdef DEBUG_SERIAL
     Serial.println("Layer init complete.");
   #endif
-  
+
   #ifdef DEBUG_SERIAL
     Serial.println("setup() complete.");
     #ifdef DEBUG_TIMING
@@ -91,7 +88,6 @@ void setup() {
     #endif
   
   #endif
-
 
   #ifdef MANUAL_PARAMS
     Serial.setTimeout(100);
@@ -119,8 +115,8 @@ void loop() {
     
     #ifdef TEST_PALETTES
       leds = CRGB::Black;
-      for(uint16_t i = 0; i < NUM_LEDS; i++) { leds_b[i] = globalBrightness; }
-      uint8_t pixelsPerPalette = NUM_LEDS / PALETTE_SIZE;
+      for(uint16_t i = 0; i < 120; i++) { leds_b[i] = globalBrightness; }
+      uint8_t pixelsPerPalette = 120 / PALETTE_SIZE;
       for(uint8_t i = 0; i < PALETTE_SIZE; i++) {
         //leds(pixelsPerPalette*i + 1, pixelsPerPalette*(i+1) - 2) = pm.palette[i]; // With spaces
         leds(pixelsPerPalette*i, pixelsPerPalette*(i+1) - 1) = pm.palette[i];

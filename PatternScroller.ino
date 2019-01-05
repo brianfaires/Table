@@ -111,6 +111,7 @@ void PatternScroller::Init(struct_base_show_params& params, uint32_t curTime, Pa
   pg.WriteColorPattern(targetColorPatternIndex, targetColorPattern);
   memcpy(curColorPattern, targetColorPattern, sizeof(CRGB)*colorPeriod);
   memcpy(oldColorPattern, targetColorPattern, sizeof(CRGB)*colorPeriod);
+  oldDimPatternIndex = GetTargetDimPatternIndex();
 
   lastDimPatternChange = curTime;
   lastColorPatternChange = curTime;
@@ -122,8 +123,12 @@ void PatternScroller::Clone(PatternScroller* source, struct_base_show_params& pa
   randomDimPatternIndex = source->randomDimPatternIndex;
   randomColorPatternIndex = source->randomColorPatternIndex;
   Init(params, curTime);
+  dimSpeed = source->dimSpeed;
+  colorSpeed = source->colorSpeed;
   lastDimMove = source->lastDimMove;
   lastColorMove = source->lastColorMove;
+  lastDimPatternChange = source->lastDimPatternChange;
+  lastColorPatternChange = source->lastColorPatternChange;
 }
 
 bool PatternScroller::Update(uint32_t curTime) {
