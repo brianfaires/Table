@@ -45,3 +45,23 @@ struct struct_timers {
   uint32_t lastBaseTransition = 0, lastTopTransition = 0;
 };
 
+struct struct_stacker {
+  uint16_t startPixel;
+  uint16_t endPixel;
+  bool moveForward;
+  uint8_t stackSize;
+  uint8_t spacing;
+  uint8_t numColors;
+  uint16_t moveSpeed;
+  
+  uint8_t numStacks;
+  uint16_t moveIndex;
+  
+  uint32_t lastMove = 0;
+};
+
+
+struct struct_comet{
+  uint16_t startPos;
+  bool moveForward;
+};

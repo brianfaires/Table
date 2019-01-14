@@ -18,15 +18,13 @@ void Rain() {
   static uint32_t lastMove = 0;
   
   uint8_t portion = scaleParam(topParams.portion, 8, 15);
-  int8_t refreshRate = scaleParam(topParams.speed, -50, 50);
-  if(refreshRate <= 0 && refreshRate > -7) { refreshRate = -7; }
-  else if(refreshRate >= 0 && refreshRate < 7) { refreshRate = 7; }
-
+  int8_t moveSpeed = scaleParam(abs(topParams.speed), int8_t(7), int8_t(50));
+  if(topParams.speed < 0) { moveSpeed *= -1; }
   
-  if(timing.now - lastMove > FPS_TO_TIME(abs(refreshRate))) {
+  if(timing.now - lastMove > FPS_TO_TIME(abs(moveSpeed))) {
     lastMove = timing.now;
     
-    if(refreshRate > 0) {
+    if(moveSpeed > 0) {
       for(uint16_t i = NUM_LEDS-1; i > 0; i--) {
         leds_top[i] = leds_top[i-1];
         leds_top_b[i] = leds_top_b[i-1];
@@ -53,8 +51,27 @@ void Rain() {
   }
 }
 
-void ScrollingTwinkle() {
-  
+void Twinkle() {
+  uint8_t spawnRate = scaleParam(topParams.portion, 1, 20);
+  uint8_t growRate = 2*scaleParam(topParams.speed, 1, 8);
+
+  for(uint16_t i = 0; i < NUM_LEDS; i++) {
+    if(leds_top_b[i] % 2 == 1) {
+      if(leds_top_b[i] < 255 - growRate) { leds_top_b[i] += growRate; }
+      else { leds_top_b[i] = 254; }
+    }
+    else if(leds_top_b[i] > 0) {
+      if(leds_top_b[i] <= growRate) { leds_top_b[i] = 0; }
+      else { leds_top_b[i] -= growRate; }
+    }
+  }
+
+  for(uint8_t i = 0; i < spawnRate; i++) {
+    uint16_t index;
+    do { index = random16(NUM_LEDS); } while(leds_top_b[i] > 0);
+    leds_top_b[index] = 1;
+    leds_top[index] = pm.palette[PALETTE_SIZE-1];
+  }
 }
 
 /*
@@ -136,8 +153,62 @@ void SpawnNewBouncy() {
 }
 */
 
-void Comets() {
+void FourComets(uint32_t curTime) {
+  const uint8_t NUM_COMETS = 4;
+  static struct_comet comets[NUM_COMETS];
+  static uint16_t moveIndex = 0;
+  static uint32_t lastMove = curTime;
   
+  uint8_t cometLength = scaleParam(topParams.portion, 8, 24);
+  uint8_t cometSpeed = scaleParam(topParams.speed, 8, 30);
+
+  if(comets[0].startPos == comets[1].startPos) {
+    // Init
+    comets[0].startPos = 0;
+    comets[0].moveForward = true;
+
+    comets[1].startPos = 173;
+    comets[1].moveForward = false;
+
+    comets[2].startPos = 210;
+    comets[2].moveForward = true;
+
+    comets[3].startPos = 333;
+    comets[3].moveForward = false;
+  }
+
+  for(uint8_t i = 0; i < NUM_COMETS; i++) {
+    DrawComet(&comets[i], cometLength, moveIndex);
+  }
+
+  if(curTime - lastMove > FPS_TO_TIME(cometSpeed)) {
+    moveIndex++;
+    if(moveIndex == 87) {
+      moveIndex = 0;
+    }
+  }
+}
+void DrawComet(struct_comet* comet, uint8_t cometLength, uint16_t moveIndex) {
+  uint16_t curPixel;
+  if(comet->moveForward) { curPixel = (comet->startPos + moveIndex) % NUM_LEDS; }
+  else { curPixel = (comet->startPos - moveIndex + NUM_LEDS) % NUM_LEDS; }
+
+  if(comet->moveForward) {
+    for(uint8_t i = 0; i < cometLength; i++) {
+      leds_top[curPixel] = pm.palette[PALETTE_SIZE-1];
+      leds_top[curPixel++] = 255 - 255*i/cometLength;
+      if(curPixel == NUM_LEDS) { curPixel = 0; }
+      if(curPixel == comet->startPos) { break; }
+    }
+  }
+  else {
+    for(uint8_t i = 0; i < cometLength; i++) {
+      leds_top[curPixel] = pm.palette[PALETTE_SIZE-1];
+      leds_top[curPixel--] = 255 - 255*i/cometLength;
+      if(curPixel == 0xFFFF) { curPixel = NUM_LEDS-1; }
+      if(curPixel == comet->startPos) { break; }
+    }
+  }
 }
 
 

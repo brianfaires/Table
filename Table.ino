@@ -26,6 +26,8 @@
  *    Top animations - based on time
  *    Make standard snake work with blackness; overlayed with dimming pattern too maybe
  *    Serial output: buffer large outputs to avoid one big delay
+ *    When you have 2 movements in multiple directions; replace it as one move speed to prevent flickering; or ensure that movements always happen on the same update cycle
+ *    Update speeds in baseParams to be uint8_t
  *    
  *  To do:
  *    - PatternScroller and PatternController library(s)

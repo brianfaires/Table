@@ -51,6 +51,10 @@ void InitBaseLayer() {
       pc.Init(NUM_LEDS, baseParams, &pm, &Gamma, allowedDimPeriods, allowedColorPeriods, timing.now);
       break;
 
+    case STACKS:
+      //InitStackers(NUM_LEDS - 18);
+      break;
+      
     default:
       break;
   }
@@ -106,7 +110,7 @@ void DrawTopLayer() {
       break;
     
     case TWINKLE:
-      ScrollingTwinkle();
+      Twinkle();
       break;
       
     case BOUNCE:
@@ -114,7 +118,7 @@ void DrawTopLayer() {
       break;
       
     case COMETS:
-      Comets();
+      FourComets(timing.now);
       break;
       
     case COLLISION:
