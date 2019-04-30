@@ -304,10 +304,14 @@ void PrintLayerParams() {
   uint8_t parameterCounter = NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS;
   String output = "Base Layer Parameters:\t\tTop Layer Parameters:\n";
 
-  output += String(parameterCounter++) + ".PauseLength:\t   " + String(layerConfig.basePauseLength/IO_TIME_FACTOR) + "   \t" + String(parameterCounter+4) + ".PauseLength:\t   " + String(layerConfig.topPauseLength/IO_TIME_FACTOR) + "\n";
-  output += String(parameterCounter++) + ".TransOutLength: " + String(layerConfig.baseTransOutLength/IO_TIME_FACTOR) + "   \t" + String(parameterCounter+4) + ".TransOutLength: " + String(layerConfig.topTransOutLength/IO_TIME_FACTOR) + "\n";
-  output += String(parameterCounter++) + ".TransInLength:  " + String(layerConfig.baseTransInLength/IO_TIME_FACTOR) + "   \t" + String(parameterCounter+4) + ".TransInLength:  " + String(layerConfig.topTransInLength/IO_TIME_FACTOR) + "\n";
-  output += String(parameterCounter++) + ".ParamWalkTime:  " + String(layerConfig.baseParamWalkTime/IO_TIME_FACTOR) + "   \t" + String(parameterCounter+4) + ".ParamWalkTime:  " + String(layerConfig.topParamWalkTime/IO_TIME_FACTOR) + "\n";
+  output += String(parameterCounter) + ".PauseLength:\t   " + String(layerConfig.basePauseLength/IO_TIME_FACTOR) + "   \t" + String(parameterCounter+4) + ".PauseLength:\t   " + String(layerConfig.topPauseLength/IO_TIME_FACTOR) + "\n";
+  parameterCounter++;
+  output += String(parameterCounter) + ".TransOutLength: " + String(layerConfig.baseTransOutLength/IO_TIME_FACTOR) + "   \t" + String(parameterCounter+4) + ".TransOutLength: " + String(layerConfig.topTransOutLength/IO_TIME_FACTOR) + "\n";
+  parameterCounter++;
+  output += String(parameterCounter) + ".TransInLength:  " + String(layerConfig.baseTransInLength/IO_TIME_FACTOR) + "   \t" + String(parameterCounter+4) + ".TransInLength:  " + String(layerConfig.topTransInLength/IO_TIME_FACTOR) + "\n";
+  parameterCounter++;
+  output += String(parameterCounter) + ".ParamWalkTime:  " + String(layerConfig.baseParamWalkTime/IO_TIME_FACTOR) + "   \t" + String(parameterCounter+4) + ".ParamWalkTime:  " + String(layerConfig.topParamWalkTime/IO_TIME_FACTOR) + "\n";
+  parameterCounter++;
   
   if(parameterCounter+4 != NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS + NUM_LAYER_PARAMS) { DUMP(parameterCounter) }
   Serial.println(output);

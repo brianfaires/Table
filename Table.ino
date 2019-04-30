@@ -1,7 +1,6 @@
 /* TODO:
  *  
  *  Test ArduinoTrace
- *  Test DEBUG_TIMING logic (is it defined if it's defined as empty?)
  *  Test PM
  *  
  *  Future ideas
@@ -41,7 +40,7 @@
 #include "A_Globals.h"
 
 void setup() {
-  #ifdef DEBUG_TIMING
+  #if DEBUG_TIMING
     uint32_t startupTime = SYSTEM_TIME;
   #endif
 

@@ -59,7 +59,7 @@ class PatternScroller {
     void BlendColorPattern();
     void BlendDimPattern();
     bool ScrollPatterns();
-    bool ScrollPatternsWithoutTimer(bool moveForward);
+    void ScrollPatternsWithoutTimer(bool moveForward);
     param_change_type GetPreferredDimParamChangeType(uint8_t patternIndex, int8_t delta);
 
     // Utility

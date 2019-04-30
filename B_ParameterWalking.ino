@@ -23,10 +23,10 @@ void PulseBaseParams(uint32_t curTime) {
   const uint32_t pulseLength = 2.3*ONE_SEC;//MIN / 128;
   
   static uint32_t curCycle = 0;
-  static bool brightLow = false;
+  //static bool brightLow = false;
   static bool transLow = false;
-  static bool brightMove = false;
-  static bool transMove = true;
+  //static bool brightMove = false;
+  //static bool transMove = true;
   
   if(curTime / pulseLength != curCycle) {
     curCycle = curTime / pulseLength;

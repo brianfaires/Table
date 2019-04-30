@@ -12,7 +12,7 @@
 #define NUM_PM_PARAMS 2
 
 // Timing debug tools
-#ifdef DEBUG_TIMING //todo: see if this is defined when DEBUG_TIMING() is defined but with no implementation
+#if DEBUG_TIMING
   uint32_t timingValues[10];
   uint32_t curDebugTime;
   uint32_t lastDebugTime;

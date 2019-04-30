@@ -197,7 +197,8 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_base
   #else
     uint8_t abs_dimSpeed = scaleParam((uint8_t)abs(params.dimSpeed), 20, 127);
     output.dimSpeed = abs_dimSpeed * (params.dimSpeed >= 0 ? 1 : -1);
-    
+
+    #if 0
     // Bound colorSpeed based on dimSpeed
     int8_t colorSpeed_lower, colorSpeed_upper;
     if(output.dimSpeed > 0) {
@@ -208,6 +209,7 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_base
       colorSpeed_upper = dimSpeed * 3/2;
       colorSpeed_upper = dimSpeed / -4;
     }
+    #endif
     
     output.colorSpeed = output.dimSpeed/2;//scaleParam(params.colorSpeed, colorSpeed_lower, colorSpeed_upper);
     output.displayMode = scaleParam(params.displayMode, 0, (NUM_DIM_PATTERNS+1) * NUM_COLOR_PATTERNS - 1);
@@ -232,7 +234,7 @@ void PatternController::StartSplit(struct_base_show_params& params) {
 
 void PatternController::EndSplit() {
   splitDisplay = false;
-  if(ps->GetDimSpeed() > 0 && secondaryScrollerIsLow || ps->GetDimSpeed() < 0 && !secondaryScrollerIsLow) {
+  if((ps->GetDimSpeed() > 0 && secondaryScrollerIsLow) || (ps->GetDimSpeed() < 0 && !secondaryScrollerIsLow)) {
     PatternScroller* swap = ps;
     ps = secondary;
     secondary = swap;

@@ -439,7 +439,7 @@ bool PatternScroller::ScrollPatterns() {
 
   return dimMoved;
 }
-bool PatternScroller::ScrollPatternsWithoutTimer(bool moveForward) {
+void PatternScroller::ScrollPatternsWithoutTimer(bool moveForward) {
   if(moveForward) {
     if(--dimIndexFirst == 0xFF) { dimIndexFirst = dimPeriod - 1; }
   }
