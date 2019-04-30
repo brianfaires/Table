@@ -1,19 +1,15 @@
 #pragma once
 
 // Runtime config
-#define DEBUG_SERIAL
 //#define TEST_PALETTES
 //#define TEST_COLOR_CORRECTION
-//#define USE_MILLIS_TIMER
+#define MANUAL_PARAMS
+//#define EXPLICIT_PARAMETERS
+#define SKIP_TIME_ON_SERIAL_WRITE
 
-#ifdef DEBUG_SERIAL
-  #define MANUAL_PARAMS
-  //#define EXPLICIT_PARAMETERS
-  //#define DEBUG_BUTTONS
-  //#define DEBUG_TIMING
-  #define SKIP_TIME_ON_SERIAL_WRITE
-#endif
-
+#define DEBUG_BTN(msg)        DEBUG(msg)
+#define DEBUG_ANIMATION(msg)  //DEBUG(msg)
+#define DEBUG_TIMING(msg)     //DEBUG(msg)
 
 // Software settings
 #define PATTERN_PARAM_CHANGE_DISTANCE    0// NUM_LEDS
@@ -21,6 +17,7 @@
 
 
 // Refresh rates and timers
+//#define USE_MILLIS_TIMER 0 //todo: test using this as 0 and see if ifdef is true
 #define REFRESH_RATE 100 // This once had flickering at 100FPS, no idea why - may be APA102 manufacturer (See FastLED FAQ)
 #ifdef USE_MILLIS_TIMER
   #define SYSTEM_TIME millis()
@@ -50,6 +47,7 @@
 
 // Initial software values
 #define INIT_GLOBAL_BRIGHTNESS 255
+#define INIT_PALETTE 1
 
 #define INIT_BASE_PAUSE_LENGTH  30 * ONE_MIN
 #define INIT_BASE_TRANS_OUT_LENGTH  3 * ONE_SEC
@@ -439,4 +437,3 @@ const uint8_t PROGMEM gammaDim_5bit[32] = { // Manually created
   18,19,21,22,24,26,28,31
 };
 */
-

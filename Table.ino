@@ -1,4 +1,9 @@
 /* TODO:
+ *  
+ *  Test ArduinoTrace
+ *  Test DEBUG_TIMING logic (is it defined if it's defined as empty?)
+ *  Test PM
+ *  
  *  Future ideas
  *  **Use hardware SPI pins
  *    Blend out/in animations at same time
@@ -19,20 +24,15 @@
  *    Patterns that set the color of their pixels
  *    Animations that fade in/out of subsets (like 3comets into 1 comet)
  *    Blending between patterns with perdiods that are factors
+ *    Make standard snake work with blackness; overlayed with dimming pattern too maybe
+ *    When you have 2 movements in multiple directions; replace it as one move speed to prevent flickering; or ensure that movements always happen on the same update cycle
  *    
  *  To do:
  *    Test 71-minute time rollover
  *    Base animations - based on time
  *    Top animations - based on time
- *    Make standard snake work with blackness; overlayed with dimming pattern too maybe
  *    Serial output: buffer large outputs to avoid one big delay
- *    When you have 2 movements in multiple directions; replace it as one move speed to prevent flickering; or ensure that movements always happen on the same update cycle
- *    Update speeds in baseParams to be uint8_t
- *    
- *  To do:
- *    - PatternScroller and PatternController library(s)
- *    - Tune Palettes
- *    - Get rid of int8_t's for baseParams
+ *    Get rid of int8_t's for baseParams; means 0 is not 0 and you can't modify speed by %
  *      
  */
 
@@ -48,10 +48,8 @@ void setup() {
   delay(STARTUP_DELAY_MS); // sanity delay
 
   //--------------------Initialize hardware--------------------
-  #ifdef DEBUG_SERIAL
-    Serial.begin(SERIAL_DATA_RATE_HZ);
-    Serial.println("Serial comm intialized.");
-  #endif
+  Serial.begin(SERIAL_DATA_RATE_HZ);
+  DEBUG("Serial comm intialized.");
 
   pinMode(BTN1_PIN, INPUT_PULLUP);
   FastLED.addLeds<APA102, LED_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(leds, NUM_LEDS, 0, leds_b, colorCorrections, &globalBrightness, gammaDim, gammaDim_5bit);
@@ -61,35 +59,21 @@ void setup() {
   leds_top = CRGB::Black;
 
   FastLED.show();
-  #ifdef DEBUG_SERIAL
-    Serial.println("LEDs defined and cleared.");
-  #endif
+  DEBUG("LEDs defined and cleared.");
   
   //--------------------Initialize software--------------------
-  pm.Init(INIT_PM_WALK_LENGTH, INIT_PM_PAUSE_LENGTH, timing.now);
-  #ifdef DEBUG_SERIAL
-    Serial.println("PaletteManager init complete.");
-  #endif
+  pm.Init(&(timing.now), INIT_PM_WALK_LENGTH, INIT_PM_PAUSE_LENGTH, INIT_PALETTE);
+  DEBUG("PaletteManager init complete.");
 
   Gamma.Init(gammaR, gammaG, gammaB, reverseGammaR, reverseGammaG, reverseGammaB, &globalBrightness);
-  #ifdef DEBUG_SERIAL
-    Serial.println("Gamma init complete.");
-  #endif
+  DEBUG("Gamma init complete.");
 
   InitBaseLayer();
   InitTopLayer();
-  #ifdef DEBUG_SERIAL
-    Serial.println("Layer init complete.");
-  #endif
+  DEBUG("Layer init complete.");
+  DEBUG("setup() complete.");
 
-  #ifdef DEBUG_SERIAL
-    Serial.println("setup() complete.");
-    #ifdef DEBUG_TIMING
-      Serial.print("setup() time: ");
-      Serial.println((uint32_t)(SYSTEM_TIME - startupTime));
-    #endif
-  
-  #endif
+  DEBUG_TIMING("setup() time: " + String((uint32_t)(SYSTEM_TIME - startupTime)));
 
   #ifdef MANUAL_PARAMS
     Serial.setTimeout(100);
@@ -106,14 +90,13 @@ void loop() {
     return;
   #endif
 
-  
   timing.now = SYSTEM_TIME;
 
   UpdateIO();
 
   if(timing.now - timing.lastDraw >= FPS_TO_TIME(REFRESH_RATE)) {
     UpdateAnimationParameters(timing.now);
-    pm.Update(timing.now);
+    pm.Update();
     
     #ifdef TEST_PALETTES
       leds = CRGB::Black;
@@ -133,12 +116,10 @@ void loop() {
 
     FastLED.show();
     timing.lastDraw += FPS_TO_TIME(REFRESH_RATE);
-    //if(timing.now > timing.lastDraw + FPS_TO_TIME(REFRESH_RATE)) { THROW("ERROR: Drawing clipped by " + String(timing.now - timing.lastDraw) + "us") }
+    if(timing.now > timing.lastDraw + FPS_TO_TIME(REFRESH_RATE)) { THROW("ERROR: Drawing clipped by " + String(timing.now - timing.lastDraw) + "us") }
   }
 
-  #ifdef DEBUG_TIMING
-    Serial.println("Total loop time = " + String(SYSTEM_TIME - timing.now) + "us");
-  #endif
+  DEBUG_TIMING("Total loop time = " + String(SYSTEM_TIME - timing.now) + "us");
 }
 
 void SkipTime(uint32_t amount) {
@@ -156,4 +137,3 @@ void SkipTimeForTimers(uint32_t amount) {
   timing.lastBaseTransition += amount;
   timing.lastTopTransition += amount;
 }
-

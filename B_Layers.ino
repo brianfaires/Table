@@ -1,7 +1,7 @@
 void DrawBaseLayer() {
   switch(baseParams.animation) {
     case SCROLLER:
-      pc.Update(baseParams, leds, leds_b, timing.now);
+      pc.Update(baseParams, leds, leds_b);
       break;
 
     case FIRE:
@@ -42,13 +42,11 @@ void DrawBaseLayer() {
   leds.fadeToBlackBy(baseTransitionProgress);
 }
 void InitBaseLayer() {
-  #ifdef DEBUG_ANIMATIONS
-    Serial.println("Init base layer: " + String(baseParams.animation));
-  #endif
+  DEBUG_ANIMATION("Init base layer: " + String(baseParams.animation));
   
   switch(baseParams.animation) {
     case SCROLLER:
-      pc.Init(NUM_LEDS, baseParams, &pm, &Gamma, allowedDimPeriods, allowedColorPeriods, timing.now);
+      pc.Init(NUM_LEDS, &(timing.now), baseParams, &pm, &Gamma, allowedDimPeriods, allowedColorPeriods);
       break;
 
     case STACKS:
@@ -60,9 +58,7 @@ void InitBaseLayer() {
   }
 }
 void CleanupBaseLayer(uint8_t lastAnimation) {
-  #ifdef DEBUG_ANIMATIONS
-    Serial.println("Cleanup base layer: " + String(lastAnimation));
-  #endif
+  DEBUG_ANIMATION("Cleanup base layer: " + String(lastAnimation));
   
   switch(lastAnimation) {
     default:
@@ -133,9 +129,7 @@ void DrawTopLayer() {
   leds_top.fadeToBlackBy(topTransitionProgress);
 }
 void InitTopLayer() {
-  #ifdef DEBUG_ANIMATIONS
-    Serial.println("Init top layer: " + String(topParams.animation));
-  #endif
+  DEBUG_ANIMATION("Init top layer: " + String(topParams.animation));
   
   switch(topParams.animation) {
     default:
@@ -143,9 +137,7 @@ void InitTopLayer() {
   }
 }
 void CleanupTopLayer(uint8_t lastAnimation) {
-  #ifdef DEBUG_ANIMATIONS
-    Serial.println("Cleanup top layer: " + String(lastAnimation));
-  #endif
+  DEBUG_ANIMATION("Cleanup top layer: " + String(lastAnimation));
   
   switch(lastAnimation) {
     default:
@@ -192,4 +184,3 @@ void OverlayLayers() {
     }
   }
 }
-

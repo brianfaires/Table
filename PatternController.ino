@@ -6,17 +6,17 @@ PatternController::PatternController() {
 uint32_t PatternController::GetColorPauseLength() {
   return ps1.GetColorPauseLength();
 }
-void PatternController::SetColorPauseLength(uint32_t value, uint32_t curTime) {
-  ps1.SetColorPauseLength(value, curTime);
-  ps2.SetColorPauseLength(value, curTime);
+void PatternController::SetColorPauseLength(uint32_t value) {
+  ps1.SetColorPauseLength(value);
+  ps2.SetColorPauseLength(value);
 }
 
 uint32_t PatternController::GetDimPauseLength() {
   return ps1.GetDimPauseLength();
 }
-void PatternController::SetDimPauseLength(uint32_t value, uint32_t curTime) {
-  ps1.SetDimPauseLength(value, curTime);
-  ps2.SetDimPauseLength(value, curTime);
+void PatternController::SetDimPauseLength(uint32_t value) {
+  ps1.SetDimPauseLength(value);
+  ps2.SetDimPauseLength(value);
 }
 
 uint32_t PatternController::GetColorBlendLength() {
@@ -61,12 +61,12 @@ void PatternController::SetBrightness(uint8_t brightness) {
   ps2.brightness = brightness;
 }
 
-void PatternController::Init(uint16_t _numLEDs, struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, const uint16_t* _allowedDimPeriods, const uint16_t* _allowedColorPeriods, uint32_t curTime) {
-  // Init PatternRepeaters
+void PatternController::Init(uint16_t _numLEDs, uint32_t* curTime, struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, const uint16_t* _allowedDimPeriods, const uint16_t* _allowedColorPeriods) {
+  // Init PatternScrollers
   SetDimBlendLength(INIT_PATTERN_CONTROLLER_DIM_BLEND_LENGTH);
   SetColorBlendLength(INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH);
-  SetDimPauseLength(INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH, curTime);
-  SetColorPauseLength(INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH, curTime);
+  SetDimPauseLength(INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH);
+  SetColorPauseLength(INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH);
   SetDimParamChangeType(INIT_DIM_PARAM_CHANGE_TYPE, INIT_CHANGE_DIM_PARAMS_WITH_MOVEMENT);
   SetBrightness(INIT_PATTERN_SCROLLER_BRIGHTNESS);
   SetEnableDoubleBrightMove(INIT_ENABLE_DOUBLE_BRIGHT_MOVE);
@@ -92,22 +92,23 @@ void PatternController::SkipTime(uint32_t amount) {
   ps2.SkipTime(amount);
 }
 
-void PatternController::Update(struct_base_show_params& params, CRGB* target, uint8_t* target_b, uint32_t curTime) {
+void PatternController::Update(struct_base_show_params& params, CRGB* target, uint8_t* target_b) {
   struct_base_show_params scaledParams;
   ScaleParams(params, scaledParams);
   
   dimSpeed = scaledParams.dimSpeed;
   colorSpeed = scaledParams.colorSpeed;
-  WalkSpeeds(curTime);
+  WalkSpeeds();
 
   // Check for changes in dimPeriod and colorPeriod. If so, correct param scaling for old periods and be ready to start splitting to bring in the new pattern
   if(ps->GetDimPeriod() != scaledParams.dimPeriod || ps->GetColorPeriod() != scaledParams.colorPeriod) {
     if(!splitDisplay && dimSpeed != 0 && ps->IsStartOfDimPattern()) {
-      StartSplit(scaledParams, curTime);
+      StartSplit(scaledParams);
     }
     ScaleParams(params, scaledParams, ps->GetDimPeriod(), ps->GetColorPeriod()); // Re-scale params with old periods
   }
 
+  //todo: Use ASSERT method
   if(ps->GetDimSpeed() != secondary->GetDimSpeed()) { THROW(String(ps->GetDimSpeed()) + " DOES NOT EQUAL " + String(secondary->GetDimSpeed())); }
 
   // Update primary PatternScroller
@@ -115,8 +116,8 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
   //ps->colorPeriod = scaledParams.colorPeriod;
   ps->brightLength = scaledParams.brightLength;
   ps->transLength = scaledParams.transLength;
-  ps->SetDisplayMode(scaledParams.displayMode, curTime);
-  bool psMoved = ps->Update(curTime);
+  ps->SetDisplayMode(scaledParams.displayMode);
+  bool psMoved = ps->Update();
 
   if(!splitDisplay) {
     ps->SetCRGBs(target, target_b, numLEDs);
@@ -128,17 +129,17 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
     //secondary->colorPeriod = scaledParams.colorPeriod; // Don't update colorPeriod if already splitting
     secondary->brightLength = scaledParams.brightLength;
     secondary->transLength = scaledParams.transLength;
-    secondary->SetDisplayMode(scaledParams.displayMode, curTime);
-    bool secMoved = secondary->Update(curTime);
+    secondary->SetDisplayMode(scaledParams.displayMode);
+    bool secMoved = secondary->Update();
 
     if(secondaryScrollerIsLow) {
       //ps->SetCRGBs(&target[splitIndex], &target_b[splitIndex], numLEDs - splitIndex);
-      ps->SetCRGBs(target, target_b, numLEDs); // debug: this is wasteful but simple. Otherwise pattern will move 2 pixels per move. Just overwrite the pixels in next line
+      ps->SetCRGBs(target, target_b, numLEDs); //todo: this is wasteful but simple. Otherwise pattern will move 2 pixels per move. Just overwrite the pixels in next line
       secondary->SetCRGBs(target, target_b, splitIndex);
     }
     else {
       //secondary->SetCRGBs(&target[splitIndex], &target_b[splitIndex], numLEDs - splitIndex);
-      secondary->SetCRGBs(target, target_b, numLEDs); // debug: this is wasteful but simple. Otherwise pattern will move 2 pixels per move. Just overwrite the pixels in next line
+      secondary->SetCRGBs(target, target_b, numLEDs); //todo: this is wasteful but simple. Otherwise pattern will move 2 pixels per move. Just overwrite the pixels in next line
       ps->SetCRGBs(target, target_b, splitIndex);
     }
 
@@ -213,17 +214,17 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_base
     output.numColors = scaleParam(params.numColors, 2, PALETTE_SIZE-1);
     output.transLength = scaleParam(params.transLength, 0, (output.dimPeriod-10) / 3);
     output.brightLength = scaleParam(params.brightLength, 0, (output.dimPeriod-10) / 3);
-    //Serial.println(String(params.brightLength)+"/"+String(output.brightLength) + ", " + String(params.transLength)+"/"+String(output.transLength));
+    //DEBUG(String(params.brightLength)+"/"+String(output.brightLength) + ", " + String(params.transLength)+"/"+String(output.transLength));
   #endif
 }
 
-void PatternController::StartSplit(struct_base_show_params& params, uint32_t curTime) {
-  Serial.println("Start Split");
+void PatternController::StartSplit(struct_base_show_params& params) {
+  DEBUG("Start Split");
   splitDisplay = true;
   splitIndex = ps->GetDimSpeed() > 0 ? 0 : numLEDs-1;
 
-  secondary->Clone(ps, params, curTime);
-  //secondary->Init(params, curTime);
+  secondary->Clone(ps, params);
+  //secondary->Init(params);
   //secondary->SyncMovement(ps);
 
   secondaryScrollerIsLow = ps->GetDimSpeed() > 0;
@@ -235,17 +236,17 @@ void PatternController::EndSplit() {
     PatternScroller* swap = ps;
     ps = secondary;
     secondary = swap;
-    Serial.println("SWAP!");
+    DEBUG("SWAP!");
   }
-  Serial.println("End Split");
+  DEBUG("End Split");
 }
 
-void PatternController::WalkSpeeds(uint32_t curTime) {
+void PatternController::WalkSpeeds() {
 // Perform everything on ps1, then copy to ps2. They should always match to be fully sync'd in movements
 
   #ifdef EXPLICIT_PARAMETERS
-    ps1.SetDimSpeed(dimSpeed, curTime);
-    ps1.SetColorSpeed(colorSpeed, curTime);
+    ps1.SetDimSpeed(dimSpeed);
+    ps1.SetColorSpeed(colorSpeed);
   #else
     // Gradually update speeds even if not ready for a pattern change; slow down at lower levels
     int8_t initSpeed = ps1.GetDimSpeed();
@@ -254,15 +255,15 @@ void PatternController::WalkSpeeds(uint32_t curTime) {
       if(absSpeed < 5) {
         // From 10% chance to 4%
         if(random8(50) < absSpeed+2) {
-          if(initSpeed < dimSpeed) { ps1.SetDimSpeed(initSpeed+1, curTime); }
-          else { ps1.SetDimSpeed(initSpeed-1, curTime); }
+          if(initSpeed < dimSpeed) { ps1.SetDimSpeed(initSpeed+1); }
+          else { ps1.SetDimSpeed(initSpeed-1); }
         }
       }
       else {
         // From 33% chance to 10%
         if(random16(530) < absSpeed+48) {
-          if(initSpeed < dimSpeed) { ps1.SetDimSpeed(initSpeed+1, curTime); }
-          else { ps1.SetDimSpeed(initSpeed-1, curTime); }
+          if(initSpeed < dimSpeed) { ps1.SetDimSpeed(initSpeed+1); }
+          else { ps1.SetDimSpeed(initSpeed-1); }
         }
       }
     }
@@ -273,22 +274,21 @@ void PatternController::WalkSpeeds(uint32_t curTime) {
       if(absSpeed < 5) {
         // From 10% chance to 4%
         if(random8(50) <= absSpeed+2) {
-          if(initSpeed < colorSpeed) { ps1.SetColorSpeed(initSpeed+1, curTime); }
-          else { ps1.SetColorSpeed(initSpeed-1, curTime); }
+          if(initSpeed < colorSpeed) { ps1.SetColorSpeed(initSpeed+1); }
+          else { ps1.SetColorSpeed(initSpeed-1); }
         }
       }
       else {
         // From 33% chance to 10%
         if(random16(530) < absSpeed+48) {
-          if(initSpeed < colorSpeed) { ps1.SetColorSpeed(initSpeed+1, curTime); }
-          else { ps1.SetColorSpeed(initSpeed-1, curTime); }
+          if(initSpeed < colorSpeed) { ps1.SetColorSpeed(initSpeed+1); }
+          else { ps1.SetColorSpeed(initSpeed-1); }
         }
       }
     }
   #endif
 
   // Always match speeds
-  ps2.SetDimSpeed(ps1.GetDimSpeed(), curTime);
-  ps2.SetColorSpeed(ps1.GetColorSpeed(), curTime);
+  ps2.SetDimSpeed(ps1.GetDimSpeed());
+  ps2.SetColorSpeed(ps1.GetColorSpeed());
 }
-

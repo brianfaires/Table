@@ -44,7 +44,7 @@ void PulseBaseParams(uint32_t curTime) {
 
   uint8_t curPulseLength = (curTime % pulseLength) * uint64_t(255) / pulseLength;
   baseParams.brightLength = transLow ? curPulseLength : 255-curPulseLength;
-  if(baseParams.brightLength < 255) { baseParams.brightLength++; } // To sync up the changes in brightLength and transLength after they're scaled from 0:dimPeriod/3, (at least at default value) debug: does this work for all dimPeriods?
+  if(baseParams.brightLength < 255) { baseParams.brightLength++; } // To sync up the changes in brightLength and transLength after they're scaled from 0:dimPeriod/3, (at least at default value) todo: does this work for all dimPeriods?
   baseParams.transLength = transLow ? 255-curPulseLength : curPulseLength;
   
   
@@ -85,4 +85,3 @@ void WalkPaletteManagerParams() {
 void WalkLayerParams() {
   PrintLayerParams();
 }
-

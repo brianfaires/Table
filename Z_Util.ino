@@ -11,13 +11,6 @@ inline int16_t scaleParam16(int8_t param, int16_t minVal, int16_t maxVal) {
   return minVal + (param * (maxVal - minVal + 1) + 128*(maxVal - minVal + 1)) / 256;
 }
 
-String ToString(CHSV hsv) {
-  return "(" + String(hsv.h) + ", " + String(hsv.s) + ", " + String(hsv.v) + ")";
-}
-String ToString(CRGB rgb) {
-  return "(" + String(rgb.r) + ", " + String(rgb.g) + ", " + String(rgb.b) + ")";
-}
-
 void fill_gradient_HSV_linear(CHSV* leds, uint16_t numPixels, CHSV a, CHSV b) {
   int16_t x1, y1, x2, y2;
   getCartesianFromHSV(a, x1, y1);
@@ -98,4 +91,3 @@ CRGB HSV2RGB(CHSV& hsv, uint8_t& led_b) {
   led_b = tempV;
   return retVal;
 }
-

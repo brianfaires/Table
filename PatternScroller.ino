@@ -1,5 +1,5 @@
 #include "PatternScroller.h"
-// debug: Speed up by only do pg.WriteDimPattern() during blend function if possible; or also when not calling blend on an update
+//todo: Speed up by only do pg.WriteDimPattern() during blend function if possible; or also when not calling blend on an update
 
 PatternScroller::PatternScroller() {
   dimParamChangeType = PREFERRED;//CENTER;//GROW_F;//GROW_R;//WORM;//FREEZE;
@@ -26,6 +26,9 @@ PatternScroller::PatternScroller() {
   colorBlendLength_queued = false;
 }
 
+//*****************************************************************
+//*************************** Accessors ***************************
+//*****************************************************************
 uint8_t PatternScroller::GetColorPeriod() { return colorPeriod; }
 uint8_t PatternScroller::GetDimPeriod() { return dimPeriod; }
 uint32_t PatternScroller::GetDimBlendLength() { return dimBlendLength_queued ? dimBlendLength_q : dimBlendLength; }
@@ -49,41 +52,114 @@ void PatternScroller::SetColorBlendLength(uint32_t value) {
   }
 }
 uint32_t PatternScroller::GetDimPauseLength() { return dimPauseLength; }
-void PatternScroller::SetDimPauseLength(uint32_t value, uint32_t curTime) {
-  if(curTime - dimPauseLength > lastDimPatternChange) { if(dimBlendOn) { lastDimPatternChange -= (value - dimPauseLength); } }// if blending already
-  else { if(curTime - value >= lastDimPatternChange) { lastDimPatternChange = curTime - value; } } // if paused and reducing pause past the start point
+void PatternScroller::SetDimPauseLength(uint32_t value) {
+  if(*curTime - dimPauseLength > lastDimPatternChange) { if(dimBlendOn) { lastDimPatternChange -= (value - dimPauseLength); } }// if blending already
+  else { if(*curTime - value >= lastDimPatternChange) { lastDimPatternChange = *curTime - value; } } // if paused and reducing pause past the start point
   dimPauseLength = value;
 }
 uint32_t PatternScroller::GetColorPauseLength() { return colorPauseLength; }
-void PatternScroller::SetColorPauseLength(uint32_t value, uint32_t curTime) {
-  if(curTime - colorPauseLength > lastColorPatternChange) { if(colorBlendOn) { lastColorPatternChange -= (value - colorPauseLength); } }// if blending already
-  else { if(curTime - value >= lastColorPatternChange) { lastColorPatternChange = curTime - value; } } // if paused and reducing pause past the start point
+void PatternScroller::SetColorPauseLength(uint32_t value) {
+  if(*curTime - colorPauseLength > lastColorPatternChange) { if(colorBlendOn) { lastColorPatternChange -= (value - colorPauseLength); } }// if blending already
+  else { if(*curTime - value >= lastColorPatternChange) { lastColorPatternChange = *curTime - value; } } // if paused and reducing pause past the start point
   colorPauseLength = value;
 }
 int8_t PatternScroller::GetColorSpeed() { return colorSpeed; }
-void PatternScroller::SetColorSpeed(int8_t value, uint32_t curTime) {
+void PatternScroller::SetColorSpeed(int8_t value) {
   if(abs(value) > abs(colorSpeed)) {
     // Watch out for rapidly making multiple moves when increasing speed
     uint32_t stepSize = FPS_TO_TIME(abs(value));
-    if(curTime - lastColorMove >= stepSize) { lastColorMove = curTime - stepSize; }
+    if(*curTime - lastColorMove >= stepSize) { lastColorMove = *curTime - stepSize; }
   }
   colorSpeed = value;
 }
 int8_t PatternScroller::GetDimSpeed() { return dimSpeed; }
-void PatternScroller::SetDimSpeed(int8_t value, uint32_t curTime) {
+void PatternScroller::SetDimSpeed(int8_t value) {
   if(abs(value) > abs(dimSpeed)) {
     // Watch out for rapidly making multiple moves when increasing speed
     uint32_t stepSize = FPS_TO_TIME(abs(value));
-    if(curTime - lastDimMove >= stepSize) { lastDimMove = curTime - stepSize; }
+    if(*curTime - lastDimMove >= stepSize) { lastDimMove = *curTime - stepSize; }
   }
   dimSpeed = value;
 }
-    
-void PatternScroller::Init(struct_base_show_params& params, uint32_t curTime, PaletteManager* _pm, GammaManager* gm, uint16_t _numLEDs) {
+uint8_t PatternScroller::GetTargetDimPatternIndex() {
+  if(IsRandomDimPattern()) { return randomDimPatternIndex; }
+  else { return targetDimPatternIndex; }
+}
+void PatternScroller::SetDisplayMode(uint8_t displayMode) {
+  uint8_t dimPatternIndex = displayMode % (NUM_DIM_PATTERNS+1); //todo: this logic isn't transparent: assumes that PatternScroller knows the # of display modes is this equation instead of setting indexes explicitly
+  uint8_t colorPatternIndex = displayMode / (NUM_DIM_PATTERNS+1);
+  
+  if(targetColorPatternIndex != colorPatternIndex && (*curTime - lastColorPatternChange >= colorPauseLength)) {
+    memcpy(oldColorPattern, curColorPattern, sizeof(CRGB)*colorPeriod);
+    targetColorPatternIndex = colorPatternIndex;
+
+    pg.WriteColorPattern(targetColorPatternIndex, targetColorPattern);
+    colorBlendOn = true;
+    lastColorPatternChange = *curTime - colorPauseLength;
+  }
+
+  if(targetDimPatternIndex != dimPatternIndex) {
+    if(IsRandomDimPattern()) {
+      if(*curTime - lastDimPatternChange < dimPauseLength) {
+        targetDimPatternIndex = oldDimPatternIndex;
+        memcpy(targetDimPattern, oldDimPattern, dimPeriod);
+        dimBlendOn = false;
+      }
+      else {
+        targetDimPatternIndex = randomDimPatternIndex;
+      }
+    }
+    else if(*curTime - lastDimPatternChange >= dimPauseLength && !dimBlendOn) {
+      oldDimPatternIndex = GetTargetDimPatternIndex();
+      memcpy(oldDimPattern, targetDimPattern, dimPeriod);
+      targetDimPatternIndex = dimPatternIndex;
+      if(IsRandomDimPattern()) { do { randomDimPatternIndex = random8(NUM_DIM_PATTERNS); } while (randomDimPatternIndex == oldDimPatternIndex); }
+      pg.WriteDimPattern(GetTargetDimPatternIndex(), targetDimPattern);
+      dimBlendOn = true;
+      lastDimPatternChange = *curTime - dimPauseLength;
+    }
+  }
+}
+
+
+//*****************************************************************
+//******************* Simple boolean functions ********************
+//*****************************************************************
+bool PatternScroller::IsReadyForDimMove() {
+  // Returns true if this cycle is going to move the pattern
+  if(dimSpeed == 0) { return false; }
+  
+  uint32_t stepSize = FPS_TO_TIME(abs(dimSpeed));
+  return *curTime - lastDimMove >= stepSize;
+}
+bool PatternScroller::IsHalfwayToDimMove() {
+  // Only return true once per cycle
+  if(dimSpeed == 0) { return false; }
+  if(dimParamWalkedThisCycle) { return false; }
+  
+  uint32_t stepSize = FPS_TO_TIME(abs(dimSpeed));
+  if(*curTime - lastDimMove >= stepSize/2) { dimParamWalkedThisCycle = true; }
+  return dimParamWalkedThisCycle;
+}
+bool PatternScroller::IsStartOfDimPattern() {
+  if(dimSpeed == 0) { return false; }
+  else if(dimSpeed > 0) { return dimIndexFirst == 0; }
+  else { return dimIndexFirst == numLEDs % dimPeriod; }
+}
+bool PatternScroller::IsRandomDimPattern() {
+  return targetDimPatternIndex == NUM_DIM_PATTERNS;
+}
+
+
+//*****************************************************************
+//************************ Object overhead ************************
+//*****************************************************************
+void PatternScroller::Init(struct_base_show_params& params, uint32_t* _curTime, PaletteManager* _pm, GammaManager* gm, uint16_t _numLEDs) {
   if(_pm) { pm = _pm; }
   if(gm) { Gamma = gm; }
   if(_pm || gm) { pg.Init(pm, gm); }
   if(_numLEDs > 0) { numLEDs = _numLEDs; }
+  if(_curTime) { curTime = _curTime; }
   
   colorIndexFirst = 0;
   dimIndexFirst = 0;
@@ -101,7 +177,7 @@ void PatternScroller::Init(struct_base_show_params& params, uint32_t curTime, Pa
   uint32_t tempColor = colorPauseLength;
   dimPauseLength = 0;
   colorPauseLength = 0;
-  SetDisplayMode(params.displayMode, curTime);
+  SetDisplayMode(params.displayMode);
   dimPauseLength = tempDim;
   colorPauseLength = tempColor;
   
@@ -113,16 +189,15 @@ void PatternScroller::Init(struct_base_show_params& params, uint32_t curTime, Pa
   memcpy(oldColorPattern, targetColorPattern, sizeof(CRGB)*colorPeriod);
   oldDimPatternIndex = GetTargetDimPatternIndex();
 
-  lastDimPatternChange = curTime;
-  lastColorPatternChange = curTime;
-  lastDimMove = curTime;
-  lastColorMove = curTime;
+  lastDimPatternChange = *curTime;
+  lastColorPatternChange = *curTime;
+  lastDimMove = *curTime;
+  lastColorMove = *curTime;
 }
-
-void PatternScroller::Clone(PatternScroller* source, struct_base_show_params& params, uint32_t curTime) {
+void PatternScroller::Clone(PatternScroller* source, struct_base_show_params& params) {
   randomDimPatternIndex = source->randomDimPatternIndex;
   randomColorPatternIndex = source->randomColorPatternIndex;
-  Init(params, curTime);
+  Init(params);
   dimSpeed = source->dimSpeed;
   colorSpeed = source->colorSpeed;
   lastDimMove = source->lastDimMove;
@@ -130,36 +205,46 @@ void PatternScroller::Clone(PatternScroller* source, struct_base_show_params& pa
   lastDimPatternChange = source->lastDimPatternChange;
   lastColorPatternChange = source->lastColorPatternChange;
 }
+void PatternScroller::SkipTime(uint32_t amount) {
+  lastColorMove += amount;
+  lastDimMove += amount;
+  lastDimPatternChange += amount;
+  lastColorPatternChange += amount;
+}
 
-bool PatternScroller::Update(uint32_t curTime) {
+
+//*****************************************************************
+//*********************** Walking/Scrolling ***********************
+//*****************************************************************
+bool PatternScroller::Update() {
 // Returns true if dim pattern moved
-  if(curTime - lastColorPatternChange >= colorPauseLength) {
-    if(WalkColorParams(curTime)) {
+  if(*curTime - lastColorPatternChange >= colorPauseLength) {
+    if(WalkColorParams()) {
       memcpy(oldColorPattern, curColorPattern, sizeof(CRGB)*colorPeriod);
       colorBlendOn = true;
-      lastColorPatternChange = curTime - colorPauseLength;
+      lastColorPatternChange = *curTime - colorPauseLength;
     }
   }
 
   if(colorBlendOn) {
     pg.WriteColorPattern(targetColorPatternIndex, targetColorPattern);
-    BlendColorPattern(curTime);
+    BlendColorPattern();
   }
   else {
     pg.WriteColorPattern(targetColorPatternIndex, curColorPattern);
   }
 
 
-  if(WalkDimParams(curTime)) {
+  if(WalkDimParams()) {
     pg.WriteDimPattern(GetTargetDimPatternIndex(), targetDimPattern);
     pg.WriteDimPattern(oldDimPatternIndex, oldDimPattern);
   }
 
-  if(curTime - lastDimPatternChange >= dimPauseLength) {
+  if(*curTime - lastDimPatternChange >= dimPauseLength) {
     if(dimBlendOn) {
       pg.WriteDimPattern(GetTargetDimPatternIndex(), targetDimPattern);
       pg.WriteDimPattern(oldDimPatternIndex, oldDimPattern);
-      BlendDimPattern(curTime);
+      BlendDimPattern();
     }
     else {
       memcpy(curDimPattern, targetDimPattern, dimPeriod);
@@ -169,74 +254,9 @@ bool PatternScroller::Update(uint32_t curTime) {
     memcpy(curDimPattern, oldDimPattern, dimPeriod);
   }
 
-  return ScrollPatterns(curTime);
+  return ScrollPatterns();
 }
-
-void PatternScroller::SkipTime(uint32_t amount) {
-  lastColorMove += amount;
-  lastDimMove += amount;
-  lastDimPatternChange += amount;
-  lastColorPatternChange += amount;
-}
-
-void PatternScroller::SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs) {
-  uint16_t curColorIndex = colorIndexFirst;
-  uint16_t curDimIndex = dimIndexFirst;
-
-  for(uint16_t i = 0; i < numLEDs; i++) {
-    if(curDimPattern[curDimIndex] == 0) { target_b[i] = 0; }
-    else {
-      target[i] = curColorPattern[curColorIndex];
-      uint16_t pixelBrightness = (uint16_t)curDimPattern[curDimIndex] * (uint16_t)(brightness+1) / 0x100;
-      target_b[i] = max(1, pixelBrightness & 0xFF); //debug: += 127?
-      //Serial.println(String(i) + ": " + String(target[i].r) + ": " + String(target[i].g) + ", " + String(target[i].b));
-    } 
-  
-    if(curDimIndex >= dimPeriod) { THROW("ERROR: SetCRGBs(): curDimIndex out of bounds: " + String(curDimIndex) + " / " + String(dimPeriod)) }
-    if(curColorIndex >= colorPeriod) { THROW("ERROR: SetCRGBs(): curColorIndex out of bounds: " + String(curColorIndex) + " / " + String(colorPeriod)) }
-
-    if(++curColorIndex == colorPeriod) { curColorIndex = 0; }
-    if(++curDimIndex == dimPeriod) { curDimIndex = 0; }
-  }
-}
-
-void PatternScroller::SetDisplayMode(uint8_t displayMode, uint32_t curTime) {
-  uint8_t dimPatternIndex = displayMode % (NUM_DIM_PATTERNS+1); // debug: this logic isn't transparent: assumes that PatternScroller knows the # of display modes is this equation instead of setting indexes explicitly
-  uint8_t colorPatternIndex = displayMode / (NUM_DIM_PATTERNS+1);
-  
-  if(targetColorPatternIndex != colorPatternIndex && (curTime - lastColorPatternChange >= colorPauseLength)) {
-    memcpy(oldColorPattern, curColorPattern, sizeof(CRGB)*colorPeriod);
-    targetColorPatternIndex = colorPatternIndex;
-
-    pg.WriteColorPattern(targetColorPatternIndex, targetColorPattern);
-    colorBlendOn = true;
-    lastColorPatternChange = curTime - colorPauseLength;
-  }
-
-  if(targetDimPatternIndex != dimPatternIndex) {
-    if(IsRandomDimPattern()) {
-      if(curTime - lastDimPatternChange < dimPauseLength) {
-        targetDimPatternIndex = oldDimPatternIndex;
-        memcpy(targetDimPattern, oldDimPattern, dimPeriod);
-        dimBlendOn = false;
-      }
-      else {
-        targetDimPatternIndex = randomDimPatternIndex;
-      }
-    }
-    else if(curTime - lastDimPatternChange >= dimPauseLength && !dimBlendOn) {
-      oldDimPatternIndex = GetTargetDimPatternIndex();
-      memcpy(oldDimPattern, targetDimPattern, dimPeriod);
-      targetDimPatternIndex = dimPatternIndex;
-      if(IsRandomDimPattern()) { do { randomDimPatternIndex = random8(NUM_DIM_PATTERNS); } while (randomDimPatternIndex == oldDimPatternIndex); }
-      pg.WriteDimPattern(GetTargetDimPatternIndex(), targetDimPattern);
-      dimBlendOn = true;
-      lastDimPatternChange = curTime - dimPauseLength;
-    }
-  }
-}
-
-bool PatternScroller::WalkColorParams(uint32_t curTime) {
+bool PatternScroller::WalkColorParams() {
   bool updateMade = false;
 
   // Instantly update params
@@ -245,12 +265,11 @@ bool PatternScroller::WalkColorParams(uint32_t curTime) {
     pg.numColors = numColors;
   }
 
-  if(pg.colorPeriod != colorPeriod) { THROW(colorPeriod mismatch!) }
+  if(pg.colorPeriod != colorPeriod) { THROW("colorPeriod mismatch!") }
 
   return updateMade;
 }
-
-bool PatternScroller::WalkDimParams(uint32_t curTime) {
+bool PatternScroller::WalkDimParams() {
   static bool blendParamsOn = false;
   static param_change_type changeType = CENTER;
 
@@ -261,18 +280,18 @@ bool PatternScroller::WalkDimParams(uint32_t curTime) {
   
   #define SCROLL_BACK() ScrollPatternsWithoutTimer(false);
   #define SCROLL_FORWARD() ScrollPatternsWithoutTimer(true);
-  #define ADJ_DOWNBEAT() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() }
-  #define ADJ_UPBEAT() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() }
-  #define ADJ_DOWNBEAT_INC() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() }
-  #define ADJ_DOWNBEAT_INC2() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() SCROLL_FORWARD() }
-  #define ADJ_DOWNBEAT_DEC() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() }
-  #define ADJ_DOWNBEAT_DEC2() if(!changeDimParamsWithMovement || IsReadyForDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK()  }
-  #define ADJ_UPBEAT_INC() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() }
-  #define ADJ_UPBEAT_INC2() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_FORWARD() SCROLL_FORWARD() }
-  #define ADJ_UPBEAT_DEC() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() }
-  #define ADJ_UPBEAT_DEC2() if(!changeDimParamsWithMovement || IsHalfwayToDimMove(curTime)) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK() }
+  #define ADJ_DOWNBEAT() if(!changeDimParamsWithMovement || IsReadyForDimMove()) { ADJUST_BOTH() }
+  #define ADJ_UPBEAT() if(!changeDimParamsWithMovement || IsHalfwayToDimMove()) { ADJUST_BOTH() }
+  #define ADJ_DOWNBEAT_INC() if(!changeDimParamsWithMovement || IsReadyForDimMove()) { ADJUST_BOTH() SCROLL_FORWARD() }
+  #define ADJ_DOWNBEAT_INC2() if(!changeDimParamsWithMovement || IsReadyForDimMove()) { ADJUST_BOTH() SCROLL_FORWARD() SCROLL_FORWARD() }
+  #define ADJ_DOWNBEAT_DEC() if(!changeDimParamsWithMovement || IsReadyForDimMove()) { ADJUST_BOTH() SCROLL_BACK() }
+  #define ADJ_DOWNBEAT_DEC2() if(!changeDimParamsWithMovement || IsReadyForDimMove()) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK()  }
+  #define ADJ_UPBEAT_INC() if(!changeDimParamsWithMovement || IsHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_FORWARD() }
+  #define ADJ_UPBEAT_INC2() if(!changeDimParamsWithMovement || IsHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_FORWARD() SCROLL_FORWARD() }
+  #define ADJ_UPBEAT_DEC() if(!changeDimParamsWithMovement || IsHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_BACK() }
+  #define ADJ_UPBEAT_DEC2() if(!changeDimParamsWithMovement || IsHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK() }
 
-  // debug: For cases 3/-3, consider 1,-2/-2,1... Also, consider cases 3/-3 as even things you want possible; if so, edit ADJUST_BOTH()
+  //todo: For cases 3/-3, consider 1,-2/-2,1... Also, consider cases 3/-3 as even things you want possible; if so, edit ADJUST_BOTH()
   // Using delta = 3/-3 to signal an actual change of 1/-1, but with both bright and trans changing
   // Allow brightLength to be double updated only when offsetting transLength so delta=0
   int8_t delta = 0;
@@ -298,7 +317,7 @@ bool PatternScroller::WalkDimParams(uint32_t curTime) {
       // Lock in the changeType at the start of the blend
       blendParamsOn = true;
       if(dimParamChangeType != PREFERRED) { changeType = dimParamChangeType; }
-      else if(dimBlendOn && curTime - lastDimPatternChange >= dimPauseLength + dimBlendLength/2) {
+      else if(dimBlendOn && *curTime - lastDimPatternChange >= dimPauseLength + dimBlendLength/2) {
         changeType = GetPreferredDimParamChangeType(GetTargetDimPatternIndex(), delta);
       }
       else {
@@ -374,17 +393,87 @@ bool PatternScroller::WalkDimParams(uint32_t curTime) {
       }
     }
     else {
-      THROW(unknown dimParamChangeType!)
+      THROW("unknown dimParamChangeType!")
       DUMP(dimParamChangeType)
     }
   }
       
-  if(pg.dimPeriod != dimPeriod) { THROW(dimPeriod mismatch without a split!) }
+  if(pg.dimPeriod != dimPeriod) { THROW("dimPeriod mismatch without a split!") }
   return delta != 0;
 }
+bool PatternScroller::ScrollPatterns() {
+  bool dimMoved = false;
 
-void PatternScroller::BlendColorPattern(uint32_t curTime) {
-  uint32_t transitionTime = curTime - lastColorPatternChange - colorPauseLength;
+  // Move dim pattern
+  if(dimSpeed == 0) {
+    lastDimMove = *curTime;
+  }
+  else if(IsReadyForDimMove()) {
+    dimParamWalkedThisCycle = false;
+    dimMoved = true;
+    // Scroll dim pattern
+    if(dimSpeed > 0) {
+      if(--dimIndexFirst == 0xFF) { dimIndexFirst = dimPeriod - 1; }
+    }
+    else {
+      if(++dimIndexFirst == dimPeriod) { dimIndexFirst = 0; }
+    }
+    
+    lastDimMove += FPS_TO_TIME(abs(dimSpeed));
+  }
+
+  // Move color pattern
+  if(colorSpeed == 0) {
+    lastColorMove = *curTime;
+  }
+  else if(*curTime - lastColorMove >= FPS_TO_TIME(abs(colorSpeed))) {
+    if(colorSpeed > 0) {
+      if(--colorIndexFirst == 0xFF) { colorIndexFirst = colorPeriod - 1; }
+    }
+    else {
+      if(++colorIndexFirst == colorPeriod) { colorIndexFirst = 0; }
+    }
+    
+    lastColorMove += FPS_TO_TIME(abs(colorSpeed));
+  }
+
+  return dimMoved;
+}
+bool PatternScroller::ScrollPatternsWithoutTimer(bool moveForward) {
+  if(moveForward) {
+    if(--dimIndexFirst == 0xFF) { dimIndexFirst = dimPeriod - 1; }
+  }
+  else {
+    if(++dimIndexFirst == dimPeriod) { dimIndexFirst = 0; }
+  }
+}
+
+
+//*****************************************************************
+//************************ Display/Blending ***********************
+//*****************************************************************
+void PatternScroller::SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs) {
+  uint16_t curColorIndex = colorIndexFirst;
+  uint16_t curDimIndex = dimIndexFirst;
+
+  for(uint16_t i = 0; i < numLEDs; i++) {
+    if(curDimPattern[curDimIndex] == 0) { target_b[i] = 0; }
+    else {
+      target[i] = curColorPattern[curColorIndex];
+      uint16_t pixelBrightness = (uint16_t)curDimPattern[curDimIndex] * (uint16_t)(brightness+1) / 0x100;
+      target_b[i] = max(1, pixelBrightness & 0xFF); //todo: += 127?
+      //DEBUG(String(i) + ": " + String(target[i].r) + ": " + String(target[i].g) + ", " + String(target[i].b));
+    } 
+  
+    if(curDimIndex >= dimPeriod) { THROW("ERROR: SetCRGBs(): curDimIndex out of bounds: " + String(curDimIndex) + " / " + String(dimPeriod)) }
+    if(curColorIndex >= colorPeriod) { THROW("ERROR: SetCRGBs(): curColorIndex out of bounds: " + String(curColorIndex) + " / " + String(colorPeriod)) }
+
+    if(++curColorIndex == colorPeriod) { curColorIndex = 0; }
+    if(++curDimIndex == dimPeriod) { curDimIndex = 0; }
+  }
+}
+void PatternScroller::BlendColorPattern() {
+  uint32_t transitionTime = *curTime - lastColorPatternChange - colorPauseLength;
   if(transitionTime < colorBlendLength) {
     uint8_t blendAmount = 255 * transitionTime / colorBlendLength;
 
@@ -399,7 +488,7 @@ void PatternScroller::BlendColorPattern(uint32_t curTime) {
 
     pg.WriteColorPattern(targetColorPatternIndex, targetColorPattern);
 
-    lastColorPatternChange = curTime;
+    lastColorPatternChange = *curTime;
     colorBlendOn = false;
     if(colorBlendLength_queued) {
       colorBlendLength = colorBlendLength_q;
@@ -407,9 +496,8 @@ void PatternScroller::BlendColorPattern(uint32_t curTime) {
     }
   }
 }
-
-void PatternScroller::BlendDimPattern(uint32_t curTime) {
-  uint32_t transitionTime = curTime - lastDimPatternChange - dimPauseLength;
+void PatternScroller::BlendDimPattern() {
+  uint32_t transitionTime = *curTime - lastDimPatternChange - dimPauseLength;
   if(transitionTime < dimBlendLength) {
     uint8_t blendAmount = 255 * transitionTime / dimBlendLength;
 
@@ -437,90 +525,10 @@ void PatternScroller::BlendDimPattern(uint32_t curTime) {
 
     pg.WriteDimPattern(oldDimPatternIndex, oldDimPattern);
     memcpy(curDimPattern, oldDimPattern, dimPeriod);
-    lastDimPatternChange = curTime;
+    lastDimPatternChange = *curTime;
   }
 }
 
-bool PatternScroller::IsReadyForDimMove(uint32_t curTime) {
-  // Returns true if this cycle is going to move the pattern (i.e. only change pattern on the same draw cycle as a move)
-  if(dimSpeed == 0) { return false; }
-  
-  uint32_t stepSize = FPS_TO_TIME(abs(dimSpeed));
-  return curTime - lastDimMove >= stepSize;
-}
-
-bool PatternScroller::IsHalfwayToDimMove(uint32_t curTime) {
-  // Only return true once per cycle
-  if(dimSpeed == 0) { return false; }
-  if(dimParamWalkedThisCycle) { return false; }
-  
-  uint32_t stepSize = FPS_TO_TIME(abs(dimSpeed));
-  if(curTime - lastDimMove >= stepSize/2) { dimParamWalkedThisCycle = true; }
-  return dimParamWalkedThisCycle;
-}
-
-bool PatternScroller::IsStartOfDimPattern() {
-  if(dimSpeed == 0) { return false; }
-  else if(dimSpeed > 0) { return dimIndexFirst == 0; }
-  else { return dimIndexFirst == numLEDs % dimPeriod; }
-}
-
-uint8_t PatternScroller::GetTargetDimPatternIndex() {
-  if(IsRandomDimPattern()) { return randomDimPatternIndex; }
-  else { return targetDimPatternIndex; }
-}
-
-bool PatternScroller::IsRandomDimPattern() {
-  return targetDimPatternIndex == NUM_DIM_PATTERNS;
-}
-
-bool PatternScroller::ScrollPatterns(uint32_t curTime) {
-  bool dimMoved = false;
-
-  // Move dim pattern
-  if(dimSpeed == 0) {
-    lastDimMove = curTime;
-  }
-  else if(IsReadyForDimMove(curTime)) {
-    dimParamWalkedThisCycle = false;
-    dimMoved = true;
-    // Scroll dim pattern
-    if(dimSpeed > 0) {
-      if(--dimIndexFirst == 0xFF) { dimIndexFirst = dimPeriod - 1; }
-    }
-    else {
-      if(++dimIndexFirst == dimPeriod) { dimIndexFirst = 0; }
-    }
-    
-    lastDimMove += FPS_TO_TIME(abs(dimSpeed));
-  }
-
-  // Move color pattern
-  if(colorSpeed == 0) {
-    lastColorMove = curTime;
-  }
-  else if(curTime - lastColorMove >= FPS_TO_TIME(abs(colorSpeed))) {
-    if(colorSpeed > 0) {
-      if(--colorIndexFirst == 0xFF) { colorIndexFirst = colorPeriod - 1; }
-    }
-    else {
-      if(++colorIndexFirst == colorPeriod) { colorIndexFirst = 0; }
-    }
-    
-    lastColorMove += FPS_TO_TIME(abs(colorSpeed));
-  }
-
-  return dimMoved;
-}
-
-bool PatternScroller::ScrollPatternsWithoutTimer(bool moveForward) {
-  if(moveForward) {
-    if(--dimIndexFirst == 0xFF) { dimIndexFirst = dimPeriod - 1; }
-  }
-  else {
-    if(++dimIndexFirst == dimPeriod) { dimIndexFirst = 0; }
-  }
-}
 
 param_change_type PatternScroller::GetPreferredDimParamChangeType(uint8_t patternIndex, int8_t delta) {
   // delta can be +/- 3. If so, the actual change was +/- 1, but both bright and trans were updated
@@ -545,4 +553,3 @@ param_change_type PatternScroller::GetPreferredDimParamChangeType(uint8_t patter
   
   return delta == 1 ? WORM : CENTER;
 }
-

@@ -321,7 +321,7 @@ bool DrawStacker(struct_stacker* s, uint32_t curTime) {
     if(curPixel != s->startPixel) {
       // Draw spacing
       for(uint8_t j = 0; j < s->spacing; j++) {
-        leds[curPixel] = CRGB::Black; // debug: superfluous line since we clear and redraw every cycle
+        leds[curPixel] = CRGB::Black; //todo: superfluous line since we clear and redraw every cycle
         if(curPixel == s->startPixel) { break; }
         if(s->moveForward) {
           curPixel--;
@@ -526,7 +526,7 @@ void Stacks(uint32_t curTime) {
           if(curPixel == 0xFFFF) { curPixel = NUM_LEDS-1; }
         }
         for(uint8_t j = 0; j < curSpacing; j++) {
-          leds[curPixel--] = CRGB::Black; // debug: superfluous line since we clear and redraw every cycle
+          leds[curPixel--] = CRGB::Black; //todo: superfluous line since we clear and redraw every cycle
           if(curPixel == 0xFFFF) { curPixel = NUM_LEDS-1; }
         }
       }
@@ -547,7 +547,7 @@ void Stacks(uint32_t curTime) {
           if(curPixel == NUM_LEDS) { curPixel = 0; }
         }
         for(uint8_t j = 0; j < curSpacing; j++) {
-          leds[curPixel++] = CRGB::Black; // debug: superfluous line since we clear and redraw every cycle
+          leds[curPixel++] = CRGB::Black; //todo: superfluous line since we clear and redraw every cycle
           if(curPixel == NUM_LEDS) { curPixel = 0; }
         }
       }
@@ -765,7 +765,7 @@ void ColorExplosion(uint32_t curTime) {
       // Increasing brightness with odd numbers
       if(leds_b[i] >= 255 - growRate) { leds_b[i] = 254; }
       else { leds_b[i] += growRate; }
-      // debug: move the 0 and NUM_LEDS checks to single cases outside the loop, to avoid checking every pixel
+      //todo: move the 0 and NUM_LEDS checks to single cases outside the loop, to avoid checking every pixel
       if(leds_b[i] >= growPoint && leds_b[i] - growRate < growPoint) {
         // Spread outward
         #define SPREAD_EXPLODE(x,y) if(leds_b[x] % 2 == 0 && leds_b[x] <= overridePoint) { leds_b[x] = 1; leds[x] = leds[y]; }
@@ -821,5 +821,3 @@ void ColorCycle() {
 void HotGlow() {
   
 }
-
-
