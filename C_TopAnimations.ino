@@ -141,12 +141,12 @@ void SpawnNewBouncy() {
       ((Bouncy*)objects[i])->vel = 0;
       ((Bouncy*)objects[i])->color = pm.palette.entries[8 + 2*i]; // This requires MAX_BOUNCIES to be <= 4
       #ifdef SERIAL_DEBUG_BOUNCY
-      Serial.print("Spawning Bouncy #");
-      Serial.println(i);
-      Serial.print("\tloc=");
-      Serial.print(((Bouncy*)objects[i])->loc);
-      Serial.print("\tvel=");
-      Serial.println(((Bouncy*)objects[i])->vel);
+      PRINT("Spawning Bouncy #");
+      PRINTLN(i);
+      PRINT("\tloc=");
+      PRINT(((Bouncy*)objects[i])->loc);
+      PRINT("\tvel=");
+      PRINTLN(((Bouncy*)objects[i])->vel);
       #endif
     }
   }

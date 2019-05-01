@@ -1,6 +1,5 @@
 /* TODO:
  *  
- *  Test ArduinoTrace
  *  Test PM
  *  
  *  Future ideas

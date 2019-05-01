@@ -577,7 +577,7 @@ void Stacks(uint32_t curTime) {
         }
       }
 
-      //if(segment == 0) Serial.println(String((startPos + movingIndexF + rotationOffset + NUM_LEDS) % NUM_LEDS) + " / " + String(endPos));
+      //if(segment == 0) PRINTLN((startPos + movingIndexF + rotationOffset + NUM_LEDS) % NUM_LEDS) + " / " + endPos);
       if(segment == 3 && (startPos - movingIndexR + rotationOffset + NUM_LEDS) % NUM_LEDS == (endPos + numStacks*(curStackSize+curSpacing) + NUM_LEDS) % NUM_LEDS) {
         if(numSegments*(numStacks+1)*(curStackSize+curSpacing) < NUM_LEDS) {
           numStacks++;

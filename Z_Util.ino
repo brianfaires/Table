@@ -57,7 +57,7 @@ inline void getCartesianFromHSV(CHSV color, int16_t& x, int16_t& y) {
   x = cos16(theta) * color.s / 255;
   y = sin16(theta) * color.s / 255;
 
-  //Serial.println("getCart" + ToString(color) + "= " + String(theta) + ", " + String(x) + ", " + String(y));
+  //PRINTLN("getCart" + color.ToString() + "= " + theta + ", " + x + ", " + y);
 }
 inline CHSV getHSVFromCartesian(int16_t x, int16_t y) {
   CHSV hsv;
@@ -65,7 +65,7 @@ inline CHSV getHSVFromCartesian(int16_t x, int16_t y) {
   hsv.s = (uint8_t) (sqrt(x * x + y * y) / 128); // length of hypotenuse
   hsv.v = 255;
   return hsv;
-  //Serial.println("getHSV(" + String(x) + ", " + String(y) + ") = " + ToString(hsv));
+  //PRINTLN("getHSV(" + x + ", " + y + ") = " + hsv);
 }
 
 // Test function to compare gamma corrected RGB blending with linear HSV blending

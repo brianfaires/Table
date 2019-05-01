@@ -90,7 +90,7 @@ bool ProcessSerialInput() {
     if(Serial.available() > 0) {
       String s = Serial.readString();
       s.trim();
-      Serial.println("\nEntered: " + s);
+      PRINTLN("\nEntered: " + s);
 
       if(s.startsWith("sp")) {
         // Set palette
@@ -122,7 +122,7 @@ bool ProcessSerialInput() {
           CRGB temp = pm.palette[i];
           output += "\tRGB: " + temp.ToString();
         }
-        Serial.print(output);
+        PRINT(output);
         return true;
       }
       else if(s.startsWith("np")) {
@@ -230,7 +230,7 @@ bool ProcessSerialInput() {
 
 void PrintParams() {
   #ifndef TEST_PALETTES
-    Serial.println("\nCommands: np (NextPalette), nb (NextBase), nt (NextTop)\n\t  rb (RandomizeBaseParams), rt (RandomizeTopParams)\n\t  sp # ### ### ### (SetPalette)");
+    PRINTLN("\nCommands: np (NextPalette), nb (NextBase), nt (NextTop)\n\t  rb (RandomizeBaseParams), rt (RandomizeTopParams)\n\t  sp # ### ### ### (SetPalette)");
     PrintBaseTopAndPMParams();
     PrintLayerParams();
     PrintPatternControllerParams(); 
@@ -256,7 +256,7 @@ void PrintBaseTopAndPMParams() {
   if(parameterCounter != NUM_BASE_PARAMS) { DUMP(parameterCounter) }
   if(topParameterCounter != NUM_BASE_PARAMS + NUM_TOP_PARAMS) { DUMP(topParameterCounter) }
   if(pmParameterCounter != NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS) { DUMP(pmParameterCounter) }
-  Serial.println(output);
+  PRINTLN(output);
 }
 
 void PrintBaseParams() {
@@ -274,7 +274,7 @@ void PrintBaseParams() {
   output += "\t" + String(parameterCounter++) + ".ColorPeriod:\t  " + String(baseParams.colorPeriod) + "\n";
 
   if(parameterCounter != NUM_BASE_PARAMS) { output += "ERROR: PrintBaseParams(), parameter count mismatch.\n"; }
-  Serial.print(output);
+  PRINT(output);
 }
 
 void PrintTopParams() {
@@ -286,7 +286,7 @@ void PrintTopParams() {
   output += "\t" + String(parameterCounter++) + ".Speed:\t  " + String(topParams.speed) + "\n";
   
   if(parameterCounter != NUM_BASE_PARAMS + NUM_TOP_PARAMS) { output += "ERROR: PrintTopParams(), parameter count mismatch.\n"; }
-  Serial.print(output);
+  PRINT(output);
 }
 
 void PrintPaletteManagerParams() {
@@ -297,7 +297,7 @@ void PrintPaletteManagerParams() {
   output += "\t" + String(parameterCounter++) + ".WalkLength:\t  " + String(pm.GetWalkLength()/IO_TIME_FACTOR) + "\n";
   
   if(parameterCounter != NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS) { output += "ERROR: PrintPaletteManagerParams(), parameter count mismatch.\n"; }
-  Serial.print(output);
+  PRINT(output);
 }
 
 void PrintLayerParams() {
@@ -314,7 +314,7 @@ void PrintLayerParams() {
   parameterCounter++;
   
   if(parameterCounter+4 != NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS + NUM_LAYER_PARAMS) { DUMP(parameterCounter) }
-  Serial.println(output);
+  PRINTLN(output);
 }
 
 void PrintPatternControllerParams() {
@@ -328,5 +328,5 @@ void PrintPatternControllerParams() {
   output += String(parameterCounter++) + ".DimParamChangeType:\t  " + String(NUM_DIM_PARAM_CHANGE_TYPES*pc.GetChangeDimParamsWithMovement() + pc.GetDimParamChangeType()) + "\n";
   
   if(parameterCounter != NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS + NUM_LAYER_PARAMS + NUM_PATTERN_PARAMS) { output += "ERROR: PrintPaletteManagerParams(), parameter count mismatch.\n"; }
-  Serial.print(output);
+  PRINT(output);
 }
