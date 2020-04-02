@@ -1,6 +1,14 @@
 #include "PatternScrolling\PatternScroller.h"
 #include "Util.h"
+
 //todo: Speed up by only do pg.WriteDimPattern() during blend function if possible; or also when not calling blend on an update
+
+//todo: these settings were sitting around; are they vestigial?
+// Software settings
+#define PATTERN_PARAM_CHANGE_DISTANCE    0// NUM_LEDS
+#define BRIGHTNESS_PARAM_CHANGE_DISTANCE 0// NUM_LEDS
+
+
 
 PatternScroller::PatternScroller() {
   dimParamChangeType = PREFERRED;//CENTER;//GROW_F;//GROW_R;//WORM;//FREEZE;

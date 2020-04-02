@@ -1,5 +1,10 @@
 #include "Globals.h"
 
+// Counters for transitions
+uint8_t baseTransitionProgress;
+uint8_t topTransitionProgress;
+
+
 void DrawBaseLayer() {
   switch(baseParams.animation) {
     case SCROLLER:
