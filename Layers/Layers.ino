@@ -1,3 +1,5 @@
+#include "Globals.h"
+
 void DrawBaseLayer() {
   switch(baseParams.animation) {
     case SCROLLER:
@@ -87,7 +89,6 @@ void TransitionBaseAnimation(uint32_t curTime) {
     }
   }
 }
-
 void NextBaseAnimation(uint32_t curTime) {
   uint8_t lastBaseAnimation = baseParams.animation;
   baseParams.animation = 1 + (baseParams.animation % NUM_BASE_ANIMATIONS);

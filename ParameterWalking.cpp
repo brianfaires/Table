@@ -1,3 +1,5 @@
+#include "Globals.h"
+
 void UpdateAnimationParameters(uint32_t curTime) {
   if(timing.now - timing.lastBaseParamWalk >= layerConfig.baseParamWalkTime) {
     RandomizeBaseParams();

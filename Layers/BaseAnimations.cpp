@@ -1,3 +1,5 @@
+#include "Globals.h"
+
 // Base animations
 const uint8_t FIRE_COOLING = 7;
 const uint8_t FIRE_SPARKING = 120;

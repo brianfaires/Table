@@ -1,4 +1,5 @@
-#include "PatternController.h"
+#include "PatternScrolling\PatternController.h"
+#include "Util.h"
 
 PatternController::PatternController() {
 }

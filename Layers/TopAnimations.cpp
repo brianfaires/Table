@@ -1,3 +1,5 @@
+#include "Globals.h"
+
 void Glitter() {
   static uint32_t lastGlitter = 0;
 
@@ -210,5 +212,3 @@ void DrawComet(struct_comet* comet, uint8_t cometLength, uint16_t moveIndex) {
     }
   }
 }
-
-

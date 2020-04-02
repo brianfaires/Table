@@ -34,9 +34,8 @@
  *      
  */
 
-#include <PaletteManager.h>
-#include <FastLED.h>
-#include "A_Globals.h"
+
+#include "Globals.h"
 
 void setup() {
   #if DEBUG_TIMING

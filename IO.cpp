@@ -1,3 +1,5 @@
+#include "Globals.h"
+
 const uint32_t DEBOUNCE_TIME = 30000;
 const uint32_t DOUBLE_CLICK_TIME = 300000;
 const uint32_t LONG_PRESS_INCREMENT = 250000;
