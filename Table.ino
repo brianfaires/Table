@@ -30,7 +30,7 @@
  *    Base animations - based on time
  *    Top animations - based on time
  *    Serial output: buffer large outputs to avoid one big delay
- *    Get rid of int8_t's for baseParams; means 0 is not 0 and you can't modify speed by %
+ *    Get rid of int8_t's for baseParams; means 0 is not 0 and you can't modify speed by %, unless also including a direction boolean
  *      
  */
 
