@@ -24,7 +24,7 @@
 
 /////////////////////////////////////////////
 ////////// Init Animation Settings //////////
-#define INIT_BASE_ANIMATION STACKS
+#define INIT_BASE_ANIMATION (uint8_t)BaseAnimation::Stacks
 #define INIT_BASE_DIM_SPEED 64
 #define INIT_BASE_COLOR_SPEED 0
 #define INIT_BASE_BRIGHT_LENGTH 60
@@ -34,7 +34,7 @@
 #define INIT_BASE_DIM_PERIOD 16
 #define INIT_BASE_COLOR_PERIOD 255
 
-#define INIT_TOP_ANIMATION NONE
+#define INIT_TOP_ANIMATION (uint8_t)TopAnimation::None
 #define INIT_TOP_PORTION 128
 #define INIT_TOP_SPEED 64
 /////////////////////////////////////////////
@@ -53,11 +53,11 @@
 #define INIT_BASE_PAUSE_LENGTH      30 * ONE_MIN
 #define INIT_BASE_TRANS_OUT_LENGTH  3 * ONE_SEC
 #define INIT_BASE_TRANS_IN_LENGTH   3 * ONE_SEC
-#define INIT_BASE_PARAM_WALK  30 * ONE_MIN
+#define INIT_BASE_PARAM_WALK        30 * ONE_MIN
 #define INIT_TOP_PAUSE_LENGTH       30 * ONE_MIN
 #define INIT_TOP_TRANS_OUT_LENGTH   3 * ONE_SEC
 #define INIT_TOP_TRANS_IN_LENGTH    3 * ONE_SEC
-#define INIT_TOP_PARAM_WALK   30 * ONE_MIN
+#define INIT_TOP_PARAM_WALK         30 * ONE_MIN
 //////////////////////////////////////////////////
 
 

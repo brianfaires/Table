@@ -86,6 +86,8 @@ void SkipTimeForIO(uint32_t amount) {
 }
 
 
+#define NUM_PM_PARAMS 2 // Todo: Define this in PaletteManager
+
 //----------------------------- Serial IO -----------------------------
 bool ProcessSerialInput() {
   #ifdef MANUAL_PARAMS

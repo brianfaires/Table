@@ -3,24 +3,11 @@
 
 //////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Animation Indexes //////////////////////////////////
-#define NONE 0
-
-#define SCROLLER 1
-#define FIRE 2
-#define DISCO_FIRE 3
-#define STACKS 4
-#define COLOR_EXPLOSION 5
-#define ORBS 6
-#define GLIMMER_BANDS 7
-#define CENTER_SPAWN 8
 #define NUM_BASE_ANIMATIONS 1
+enum class BaseAnimation { None=0, Scroller=1, Fire=2, DiscoFire=3, Stacks=4, ColorExplosion=5, Orbs=6, GlimmerBands=7, CenterSpawn=8 };
 
-#define GLITTER 1
-#define RAIN 2
-#define TWINKLE 3
-#define BOUNCE 4
-#define COMETS 5
-#define COLLISION 6
+#define NUM_TOP_ANIMATIONS 2
+enum class TopAnimation { None=0, Glitter=1, Rain=2, Twinkle=3, Bounce=4, Comets=5, Collision=6 };
 //////////////////////////////////////////////////////////////////////////////////
 
 
@@ -41,8 +28,6 @@
 
 //////////////////////////////////////////////////////////////////////////////////
 ///////////////////// Structs and their sizes ////////////////////////////////////
-#define NUM_TOP_ANIMATIONS 2 // Todo: Find the right place for this
-
 #define NUM_BASE_PARAMS 9
 struct struct_base_show_params {
   uint8_t animation = INIT_BASE_ANIMATION;
@@ -55,8 +40,6 @@ struct struct_base_show_params {
   uint8_t dimPeriod = INIT_BASE_DIM_PERIOD;
   uint8_t colorPeriod = INIT_BASE_COLOR_PERIOD;
 };
-
-#define NUM_PM_PARAMS 2 // Todo: Define this in PaletteManager
 
 #define NUM_TOP_PARAMS 3
 struct struct_top_show_params {
@@ -78,7 +61,6 @@ struct struct_config {
   uint32_t topParamWalkTime = INIT_TOP_PARAM_WALK;
 };
 
-
 struct struct_timers {
   uint32_t now = 0;
   uint32_t lastDraw = 0;
@@ -90,7 +72,6 @@ struct base_animation {
   String name;
   void Draw(struct_base_show_params* baseParams, CRGB* leds, uint8_t* leds_b);
 };
-
 
 struct struct_stacker {
   uint16_t startPixel;
@@ -106,7 +87,6 @@ struct struct_stacker {
   
   uint32_t lastMove = 0;
 };
-
 
 struct struct_comet{
   uint16_t startPos;
