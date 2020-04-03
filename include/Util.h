@@ -1,3 +1,4 @@
+#pragma once
 #include "Globals.h"
 
 #define FPS_TO_TIME(x) (ONE_SEC / x)

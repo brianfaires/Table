@@ -557,7 +557,7 @@ param_change_type PatternScroller::GetPreferredDimParamChangeType(uint8_t patter
     case SNAKE3:          return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM; // 12
     case THREE_COMETS_F:  return abs(delta)==3 ? WORM : abs(delta)==2 ? CENTER : (dimSpeed > 0 ? GROW_R : WORM);
     case THREE_COMETS_R:  return abs(delta)==3 ? WORM : abs(delta)==2 ? CENTER : (dimSpeed < 0 ? GROW_R : WORM);
-    default: THROW("Unrecognized patternIndex") DUMP(patternIndex); break;
+    default: THROW_DUMP("Unrecognized patternIndex", patternIndex); break;
   }
   
   return delta == 1 ? WORM : CENTER;

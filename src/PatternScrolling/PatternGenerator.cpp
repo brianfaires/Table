@@ -37,7 +37,7 @@ void PatternGenerator::Init(PaletteManager* _pm, GammaManager* gm) {
 
 void PatternGenerator::WriteDimPattern(uint8_t patternIndex, uint8_t* outputArray) {
   uint8_t brightPeriod = 2*transLength + brightLength + 9; // All patterns have a length (excluding spacing) of this
-  if(brightPeriod > dimPeriod) { THROW("Out of bounds dimPeriod") DUMP(brightPeriod) }
+  if(brightPeriod > dimPeriod) { THROW_DUMP("Out of bounds dimPeriod", brightPeriod) }
 
   switch(patternIndex) {
     case COMET_F:   		WriteDimPattern_Comet(outputArray); break;
