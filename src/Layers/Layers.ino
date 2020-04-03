@@ -7,35 +7,35 @@ uint8_t topTransitionProgress;
 
 void DrawBaseLayer() {
   switch(baseParams.animation) {
-    case SCROLLER:
+    case (uint8_t)BaseAnimation::Scroller:
       pc.Update(baseParams, leds, leds_b);
       break;
 
-    case FIRE:
+    case (uint8_t)BaseAnimation::Fire:
       Fire();
       break;
 
-    case DISCO_FIRE:
+    case (uint8_t)BaseAnimation::DiscoFire:
       DiscoFire();
       break;
 
-    case COLOR_EXPLOSION:
+    case (uint8_t)BaseAnimation::ColorExplosion:
       ColorExplosion(timing.now);
       break;
 
-    case ORBS:
+    case (uint8_t)BaseAnimation::Orbs:
       Orbs();
       break;
 
-    case GLIMMER_BANDS:
+    case (uint8_t)BaseAnimation::GlimmerBands:
       ScrollingGlimmerBands();
       break;
 
-    case CENTER_SPAWN:
+    case (uint8_t)BaseAnimation::CenterSpawn:
       CenterSpawn();
       break;
 
-    case STACKS:
+    case (uint8_t)BaseAnimation::Stacks:
       Stacks(timing.now);
       break;
 
@@ -52,11 +52,11 @@ void InitBaseLayer() {
   DEBUG_ANIMATION("Init base layer: " + String(baseParams.animation));
   
   switch(baseParams.animation) {
-    case SCROLLER:
+    case (uint8_t)BaseAnimation::Scroller:
       pc.Init(NUM_LEDS, &(timing.now), baseParams, &pm, &Gamma, allowedDimPeriods, allowedColorPeriods);
       break;
 
-    case STACKS:
+    case (uint8_t)BaseAnimation::Stacks:
       //InitStackers(NUM_LEDS - 18);
       break;
       
@@ -103,27 +103,27 @@ void NextBaseAnimation(uint32_t curTime) {
 
 void DrawTopLayer() {
   switch(topParams.animation) {
-    case GLITTER:
+    case (uint8_t)TopAnimation::Glitter:
       Glitter();
       break;
       
-    case RAIN:
+    case (uint8_t)TopAnimation::Rain:
       Rain();
       break;
     
-    case TWINKLE:
+    case (uint8_t)TopAnimation::Twinkle:
       Twinkle();
       break;
       
-    case BOUNCE:
+    case (uint8_t)TopAnimation::Bounce:
       //Bounce();
       break;
       
-    case COMETS:
+    case (uint8_t)TopAnimation::Comets:
       FourComets(timing.now);
       break;
       
-    case COLLISION:
+    case (uint8_t)TopAnimation::Collision:
       Collision();
       break;
       
