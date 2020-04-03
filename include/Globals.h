@@ -1,8 +1,8 @@
 #pragma once
+#include "GammaManager.h"
+#include "PaletteManager.h"
 #include "Definitions.h"
 #include "Util.h"
-#include "PaletteManager.h"
-#include "GammaManager.h"
 #include "PatternScrolling\PatternController.h"
 
 // Timing debug tools
@@ -96,4 +96,3 @@ void Rain();
 void Twinkle();
 void FourComets(uint32_t curTime);
 void DrawComet(struct_comet* comet, uint8_t cometLength, uint16_t moveIndex);
-
