@@ -1,4 +1,5 @@
 #pragma once
+
 #include "GammaManager.h"
 #include "PaletteManager.h"
 #include "Definitions.h"
@@ -7,28 +8,31 @@
 
 // Timing debug tools
 #if DEBUG_TIMING
-  uint32_t timingValues[10];
-  uint32_t curDebugTime;
-  uint32_t lastDebugTime;
+  extern uint32_t timingValues[10];
+  extern uint32_t curDebugTime;
+  extern uint32_t lastDebugTime;
+#endif
+#ifdef DEBUG_CLIPPING
+  extern uint32_t lastClippedTime;
 #endif
 
 // Organizational structs for timers, configuration, and runtime parameters
-struct_timers timing;
-struct_config layerConfig;
-struct_base_show_params baseParams;
-struct_top_show_params topParams;
+extern struct_timers timing;
+extern struct_config layerConfig;
+extern struct_base_show_params baseParams;
+extern struct_top_show_params topParams;
 
 // Color and brightness outputs
-CRGBArray<NUM_LEDS> leds;
-uint8_t leds_b[NUM_LEDS];
-CRGBArray<NUM_LEDS> leds_top;
-uint8_t leds_top_b[NUM_LEDS];
-uint8_t globalBrightness = INIT_GLOBAL_BRIGHTNESS;
+extern CRGBArray<NUM_LEDS> leds;
+extern uint8_t leds_b[NUM_LEDS];
+extern CRGBArray<NUM_LEDS> leds_top;
+extern uint8_t leds_top_b[NUM_LEDS];
+extern uint8_t globalBrightness;
 
 // Objects
-PaletteManager pm;
-GammaManager Gamma;
-PatternController pc;
+extern PaletteManager pm;
+extern GammaManager Gamma;
+extern PatternController pc;
 
 
 /////// All global functions ///////

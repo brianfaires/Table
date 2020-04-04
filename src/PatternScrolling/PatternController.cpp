@@ -63,15 +63,7 @@ void PatternController::SetBrightness(uint8_t brightness) {
 }
 
 void PatternController::Init(uint16_t _numLEDs, uint32_t* curTime, struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, const uint16_t* _allowedDimPeriods, const uint16_t* _allowedColorPeriods) {
-  // Init PatternScrollers
-  SetDimBlendLength(INIT_PATTERN_CONTROLLER_DIM_BLEND_LENGTH);
-  SetColorBlendLength(INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH);
-  SetDimPauseLength(INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH);
-  SetColorPauseLength(INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH);
-  SetDimParamChangeType(INIT_DIM_PARAM_CHANGE_TYPE, INIT_CHANGE_DIM_PARAMS_WITH_MOVEMENT);
-  SetBrightness(INIT_PATTERN_SCROLLER_BRIGHTNESS);
-  SetEnableDoubleBrightMove(INIT_ENABLE_DOUBLE_BRIGHT_MOVE);
-
+  
   numLEDs = _numLEDs;
   allowedDimPeriods = _allowedDimPeriods;
   allowedColorPeriods = _allowedColorPeriods;
@@ -83,6 +75,17 @@ void PatternController::Init(uint16_t _numLEDs, uint32_t* curTime, struct_base_s
   colorSpeed = scaledParams.colorSpeed;
   ps1.Init(scaledParams, curTime, pm, gm, numLEDs);
   ps2.Init(scaledParams, curTime, pm, gm, numLEDs);
+
+// Todo: personal note: (PIO, moved this from start of function)
+// Init PatternScrollers
+  SetDimBlendLength(INIT_PATTERN_CONTROLLER_DIM_BLEND_LENGTH);
+  SetColorBlendLength(INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH);
+  SetDimPauseLength(INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH);
+  SetColorPauseLength(INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH);
+  SetDimParamChangeType(INIT_DIM_PARAM_CHANGE_TYPE, INIT_CHANGE_DIM_PARAMS_WITH_MOVEMENT);
+  SetBrightness(INIT_PATTERN_SCROLLER_BRIGHTNESS);
+  SetEnableDoubleBrightMove(INIT_ENABLE_DOUBLE_BRIGHT_MOVE);
+
 
   ps = &ps1;
   secondary = &ps2;

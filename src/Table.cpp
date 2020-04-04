@@ -29,8 +29,9 @@ void setup() {
   DEBUG("Gamma init complete.");
 
   InitBaseLayer();
+  DEBUG("Base layer init complete.");
   InitTopLayer();
-  DEBUG("Layer init complete.");
+  DEBUG("Top layer init complete.");
   DEBUG("setup() complete.");
 
   DEBUG_TIMING("setup() time: " + String((uint32_t)(SYSTEM_TIME - startupTime)));
@@ -46,7 +47,7 @@ void setup() {
 void loop() {
   #ifdef TEST_COLOR_CORRECTION
     for(uint16_t i = 0; i < NUM_LEDS; i++) { leds_b[i] = 255; }
-    Gamma.RunTests(leds, leds_b, 384, 4, 32);
+    Gamma.RunTests(leds, leds_b, NUM_LEDS, 4, 32);
     return;
   #endif
 
@@ -59,12 +60,20 @@ void loop() {
     pm.Update();
     
     #ifdef TEST_PALETTES
+      const uint16_t length = 120;
+      const uint16_t offset1 = 228;
+      const uint16_t offset2 = 390;
+      
+      const uint16_t pixelsPerPalette = length / PALETTE_SIZE;
       leds = CRGB::Black;
-      for(uint16_t i = 0; i < 120; i++) { leds_b[i] = globalBrightness; }
-      uint8_t pixelsPerPalette = 120 / PALETTE_SIZE;
+      for(uint16_t i = 0; i < NUM_LEDS; i++) { leds_b[i] = globalBrightness; }
       for(uint8_t i = 0; i < PALETTE_SIZE; i++) {
-        //leds(pixelsPerPalette*i + 1, pixelsPerPalette*(i+1) - 2) = pm.palette[i]; // With spaces
-        leds(pixelsPerPalette*i, pixelsPerPalette*(i+1) - 1) = pm.palette[i];
+        // With spaces
+        leds(offset1 + pixelsPerPalette*i + 1, offset1 + pixelsPerPalette*(i+1) - 2) = pm.palette[i];
+        leds(offset2 + pixelsPerPalette*i + 1, offset2 + pixelsPerPalette*(i+1) - 2) = pm.palette[PALETTE_SIZE-1-i];
+        // Without spaces
+        //leds(offset1 + pixelsPerPalette*i, offset1 + pixelsPerPalette*(i+1) - 1) = pm.palette[i];
+        //leds(offset2 + pixelsPerPalette*i, offset2 + pixelsPerPalette*(i+1) - 1) = pm.palette[PALETTE_SIZE-1-i];
       }
     #else
       TransitionBaseAnimation(timing.now);
@@ -76,7 +85,12 @@ void loop() {
 
     FastLED.show();
     timing.lastDraw += FPS_TO_TIME(REFRESH_RATE);
-    if(timing.now > timing.lastDraw + FPS_TO_TIME(REFRESH_RATE)) { THROW("ERROR: Drawing clipped by " + String(timing.now - timing.lastDraw) + "us") }
+    #ifdef DEBUG_CLIPPING
+      if((timing.now > timing.lastDraw + FPS_TO_TIME(REFRESH_RATE)) && (timing.now-lastClippedTime > ONE_SEC)) {
+        DEBUG_CLIPPING("ERROR: Drawing clipped by " + (timing.now - timing.lastDraw) + "us")
+        lastClippedTime = timing.now;
+      }
+    #endif
   }
 
   DEBUG_TIMING("Total loop time = " + String(SYSTEM_TIME - timing.now) + "us");
@@ -87,6 +101,9 @@ void SkipTime(uint32_t amount) {
   SkipTimeForIO(amount);
   pm.SkipTime(amount);
   pc.SkipTime(amount);
+  #ifdef DEBUG_CLIPPING
+    lastClippedTime += amount;
+  #endif
 }
 
 void SkipTimeForTimers(uint32_t amount) {

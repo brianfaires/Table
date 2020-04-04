@@ -65,7 +65,7 @@ void PatternGenerator::WriteColorPattern(uint8_t patternIndex, CRGB* outputArray
   switch(patternIndex) {
     case 0:  WriteColorPattern_Gradient(outputArray); break;
     case 1: WriteColorPattern_Blocks(outputArray); break;
-	default: DUMP(patternIndex); break;
+	default:  THROW_DUMP("Unrecognized patternIndex", patternIndex); break;
   }
   
   //for(uint8_t i =0; i < colorPeriod; i++) { Serial.println(String(i) + ": (" + outputArray[i].r + ", " + outputArray[i].g + ", " + outputArray[i].b + ")"); }

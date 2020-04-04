@@ -731,7 +731,7 @@ void Stacks(uint32_t curTime) {
 */
 void Collision() {
   // Comets flow from spawn point to end point and explode in a flash of white
-  // numColors, brightSpeed, colorThickness
+  // numColors, dimSpeed, colorThickness
 }
 
 void PulseInPlace() {

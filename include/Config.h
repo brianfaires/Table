@@ -6,11 +6,10 @@
 
 ////////////////////////////////////////
 //////////// Runtime config ////////////
-//#define TEST_PALETTES
-//#define TEST_COLOR_CORRECTION
 #define MANUAL_PARAMS
-//#define EXPLICIT_PARAMETERS
-#define SKIP_TIME_ON_SERIAL_WRITE
+#define TEST_PALETTES
+//#define TEST_COLOR_CORRECTION // Overrides everything else
+#define EXPLICIT_PARAMETERS
 ////////////////////////////////////////
 
 
@@ -19,18 +18,19 @@
 #define DEBUG_BTN(msg)        DEBUG(msg)
 #define DEBUG_ANIMATION(msg)  //DEBUG(msg)
 #define DEBUG_TIMING(msg)     //DEBUG(msg)
+#define DEBUG_CLIPPING(msg)   //THROW(msg)
 ////////////////////////////////////////
 
 
 /////////////////////////////////////////////
 ////////// Init Animation Settings //////////
-#define INIT_BASE_ANIMATION (uint8_t)BaseAnimation::Stacks
-#define INIT_BASE_DIM_SPEED 64
-#define INIT_BASE_COLOR_SPEED 0
-#define INIT_BASE_BRIGHT_LENGTH 60
+#define INIT_BASE_ANIMATION (uint8_t)BaseAnimation::Scroller
+#define INIT_BASE_DIM_SPEED 16
+#define INIT_BASE_COLOR_SPEED 64
+#define INIT_BASE_BRIGHT_LENGTH 64
 #define INIT_BASE_TRANS_LENGTH 240
 #define INIT_BASE_NUM_COLORS 200
-#define INIT_BASE_DISPLAY_MODE 200
+#define INIT_BASE_DISPLAY_MODE 127
 #define INIT_BASE_DIM_PERIOD 16
 #define INIT_BASE_COLOR_PERIOD 255
 
@@ -42,9 +42,9 @@
 
 /////////////////////////////////////////////
 //////// Init PaletteManager Settings ///////
-#define INIT_PALETTE 1
+#define INIT_PALETTE 3
 #define INIT_PM_WALK_LENGTH   3 * ONE_SEC
-#define INIT_PM_PAUSE_LENGTH  30 * ONE_MIN
+#define INIT_PM_PAUSE_LENGTH  0 * ONE_MIN
 /////////////////////////////////////////////
 
 
@@ -87,7 +87,7 @@ const uint16_t PROGMEM allowedColorPeriods[] = { 20, 21, 28, 30, 35, 42, 60, 70,
 #define SERIAL_DATA_RATE_HZ 115200
 #define CLOCK_PIN 13
 #define LED_PIN 12
-#define NUM_LEDS 420
+#define NUM_LEDS 520
 #define BTN1_PIN 14
 #define BTN2_PIN 15
 #define NUM_BTNS 2
