@@ -4,10 +4,10 @@
 //////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Animation Indexes //////////////////////////////////
 #define NUM_BASE_ANIMATIONS 1
-enum class BaseAnimation { None=0, Scroller=1, Fire=2, DiscoFire=3, Stacks=4, ColorExplosion=5, Orbs=6, GlimmerBands=7, CenterSpawn=8 };
+enum class BaseAnimation { None, Scroller, Fire, DiscoFire, Stacks, ColorExplosion, Orbs, GlimmerBands, CenterSpawn };
 
 #define NUM_TOP_ANIMATIONS 2
-enum class TopAnimation { None=0, Glitter=1, Rain=2, Twinkle=3, Bounce=4, Comets=5, Collision=6 };
+enum class TopAnimation { None, Glitter, Rain, Twinkle, Bounce, Comets, Collision };
 //////////////////////////////////////////////////////////////////////////////////
 
 

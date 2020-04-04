@@ -42,7 +42,7 @@
 
 /////////////////////////////////////////////
 //////// Init PaletteManager Settings ///////
-#define INIT_PALETTE 3
+#define INIT_PALETTE PaletteIndex::analagousCyan
 #define INIT_PM_WALK_LENGTH   3 * ONE_SEC
 #define INIT_PM_PAUSE_LENGTH  0 * ONE_MIN
 /////////////////////////////////////////////
