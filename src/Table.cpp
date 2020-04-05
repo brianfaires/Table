@@ -25,7 +25,7 @@ void setup() {
   pm.Init(&(timing.now), INIT_PM_WALK_LENGTH, INIT_PM_PAUSE_LENGTH, INIT_PALETTE);
   DEBUG("PaletteManager init complete.");
 
-  Gamma.Init(&globalBrightness);
+  Gamma.Init(leds, leds_b, leds_5bit_brightness, NUM_LEDS, &globalBrightness);
   DEBUG("Gamma init complete.");
 
   InitBaseLayer();
@@ -46,8 +46,7 @@ void setup() {
 
 void loop() {
   #ifdef TEST_COLOR_CORRECTION
-    for(uint16_t i = 0; i < NUM_LEDS; i++) { leds_b[i] = 255; }
-    Gamma.RunTests(leds, leds_b, NUM_LEDS, 4, 32);
+    Gamma.RunTests(4, 32);
     return;
   #endif
 
@@ -83,7 +82,7 @@ void loop() {
       OverlayLayers();
     #endif
 
-    Gamma.PrepPixelsForFastLED(leds, leds_b, leds_5bit_brightness, NUM_LEDS);
+    Gamma.PrepPixelsForFastLED();
     FastLED.show();
 
     timing.lastDraw += FPS_TO_TIME(REFRESH_RATE);

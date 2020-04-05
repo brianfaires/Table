@@ -2,12 +2,12 @@
 #include "FastLED.h"
 
 
-#define INIT_GLOBAL_BRIGHTNESS 255
+#define INIT_GLOBAL_BRIGHTNESS 128
 
 ////////////////////////////////////////
 //////////// Runtime config ////////////
 #define MANUAL_PARAMS
-//#define TEST_PALETTES
+#define TEST_PALETTES
 //#define TEST_COLOR_CORRECTION // Overrides everything else
 //#define EXPLICIT_PARAMETERS
 ////////////////////////////////////////

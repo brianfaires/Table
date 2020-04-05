@@ -133,6 +133,13 @@ bool ProcessSerialInput() {
         pm.NextPalette();
         return true;
       }
+      else if(s.startsWith("tp")) {
+        s = s.substring(2);
+        long b = s.toInt();
+        if(b < 0 || b > 255) { return false; }
+        pm.setTarget(static_cast<PaletteIndex>(b));
+        return true;
+      }
       else if(s.startsWith("nb")) {
         NextBaseAnimation(timing.now);
         return true;
@@ -234,7 +241,7 @@ bool ProcessSerialInput() {
 
 void PrintParams() {
   #ifndef TEST_COLOR_CORRECTION
-    PRINTLN("\nCommands: np (NextPalette), nb (NextBase), nt (NextTop)\n\t  rb (RandomizeBaseParams), rt (RandomizeTopParams)\n\t  sp # ### ### ### (SetPalette)")
+    PRINTLN("\nCommands: np (NextPalette), nb (NextBase), nt (NextTop)\n\t  sb ### (SetBrightness), rb (RandomizeBaseParams), rt (RandomizeTopParams)\n\t  tp (TargetPalette), sp # ### ### ### (SetPalette)")
     
     PrintBaseTopAndPMParams();
     PrintLayerParams();
