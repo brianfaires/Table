@@ -25,6 +25,8 @@ extern struct_top_show_params topParams;
 // Color and brightness outputs
 extern CRGBArray<NUM_LEDS> leds;
 extern uint8_t leds_b[NUM_LEDS];
+extern uint8_t leds_5bit_brightness[NUM_LEDS];
+
 extern CRGBArray<NUM_LEDS> leds_top;
 extern uint8_t leds_top_b[NUM_LEDS];
 extern uint8_t globalBrightness;

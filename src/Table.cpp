@@ -12,7 +12,7 @@ void setup() {
   DEBUG("Serial comm intialized.");
 
   pinMode(BTN1_PIN, INPUT_PULLUP);
-  FastLED.addLeds<APA102, LED_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(leds, NUM_LEDS, 0, leds_b, colorCorrections, &globalBrightness, gammaDim, gammaDim_5bit);
+  FastLED.addLeds<APA102, LED_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(leds, NUM_LEDS, 0, leds_5bit_brightness);
   //FastLED.addLeds<SK9822, LED_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(leds, NUM_LEDS, 0);
   //FastLED.setBrightness(BRIGHTNESS);
   leds = CRGB::Black;
@@ -25,7 +25,7 @@ void setup() {
   pm.Init(&(timing.now), INIT_PM_WALK_LENGTH, INIT_PM_PAUSE_LENGTH, INIT_PALETTE);
   DEBUG("PaletteManager init complete.");
 
-  Gamma.Init(gammaR, gammaG, gammaB, reverseGammaR, reverseGammaG, reverseGammaB, &globalBrightness);
+  Gamma.Init(&globalBrightness);
   DEBUG("Gamma init complete.");
 
   InitBaseLayer();
@@ -83,7 +83,9 @@ void loop() {
       OverlayLayers();
     #endif
 
+    Gamma.PrepPixelsForFastLED(leds, leds_b, leds_5bit_brightness, NUM_LEDS);
     FastLED.show();
+
     timing.lastDraw += FPS_TO_TIME(REFRESH_RATE);
     #ifdef DEBUG_CLIPPING
       if((timing.now > timing.lastDraw + FPS_TO_TIME(REFRESH_RATE)) && (timing.now-lastClippedTime > ONE_SEC)) {
