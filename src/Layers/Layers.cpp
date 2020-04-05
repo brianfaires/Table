@@ -49,7 +49,7 @@ void DrawBaseLayer() {
   leds.fadeToBlackBy(baseTransitionProgress);
 }
 void InitBaseLayer() {
-  DEBUG_ANIMATION("Init base layer: " + String(baseParams.animation));
+  DEBUG_ANIMATION("Init base layer: " + baseParams.animation);
   
   switch(baseParams.animation) {
     case (uint8_t)BaseAnimation::Scroller:
@@ -65,7 +65,7 @@ void InitBaseLayer() {
   }
 }
 void CleanupBaseLayer(uint8_t lastAnimation) {
-  DEBUG_ANIMATION("Cleanup base layer: " + String(lastAnimation));
+  DEBUG_ANIMATION("Cleanup base layer: " + lastAnimation);
   
   switch(lastAnimation) {
     default:
@@ -135,7 +135,7 @@ void DrawTopLayer() {
   leds_top.fadeToBlackBy(topTransitionProgress);
 }
 void InitTopLayer() {
-  DEBUG_ANIMATION("Init top layer: " + String(topParams.animation));
+  DEBUG_ANIMATION("Init top layer: " + topParams.animation);
   
   switch(topParams.animation) {
     default:
@@ -143,7 +143,7 @@ void InitTopLayer() {
   }
 }
 void CleanupTopLayer(uint8_t lastAnimation) {
-  DEBUG_ANIMATION("Cleanup top layer: " + String(lastAnimation));
+  DEBUG_ANIMATION("Cleanup top layer: " + lastAnimation);
   
   switch(lastAnimation) {
     default:

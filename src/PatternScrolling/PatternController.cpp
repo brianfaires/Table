@@ -113,7 +113,7 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
   }
 
   //todo: Use ASSERT method
-  if(ps->GetDimSpeed() != secondary->GetDimSpeed()) { THROW(String(ps->GetDimSpeed()) + " DOES NOT EQUAL " + String(secondary->GetDimSpeed())); }
+  if(ps->GetDimSpeed() != secondary->GetDimSpeed()) { THROW(ps->GetDimSpeed() + " DOES NOT EQUAL " + secondary->GetDimSpeed()); }
 
   // Update primary PatternScroller
   ps->numColors = scaledParams.numColors;
@@ -220,7 +220,7 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_base
     output.numColors = scaleParam(params.numColors, 2, PALETTE_SIZE-1);
     output.transLength = scaleParam(params.transLength, 0, (output.dimPeriod-10) / 3);
     output.brightLength = scaleParam(params.brightLength, 0, (output.dimPeriod-10) / 3);
-    //DEBUG(String(params.brightLength)+"/"+String(output.brightLength) + ", " + String(params.transLength)+"/"+String(output.transLength));
+    //DEBUG(params.brightLength+"/"+output.brightLength + ", " + params.transLength+"/"+output.transLength);
   #endif
 }
 

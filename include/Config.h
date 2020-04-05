@@ -7,7 +7,7 @@
 ////////////////////////////////////////
 //////////// Runtime config ////////////
 #define MANUAL_PARAMS
-#define TEST_PALETTES
+//#define TEST_PALETTES
 //#define TEST_COLOR_CORRECTION // Overrides everything else
 //#define EXPLICIT_PARAMETERS
 ////////////////////////////////////////
@@ -45,6 +45,7 @@
 #define INIT_PALETTE PaletteIndex::analagousCyan
 #define INIT_PM_WALK_LENGTH   3 * ONE_SEC
 #define INIT_PM_PAUSE_LENGTH  0 * ONE_MIN
+#define INIT_FADE_IN_FROM_BLACK true
 /////////////////////////////////////////////
 
 
@@ -71,11 +72,29 @@
 #define INIT_DIM_PARAM_CHANGE_TYPE WORM
 #define INIT_CHANGE_DIM_PARAMS_WITH_MOVEMENT true
 #define INIT_ENABLE_DOUBLE_BRIGHT_MOVE false
+////////////////////////////////////////////////////////////////////////
 
-#define NUM_ALLOWED_DIM_PERIODS 10
-#define NUM_ALLOWED_COLOR_PERIODS 11
-const uint16_t PROGMEM allowedDimPeriods[] = { 21, 28, 30, 35, 42, 60, 70, 84, 105, 210 };
-const uint16_t PROGMEM allowedColorPeriods[] = { 20, 21, 28, 30, 35, 42, 60, 70, 84, 105, 210 };
+
+#define NUM_LEDS 520
+#if NUM_LEDS == 420
+  // 2*2*3*5*6*7
+  #define NUM_ALLOWED_DIM_PERIODS 10
+  #define NUM_ALLOWED_COLOR_PERIODS 11
+  const uint16_t PROGMEM allowedDimPeriods[] = { 21, 28, 30, 35, 42, 60, 70, 84, 105, 210 };
+  const uint16_t PROGMEM allowedColorPeriods[] = { 20, 21, 28, 30, 35, 42, 60, 70, 84, 105, 210 };
+#elif NUM_LEDS == 408
+  // 2*2*2*3*17
+  #define NUM_ALLOWED_DIM_PERIODS 7
+  #define NUM_ALLOWED_COLOR_PERIODS 7
+  const uint16_t PROGMEM allowedDimPeriods[] = { 17, 24, 34, 51, 68, 102, 204 };
+  const uint16_t PROGMEM allowedColorPeriods[] = { 17, 24, 34, 51, 68, 102, 204 };
+#elif NUM_LEDS == 520
+  // 2*2*2*5*13
+  #define NUM_ALLOWED_DIM_PERIODS 7
+  #define NUM_ALLOWED_COLOR_PERIODS 7
+  const uint16_t PROGMEM allowedDimPeriods[] = { 20, 26, 40, 52, 65, 104, 130 };
+  const uint16_t PROGMEM allowedColorPeriods[] = { 20, 26, 40, 52, 65, 104, 130 };
+#endif
 ////////////////////////////////////////////////////////////////////////
 
 
@@ -87,7 +106,6 @@ const uint16_t PROGMEM allowedColorPeriods[] = { 20, 21, 28, 30, 35, 42, 60, 70,
 #define SERIAL_DATA_RATE_HZ 115200
 #define CLOCK_PIN 13
 #define LED_PIN 12
-#define NUM_LEDS 520
 #define BTN1_PIN 14
 #define BTN2_PIN 15
 #define NUM_BTNS 2

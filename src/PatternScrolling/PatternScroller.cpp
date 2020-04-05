@@ -471,11 +471,11 @@ void PatternScroller::SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs
       target[i] = curColorPattern[curColorIndex];
       uint16_t pixelBrightness = (uint16_t)curDimPattern[curDimIndex] * (uint16_t)(brightness+1) / 0x100;
       target_b[i] = max(1, pixelBrightness & 0xFF); //todo: += 127?
-      //DEBUG(String(i) + ": " + String(target[i].r) + ": " + String(target[i].g) + ", " + String(target[i].b));
+      //DEBUG(i + ": " + target[i].r + ": " + target[i].g + ", " + target[i].b);
     } 
   
-    if(curDimIndex >= dimPeriod) { THROW("ERROR: SetCRGBs(): curDimIndex out of bounds: " + String(curDimIndex) + " / " + String(dimPeriod)) }
-    if(curColorIndex >= colorPeriod) { THROW("ERROR: SetCRGBs(): curColorIndex out of bounds: " + String(curColorIndex) + " / " + String(colorPeriod)) }
+    if(curDimIndex >= dimPeriod) { THROW("ERROR: SetCRGBs(): curDimIndex out of bounds: " + curDimIndex + " / " + dimPeriod) }
+    if(curColorIndex >= colorPeriod) { THROW("ERROR: SetCRGBs(): curColorIndex out of bounds: " + curColorIndex + " / " + colorPeriod) }
 
     if(++curColorIndex == colorPeriod) { curColorIndex = 0; }
     if(++curDimIndex == dimPeriod) { curDimIndex = 0; }

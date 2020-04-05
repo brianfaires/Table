@@ -22,7 +22,7 @@ void setup() {
   DEBUG("LEDs defined and cleared.");
   
   //--------------------Initialize software--------------------
-  pm.Init(&(timing.now), INIT_PM_WALK_LENGTH, INIT_PM_PAUSE_LENGTH, INIT_PALETTE);
+  pm.Init(&(timing.now), INIT_PM_WALK_LENGTH, INIT_PM_PAUSE_LENGTH, INIT_PALETTE, INIT_FADE_IN_FROM_BLACK);
   DEBUG("PaletteManager init complete.");
 
   Gamma.Init(leds, leds_b, leds_5bit_brightness, NUM_LEDS, &globalBrightness);
@@ -34,7 +34,7 @@ void setup() {
   DEBUG("Top layer init complete.");
   DEBUG("setup() complete.");
 
-  DEBUG_TIMING("setup() time: " + String((uint32_t)(SYSTEM_TIME - startupTime)));
+  DEBUG_TIMING("setup() time: " + (SYSTEM_TIME - startupTime));
 
   #ifdef MANUAL_PARAMS
     Serial.setTimeout(100);
@@ -94,7 +94,7 @@ void loop() {
     #endif
   }
 
-  DEBUG_TIMING("Total loop time = " + String(SYSTEM_TIME - timing.now) + "us");
+  DEBUG_TIMING("Total loop time = " +  (SYSTEM_TIME - timing.now) + "us");
 }
 
 void SkipTime(uint32_t amount) {
