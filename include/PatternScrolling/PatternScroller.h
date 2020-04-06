@@ -11,29 +11,29 @@ enum param_change_type { PREFERRED, GROW_F, GROW_R, WORM, FREEZE, CENTER, MIX_F 
 class PatternScroller {
   public:
     PatternScroller();
-    void Init(struct_base_show_params& params, uint32_t* curTime = NULL, PaletteManager* _pm = NULL, GammaManager* gm = NULL, uint16_t _numLEDs = 0);
+    void Init(struct_base_show_params& params, uint32_t* curTime = NULL, PaletteManager* _pm = NULL, GammaManager* _gm = NULL, uint16_t _numLEDs = 0);
     void Clone(PatternScroller* source, struct_base_show_params& params);
     bool Update();
     void SkipTime(uint32_t amount);
     void SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs);
     bool IsStartOfDimPattern();
 
-    // Getters/Setters
-    void SetDisplayMode(uint8_t displayMode);
-    uint8_t GetColorPeriod();
-    uint8_t GetDimPeriod();
-    uint32_t GetDimBlendLength();
-    void SetDimBlendLength(uint32_t value);
-    uint32_t GetColorBlendLength();
-    void SetColorBlendLength(uint32_t value);
-    uint32_t GetDimPauseLength();
-    void SetDimPauseLength(uint32_t value);
-    uint32_t GetColorPauseLength();
-    void SetColorPauseLength(uint32_t value);
-    int8_t GetDimSpeed();
-    void SetDimSpeed(int8_t value);
-    int8_t GetColorSpeed();
-    void SetColorSpeed(int8_t value);
+    // Accessors/Mutators
+    void setDisplayMode(uint8_t displayMode);
+    uint8_t getColorPeriod();
+    uint8_t getDimPeriod();
+    uint32_t getDimBlendLength();
+    void setDimBlendLength(uint32_t value);
+    uint32_t getColorBlendLength();
+    void setColorBlendLength(uint32_t value);
+    uint32_t getDimPauseLength();
+    void setDimPauseLength(uint32_t value);
+    uint32_t getColorPauseLength();
+    void setColorPauseLength(uint32_t value);
+    int8_t getDimSpeed();
+    void setDimSpeed(int8_t value);
+    int8_t getColorSpeed();
+    void setColorSpeed(int8_t value);
     
     // Params
     param_change_type dimParamChangeType;
@@ -56,26 +56,24 @@ class PatternScroller {
     void BlendDimPattern();
     bool ScrollPatterns();
     void ScrollPatternsWithoutTimer(bool moveForward);
-    param_change_type GetPreferredDimParamChangeType(uint8_t patternIndex, int8_t delta);
+    param_change_type getPreferredDimParamChangeType(uint8_t patternIndex, int8_t delta);
 
     // Utility
     bool IsReadyForDimMove();
     bool IsHalfwayToDimMove();
-    uint8_t GetTargetDimPatternIndex();
+    uint8_t getTargetDimPatternIndex();
     bool IsRandomDimPattern();
     
     // Blending
     bool dimBlendOn = false;
     bool colorBlendOn = false;
-    bool dimParamWalkedThisCycle = false;
 
     // Params
     uint8_t colorPeriod, dimPeriod;
     int8_t dimSpeed, colorSpeed;
     uint16_t numLEDs;
     uint32_t dimPauseLength, colorPauseLength;
-    uint32_t dimBlendLength, colorBlendLength, dimBlendLength_q, colorBlendLength_q;
-    bool dimBlendLength_queued, colorBlendLength_queued; //todo: these could be replaced by determining current blendAmount and adjusting last___PatternChange accordingly
+    uint32_t dimBlendLength, colorBlendLength;
 
     // Display mode
     uint8_t oldDimPatternIndex;
