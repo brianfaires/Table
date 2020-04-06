@@ -1,6 +1,7 @@
 #pragma once
 #include "Definitions.h"
-#include "PatternGenerator.h"
+#include "DimPattern.h"
+#include "ColorPattern.h"
 
 #define MAX_PERIOD 210
 
@@ -47,7 +48,6 @@ class PatternScroller {
     // Objects
     PaletteManager* pm;
     GammaManager* Gamma;
-    PatternGenerator pg;
 
     // Smoothing
     bool WalkColorParams();
@@ -91,4 +91,15 @@ class PatternScroller {
     // Timers
     uint32_t lastDimMove, lastColorMove;
     uint32_t lastDimPatternChange, lastColorPatternChange;
+
+
+    DimPattern* allDimPatterns[NUM_DIM_PATTERNS] = { new DimPattern, new DimPattern_Comet, new DimPattern_ReverseComet,
+      new DimPattern_TwoSided, new DimPattern_Barbell, new DimPattern_Snake, new DimPattern_Snake3, new DimPattern_3Comets,
+      new DimPattern_3ReverseComets, new DimPattern_Towers, new DimPattern_Bowties, new DimPattern_ReverseBowties,
+      new DimPattern_SlopedHighTowers, new DimPattern_SlopedLowTowers, new DimPattern_SlideHigh, new DimPattern_SlideLow
+    };
+
+    ColorPattern* allColorPatterns[NUM_COLOR_PATTERNS] = { new ColorPattern_Gradient, new ColorPattern_Blocks };
+    void WriteDimPattern(uint8_t patternIndex, uint8_t* outputArray);
+    void WriteColorPattern(uint8_t patternIndex, CRGB* outputArray);
 };

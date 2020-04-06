@@ -4,10 +4,10 @@
 //////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Animation Indexes //////////////////////////////////
 #define NUM_BASE_ANIMATIONS 1
-enum class BaseAnimation { None, Scroller, Fire, DiscoFire, Stacks, ColorExplosion, Orbs, GlimmerBands, CenterSpawn };
+enum class BaseAnimation : uint8_t { None, Scroller, Fire, DiscoFire, Stacks, ColorExplosion, Orbs, GlimmerBands, CenterSpawn };
 
 #define NUM_TOP_ANIMATIONS 2
-enum class TopAnimation { None, Glitter, Rain, Twinkle, Bounce, Comets, Collision };
+enum class TopAnimation : uint8_t { None, Glitter, Rain, Twinkle, Bounce, Comets, Collision };
 //////////////////////////////////////////////////////////////////////////////////
 
 
@@ -30,7 +30,7 @@ enum class TopAnimation { None, Glitter, Rain, Twinkle, Bounce, Comets, Collisio
 ///////////////////// Structs and their sizes ////////////////////////////////////
 #define NUM_BASE_PARAMS 9
 struct struct_base_show_params {
-  uint8_t animation = INIT_BASE_ANIMATION;
+  BaseAnimation animation = INIT_BASE_ANIMATION;
   int8_t dimSpeed = INIT_BASE_DIM_SPEED;
   int8_t colorSpeed = INIT_BASE_COLOR_SPEED;
   uint8_t brightLength = INIT_BASE_BRIGHT_LENGTH;
@@ -43,7 +43,7 @@ struct struct_base_show_params {
 
 #define NUM_TOP_PARAMS 3
 struct struct_top_show_params {
-  uint8_t animation = INIT_TOP_ANIMATION;
+  TopAnimation animation = INIT_TOP_ANIMATION;
   uint8_t portion = INIT_TOP_PORTION;
   int8_t speed = INIT_TOP_SPEED;
 };

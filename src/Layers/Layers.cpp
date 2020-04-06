@@ -7,35 +7,35 @@ uint8_t topTransitionProgress;
 
 void DrawBaseLayer() {
   switch(baseParams.animation) {
-    case (uint8_t)BaseAnimation::Scroller:
+    case BaseAnimation::Scroller:
       pc.Update(baseParams, leds, leds_b);
       break;
 
-    case (uint8_t)BaseAnimation::Fire:
+    case BaseAnimation::Fire:
       Fire();
       break;
 
-    case (uint8_t)BaseAnimation::DiscoFire:
+    case BaseAnimation::DiscoFire:
       DiscoFire();
       break;
 
-    case (uint8_t)BaseAnimation::ColorExplosion:
+    case BaseAnimation::ColorExplosion:
       ColorExplosion(timing.now);
       break;
 
-    case (uint8_t)BaseAnimation::Orbs:
+    case BaseAnimation::Orbs:
       Orbs();
       break;
 
-    case (uint8_t)BaseAnimation::GlimmerBands:
+    case BaseAnimation::GlimmerBands:
       ScrollingGlimmerBands();
       break;
 
-    case (uint8_t)BaseAnimation::CenterSpawn:
+    case BaseAnimation::CenterSpawn:
       CenterSpawn();
       break;
 
-    case (uint8_t)BaseAnimation::Stacks:
+    case BaseAnimation::Stacks:
       Stacks(timing.now);
       break;
 
@@ -52,11 +52,11 @@ void InitBaseLayer() {
   DEBUG_ANIMATION("Init base layer: " + baseParams.animation);
   
   switch(baseParams.animation) {
-    case (uint8_t)BaseAnimation::Scroller:
+    case BaseAnimation::Scroller:
       pc.Init(NUM_LEDS, &(timing.now), baseParams, &pm, &Gamma, allowedDimPeriods, allowedColorPeriods);
       break;
 
-    case (uint8_t)BaseAnimation::Stacks:
+    case BaseAnimation::Stacks:
       //InitStackers(NUM_LEDS - 18);
       break;
       
@@ -64,7 +64,7 @@ void InitBaseLayer() {
       break;
   }
 }
-void CleanupBaseLayer(uint8_t lastAnimation) {
+void CleanupBaseLayer(BaseAnimation lastAnimation) {
   DEBUG_ANIMATION("Cleanup base layer: " + lastAnimation);
   
   switch(lastAnimation) {
@@ -73,6 +73,7 @@ void CleanupBaseLayer(uint8_t lastAnimation) {
   }
 }
 void TransitionBaseAnimation(uint32_t curTime) {
+  // Currently, not possible to draw 2 animations at once.  One fades out, then one fades in.
   static bool alreadySwitched = false;
   
   if(curTime - timing.lastBaseTransition >= layerConfig.basePauseLength) {
@@ -95,35 +96,35 @@ void TransitionBaseAnimation(uint32_t curTime) {
   }
 }
 void NextBaseAnimation(uint32_t curTime) {
-  uint8_t lastBaseAnimation = baseParams.animation;
-  baseParams.animation = 1 + (baseParams.animation % NUM_BASE_ANIMATIONS);
+  BaseAnimation lastBaseAnimation = baseParams.animation;
+  baseParams.animation = static_cast<BaseAnimation>(1 + ((uint8_t)baseParams.animation % NUM_BASE_ANIMATIONS));
   CleanupBaseLayer(lastBaseAnimation);
   InitBaseLayer();
 }
 
 void DrawTopLayer() {
   switch(topParams.animation) {
-    case (uint8_t)TopAnimation::Glitter:
+    case TopAnimation::Glitter:
       Glitter();
       break;
       
-    case (uint8_t)TopAnimation::Rain:
+    case TopAnimation::Rain:
       Rain();
       break;
     
-    case (uint8_t)TopAnimation::Twinkle:
+    case TopAnimation::Twinkle:
       Twinkle();
       break;
       
-    case (uint8_t)TopAnimation::Bounce:
+    case TopAnimation::Bounce:
       //Bounce();
       break;
       
-    case (uint8_t)TopAnimation::Comets:
+    case TopAnimation::Comets:
       FourComets(timing.now);
       break;
       
-    case (uint8_t)TopAnimation::Collision:
+    case TopAnimation::Collision:
       Collision();
       break;
       
@@ -142,7 +143,7 @@ void InitTopLayer() {
       break;
   }
 }
-void CleanupTopLayer(uint8_t lastAnimation) {
+void CleanupTopLayer(TopAnimation lastAnimation) {
   DEBUG_ANIMATION("Cleanup top layer: " + lastAnimation);
   
   switch(lastAnimation) {
@@ -151,7 +152,9 @@ void CleanupTopLayer(uint8_t lastAnimation) {
   }
 }
 void TransitionTopAnimation(uint32_t curTime) {
+  // Currently, not possible to draw 2 animations at once.  One fades out, then one fades in.
   static bool alreadySwitched = false;
+  
   if(curTime - timing.lastTopTransition >= layerConfig.topPauseLength) {
     uint32_t transitionTime = curTime - timing.lastTopTransition - layerConfig.topPauseLength;
     if(transitionTime < layerConfig.topTransOutLength) {
@@ -173,20 +176,20 @@ void TransitionTopAnimation(uint32_t curTime) {
 }
 void NextTopAnimation(uint32_t curTime) {
   if(NUM_TOP_ANIMATIONS > 0) {
-    uint8_t lastTopAnimation = topParams.animation;
-    topParams.animation = 1 + (topParams.animation % NUM_TOP_ANIMATIONS);
+    TopAnimation lastTopAnimation = topParams.animation;
+    topParams.animation = static_cast<TopAnimation>(1 + ((uint8_t)topParams.animation % NUM_TOP_ANIMATIONS));
     CleanupTopLayer(lastTopAnimation);
     InitTopLayer();
   }
 }
 
 void OverlayLayers() {
+  uint16_t topBrightness;
   for(uint16_t i = 0; i < NUM_LEDS; i++) {
-    uint16_t topBrightness = leds_top[i].r + leds_top[i].g + leds_top[i].b;
+    topBrightness = leds_top_b[i];
     if(topBrightness > 0) {
-      uint16_t baseBrightness = leds[i].r + leds[i].g + leds[i].b;
-      uint8_t blendAmount = 255 * topBrightness / (topBrightness + baseBrightness);
-      nblend(leds[i], leds_top[i], blendAmount);
+      uint8_t blendAmount = 255 * topBrightness / (topBrightness + leds_b[i]);
+      nblend(leds_top[i], leds[i], blendAmount);
     }
   }
 }

@@ -198,7 +198,7 @@ bool ProcessSerialInput() {
     uint8_t next = 0;
     if(paramNum == next++) {
       CleanupBaseLayer(baseParams.animation);
-      baseParams.animation = value;
+      baseParams.animation = static_cast<BaseAnimation>((uint8_t)value);
       InitBaseLayer();
     }
     else if(paramNum == next++) { baseParams.colorSpeed = value; }
@@ -211,7 +211,7 @@ bool ProcessSerialInput() {
     else if(paramNum == next++) { baseParams.colorPeriod = value; }
     else if(paramNum == next++) {
       CleanupTopLayer(topParams.animation);
-      topParams.animation = value;
+      topParams.animation = static_cast<TopAnimation>((uint8_t)value);
       InitTopLayer();
     }
     else if(paramNum == next++) { topParams.portion = value; }
@@ -255,7 +255,7 @@ void PrintBaseTopAndPMParams() {
   uint8_t pmParameterCounter = NUM_BASE_PARAMS + NUM_TOP_PARAMS;
   String output = "Base Parameters:\t\tTop Parameters:\n";
   
-  output += String(parameterCounter++) + ".Animation:\t  " + baseParams.animation + "\t\t" + (topParameterCounter++) + ".Animation:\t  " + topParams.animation + "\n";
+  output += String(parameterCounter++) + ".Animation:\t  " + (uint8_t)baseParams.animation + "\t\t" + (topParameterCounter++) + ".Animation:\t  " + (uint8_t)topParams.animation + "\n";
   output += String(parameterCounter++) + ".ColorSpeed:\t  " + baseParams.colorSpeed + "\t\t" + (topParameterCounter++) + ".Portion:\t  " + topParams.portion + "\n";
   output += String(parameterCounter++) + ".DimSpeed:\t  " + baseParams.dimSpeed + "\t\t" + (topParameterCounter++) + ".Speed:\t  " + topParams.speed + "\n";
   output += String(parameterCounter++) + ".BrightLength:\t  " + baseParams.brightLength + "\n";
@@ -275,7 +275,7 @@ void PrintBaseParams() {
   uint8_t parameterCounter = 0;
   String output = "Base Parameters:\n";
   
-  output += "\t" + String(parameterCounter++) + ".Animation:\t  " + baseParams.animation + "\n";
+  output += "\t" + String(parameterCounter++) + ".Animation:\t  " + (uint8_t)baseParams.animation + "\n";
   output += "\t" + String(parameterCounter++) + ".ColorSpeed:\t  " + baseParams.colorSpeed + "\n";
   output += "\t" + String(parameterCounter++) + ".DimSpeed:\t  " + baseParams.dimSpeed + "\n";
   output += "\t" + String(parameterCounter++) + ".BrightLength:\t  " + baseParams.brightLength + "\n";
@@ -293,7 +293,7 @@ void PrintTopParams() {
   uint8_t parameterCounter = NUM_BASE_PARAMS;
   String output = "Top Parameters:\n";
   
-  output += "\t" + String(parameterCounter++) + ".Animation:\t  " + topParams.animation + "\n";
+  output += "\t" + String(parameterCounter++) + ".Animation:\t  " + (uint8_t)topParams.animation + "\n";
   output += "\t" + String(parameterCounter++) + ".Portion:\t  " + topParams.portion + "\n";
   output += "\t" + String(parameterCounter++) + ".Speed:\t  " + topParams.speed + "\n";
   PRINT(output)

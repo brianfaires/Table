@@ -1,7 +1,6 @@
 #pragma once
 #include "FastLED.h"
 
-
 #define INIT_GLOBAL_BRIGHTNESS 128
 
 ////////////////////////////////////////
@@ -24,17 +23,17 @@
 
 /////////////////////////////////////////////
 ////////// Init Animation Settings //////////
-#define INIT_BASE_ANIMATION (uint8_t)BaseAnimation::Scroller
+#define INIT_BASE_ANIMATION BaseAnimation::Scroller
 #define INIT_BASE_DIM_SPEED 16
 #define INIT_BASE_COLOR_SPEED 64
 #define INIT_BASE_BRIGHT_LENGTH 64
 #define INIT_BASE_TRANS_LENGTH 240
 #define INIT_BASE_NUM_COLORS 200
-#define INIT_BASE_DISPLAY_MODE 127
+#define INIT_BASE_DISPLAY_MODE 0
 #define INIT_BASE_DIM_PERIOD 16
 #define INIT_BASE_COLOR_PERIOD 255
 
-#define INIT_TOP_ANIMATION (uint8_t)TopAnimation::None
+#define INIT_TOP_ANIMATION TopAnimation::None
 #define INIT_TOP_PORTION 128
 #define INIT_TOP_SPEED 64
 /////////////////////////////////////////////
@@ -42,10 +41,10 @@
 
 /////////////////////////////////////////////
 //////// Init PaletteManager Settings ///////
-#define INIT_PALETTE PaletteIndex::analagousCyan
+#define INIT_PALETTE static_cast<PaletteIndex>(8)
 #define INIT_PM_WALK_LENGTH   3 * ONE_SEC
 #define INIT_PM_PAUSE_LENGTH  0 * ONE_MIN
-#define INIT_FADE_IN_FROM_BLACK true
+#define INIT_FADE_IN_FROM_BLACK false
 /////////////////////////////////////////////
 
 

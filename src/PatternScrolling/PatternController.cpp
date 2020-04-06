@@ -216,7 +216,7 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_base
     #endif
     
     output.colorSpeed = output.dimSpeed/2;//scaleParam(params.colorSpeed, colorSpeed_lower, colorSpeed_upper);
-    output.displayMode = scaleParam(params.displayMode, 0, (NUM_DIM_PATTERNS+1) * NUM_COLOR_PATTERNS - 1);
+    output.displayMode = scaleParam(params.displayMode, 0, NUM_DIM_PATTERNS * NUM_COLOR_PATTERNS - 1);
     output.numColors = scaleParam(params.numColors, 2, PALETTE_SIZE-1);
     output.transLength = scaleParam(params.transLength, 0, (output.dimPeriod-10) / 3);
     output.brightLength = scaleParam(params.brightLength, 0, (output.dimPeriod-10) / 3);

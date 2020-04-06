@@ -65,12 +65,12 @@ void WalkLayerParams();
 // Layers.cpp
 void DrawBaseLayer();
 void InitBaseLayer();
-void CleanupBaseLayer(uint8_t lastAnimation);
+void CleanupBaseLayer(BaseAnimation lastAnimation);
 void TransitionBaseAnimation(uint32_t curTime);
 void NextBaseAnimation(uint32_t curTime);
 void DrawTopLayer();
 void InitTopLayer();
-void CleanupTopLayer(uint8_t lastAnimation);
+void CleanupTopLayer(TopAnimation lastAnimation);
 void TransitionTopAnimation(uint32_t curTime);
 void NextTopAnimation(uint32_t curTime);
 void OverlayLayers();
