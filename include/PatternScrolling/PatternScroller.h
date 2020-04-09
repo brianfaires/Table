@@ -18,7 +18,7 @@ class PatternScroller {
     void SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs);
     bool IsStartOfDimPattern();
 
-    // Accessors/Mutators
+    // Getters/Setters
     void setDisplayMode(uint8_t displayMode);
     uint8_t getColorPeriod();
     uint8_t getDimPeriod();
@@ -56,7 +56,7 @@ class PatternScroller {
     void BlendDimPattern();
     bool ScrollPatterns();
     void ScrollPatternsWithoutTimer(bool moveForward);
-    param_change_type getPreferredDimParamChangeType(uint8_t patternIndex, int8_t delta);
+    param_change_type GetPreferredDimParamChangeType(uint8_t patternIndex, int8_t delta);
 
     // Utility
     bool IsReadyForDimMove();

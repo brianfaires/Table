@@ -11,22 +11,22 @@ class PatternController {
     void Update(struct_base_show_params& params, CRGB* target, uint8_t* target_b);
     void SkipTime(uint32_t amount);
 
-    uint32_t GetColorPauseLength();
-    void SetColorPauseLength(uint32_t value);
-    uint32_t GetColorBlendLength();
-    void SetColorBlendLength(uint32_t value);
-    uint32_t GetDimPauseLength();
-    void SetDimPauseLength(uint32_t value);
-    uint32_t GetDimBlendLength();
-    void SetDimBlendLength(uint32_t value);
-    param_change_type GetDimParamChangeType();
-    bool GetChangeDimParamsWithMovement();
-    bool GetEnableDoubleBrightMove();
-    void SetEnableDoubleBrightMove(bool value);
-    void SetDimParamChangeType(param_change_type value);
-    void SetDimParamChangeType(bool changeDimParamsWithMovement);
-    void SetDimParamChangeType(param_change_type value, bool changeDimParamsWithMovement);
-    void SetBrightness(uint8_t brightness);
+    uint32_t getColorPauseLength();
+    void setColorPauseLength(uint32_t value);
+    uint32_t getColorBlendLength();
+    void setColorBlendLength(uint32_t value);
+    uint32_t getDimPauseLength();
+    void setDimPauseLength(uint32_t value);
+    uint32_t getDimBlendLength();
+    void setDimBlendLength(uint32_t value);
+    param_change_type getDimParamChangeType();
+    bool getChangeDimParamsWithMovement();
+    bool getEnableDoubleBrightMove();
+    void setEnableDoubleBrightMove(bool value);
+    void setDimParamChangeType(param_change_type value);
+    void setDimParamChangeType(bool changeDimParamsWithMovement);
+    void setDimParamChangeType(param_change_type value, bool changeDimParamsWithMovement);
+    void setBrightness(uint8_t brightness);
     
   private:
     PatternScroller ps1, ps2;

@@ -1,65 +1,65 @@
 #include "PatternScrolling\PatternController.h"
 #include "Util.h"
 
-#define ALLOW_ZERO_SPEED
+//#define ALLOW_ZERO_SPEED
 
 PatternController::PatternController() {
 }
 
-uint32_t PatternController::GetColorPauseLength() {
+uint32_t PatternController::getColorPauseLength() {
   return ps1.getColorPauseLength();
 }
-void PatternController::SetColorPauseLength(uint32_t value) {
+void PatternController::setColorPauseLength(uint32_t value) {
   ps1.setColorPauseLength(value);
   ps2.setColorPauseLength(value);
 }
 
-uint32_t PatternController::GetDimPauseLength() {
+uint32_t PatternController::getDimPauseLength() {
   return ps1.getDimPauseLength();
 }
-void PatternController::SetDimPauseLength(uint32_t value) {
+void PatternController::setDimPauseLength(uint32_t value) {
   ps1.setDimPauseLength(value);
   ps2.setDimPauseLength(value);
 }
 
-uint32_t PatternController::GetColorBlendLength() {
+uint32_t PatternController::getColorBlendLength() {
   return ps1.getColorBlendLength();
 }
-void PatternController::SetColorBlendLength(uint32_t value) {
+void PatternController::setColorBlendLength(uint32_t value) {
   ps1.setColorBlendLength(value);
   ps2.setColorBlendLength(value);
 }
 
-uint32_t PatternController::GetDimBlendLength() {
+uint32_t PatternController::getDimBlendLength() {
   return ps1.getDimBlendLength();
 }
-void PatternController::SetDimBlendLength(uint32_t value) {
+void PatternController::setDimBlendLength(uint32_t value) {
   ps1.setDimBlendLength(value);
   ps2.setDimBlendLength(value);
 }
 
-param_change_type PatternController::GetDimParamChangeType() {
+param_change_type PatternController::getDimParamChangeType() {
   return ps1.dimParamChangeType;
 }
-bool PatternController::GetChangeDimParamsWithMovement() {
+bool PatternController::getChangeDimParamsWithMovement() {
   return ps1.changeDimParamsWithMovement;
 }
-void PatternController::SetDimParamChangeType(param_change_type value) {
-  SetDimParamChangeType(value, ps1.changeDimParamsWithMovement);
+void PatternController::setDimParamChangeType(param_change_type value) {
+  setDimParamChangeType(value, ps1.changeDimParamsWithMovement);
 }
-void PatternController::SetDimParamChangeType(bool changeDimParamsWithMovement) {
-  SetDimParamChangeType(ps1.dimParamChangeType, changeDimParamsWithMovement);
+void PatternController::setDimParamChangeType(bool changeDimParamsWithMovement) {
+  setDimParamChangeType(ps1.dimParamChangeType, changeDimParamsWithMovement);
 }
-void PatternController::SetDimParamChangeType(param_change_type value, bool changeDimParamsWithMovement) {
+void PatternController::setDimParamChangeType(param_change_type value, bool changeDimParamsWithMovement) {
   ps1.dimParamChangeType = value;
   ps1.changeDimParamsWithMovement = changeDimParamsWithMovement;
   ps2.dimParamChangeType = value;
   ps2.changeDimParamsWithMovement = changeDimParamsWithMovement;
 }
-bool PatternController::GetEnableDoubleBrightMove() { return ps1.enableDoubleBrightMove; }
-void PatternController::SetEnableDoubleBrightMove(bool value) { ps1.enableDoubleBrightMove = value; ps2.enableDoubleBrightMove = value; }
+bool PatternController::getEnableDoubleBrightMove() { return ps1.enableDoubleBrightMove; }
+void PatternController::setEnableDoubleBrightMove(bool value) { ps1.enableDoubleBrightMove = value; ps2.enableDoubleBrightMove = value; }
 
-void PatternController::SetBrightness(uint8_t brightness) {
+void PatternController::setBrightness(uint8_t brightness) {
   ps1.brightness = brightness;
   ps2.brightness = brightness;
 }
@@ -80,13 +80,13 @@ void PatternController::Init(uint16_t _numLEDs, uint32_t* curTime, struct_base_s
 
   // Todo: personal note: (PIO, moved this from start of function)
   // Init PatternScrollers
-  SetDimBlendLength(INIT_PATTERN_CONTROLLER_DIM_BLEND_LENGTH);
-  SetColorBlendLength(INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH);
-  SetDimPauseLength(INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH);
-  SetColorPauseLength(INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH);
-  SetDimParamChangeType(INIT_DIM_PARAM_CHANGE_TYPE, INIT_CHANGE_DIM_PARAMS_WITH_MOVEMENT);
-  SetBrightness(INIT_PATTERN_SCROLLER_BRIGHTNESS);
-  SetEnableDoubleBrightMove(INIT_ENABLE_DOUBLE_BRIGHT_MOVE);
+  setDimBlendLength(INIT_PATTERN_CONTROLLER_DIM_BLEND_LENGTH);
+  setColorBlendLength(INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH);
+  setDimPauseLength(INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH);
+  setColorPauseLength(INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH);
+  setDimParamChangeType(INIT_DIM_PARAM_CHANGE_TYPE, INIT_CHANGE_DIM_PARAMS_WITH_MOVEMENT);
+  setBrightness(INIT_PATTERN_SCROLLER_BRIGHTNESS);
+  setEnableDoubleBrightMove(INIT_ENABLE_DOUBLE_BRIGHT_MOVE);
 
 
   ps = &ps1;

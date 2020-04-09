@@ -5,6 +5,7 @@
 
 ////////////////////////////////////////
 //////////// Runtime config ////////////
+//#define USING_DEBUG_BOARD
 #define MANUAL_PARAMS
 //#define TEST_PALETTES
 //#define TEST_COLOR_CORRECTION // Overrides everything else
@@ -103,10 +104,15 @@
 #define STARTUP_DELAY_MS 1000
 #define LED_DATA_RATE_MHZ 24
 #define SERIAL_DATA_RATE_HZ 115200
-#define CLOCK_PIN 13
-#define LED_PIN 12
 #define BTN1_PIN 14
 #define BTN2_PIN 15
 #define NUM_BTNS 2
+#ifdef USING_DEBUG_BOARD
+  #define CLOCK_PIN 5
+  #define LED_PIN 18
+#else
+  #define CLOCK_PIN 13
+  #define LED_PIN 12
+#endif
 /////////////////////////////////////////
 
