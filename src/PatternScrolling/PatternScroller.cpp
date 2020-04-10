@@ -90,13 +90,15 @@ void PatternScroller::setDisplayMode(uint8_t displayMode) {
   uint8_t dimPatternIndex = displayMode % NUM_DIM_PATTERNS;
   uint8_t colorPatternIndex = displayMode / NUM_DIM_PATTERNS;
 
-  if(targetColorPatternIndex != colorPatternIndex && (*curTime - lastColorPatternChange >= colorPauseLength)) {
-    memcpy(oldColorPattern, curColorPattern, sizeof(CRGB)*colorPeriod);
-    targetColorPatternIndex = colorPatternIndex;
-
-    WriteColorPattern(targetColorPatternIndex, targetColorPattern);
-    colorBlendOn = true;
-    lastColorPatternChange = *curTime - colorPauseLength;
+  if(targetColorPatternIndex != colorPatternIndex) {
+    if(*curTime - lastColorPatternChange >= colorPauseLength) {
+      // Begin blending into new colorPattern
+      memcpy(oldColorPattern, curColorPattern, sizeof(CRGB)*colorPeriod);
+      targetColorPatternIndex = colorPatternIndex;
+      WriteColorPattern(targetColorPatternIndex, targetColorPattern);
+      colorBlendOn = true;
+      lastColorPatternChange = *curTime - colorPauseLength; // Might already be blending
+    }
   }
 
   if(targetDimPatternIndex != dimPatternIndex) {
@@ -112,14 +114,14 @@ void PatternScroller::setDisplayMode(uint8_t displayMode) {
         memcpy(targetDimPattern, oldDimPattern, dimPeriod);
         dimBlendOn = false;
       }
-    }
+    }    
     else if(!dimBlendOn && isTimeForChange) {
-      oldDimPatternIndex = getTargetDimPatternIndex();
+      dimBlendOn = true;
+      oldDimPatternIndex = targetDimPatternIndex;
       memcpy(oldDimPattern, targetDimPattern, dimPeriod);
       targetDimPatternIndex = dimPatternIndex;
       if(IsRandomDimPattern()) { do { randomDimPatternIndex = random8(1, NUM_DIM_PATTERNS-1); } while (randomDimPatternIndex == oldDimPatternIndex); }
       WriteDimPattern(getTargetDimPatternIndex(), targetDimPattern);
-      dimBlendOn = true;
       lastDimPatternChange = *curTime - dimPauseLength;
     }
   }
@@ -227,7 +229,6 @@ void PatternScroller::SkipTime(uint32_t amount) {
 //*********************** Walking/Scrolling ***********************
 //*****************************************************************
 bool PatternScroller::Update() { // Returns true if dim pattern moved
- 
   // Color changing - params and pattern can only change after pauseLength, because they both force a fade.
   if(*curTime - lastColorPatternChange >= colorPauseLength) {
     if(WalkColorParams()) {
@@ -288,8 +289,8 @@ bool PatternScroller::WalkDimParams() {
 
   #define ADJUST_BOTH() if(DimPattern::brightLength < brightLength) { DimPattern::brightLength++; } \
                         else if(DimPattern::brightLength > brightLength) { DimPattern::brightLength--; } \
-                        if(DimPattern::transLength < transLength && DimPattern::brightLength >= brightLength) { DimPattern::transLength++; if(enableDoubleBrightMove && DimPattern::brightLength > brightLength) { DimPattern::brightLength--; } } \
-                        else if(DimPattern::transLength > transLength && DimPattern::brightLength <= brightLength) { DimPattern::transLength--; if(enableDoubleBrightMove && DimPattern::brightLength < brightLength) { DimPattern::brightLength++; } } 
+                        if(DimPattern::transLength < transLength) { DimPattern::transLength++; if(enableDoubleBrightMove && DimPattern::brightLength > brightLength) { DimPattern::brightLength--; } } \
+                        else if(DimPattern::transLength > transLength) { DimPattern::transLength--; if(enableDoubleBrightMove && DimPattern::brightLength < brightLength) { DimPattern::brightLength++; } } 
   
   #define SCROLL_BACK() ScrollPatternsWithoutTimer(false);
   #define SCROLL_FORWARD() ScrollPatternsWithoutTimer(true);
@@ -303,18 +304,18 @@ bool PatternScroller::WalkDimParams() {
   #define ADJ_UPBEAT_INC2() if(!changeDimParamsWithMovement || IsHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_FORWARD() SCROLL_FORWARD() }
   #define ADJ_UPBEAT_DEC() if(!changeDimParamsWithMovement || IsHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_BACK() }
   #define ADJ_UPBEAT_DEC2() if(!changeDimParamsWithMovement || IsHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK() }
+  
 
-  //todo: For cases 3/-3, consider 1,-2/-2,1... Also, consider cases 3/-3 as even things you want possible; if so, edit ADJUST_BOTH()
-  // Using delta = 3/-3 to signal an actual change of 1/-1, but with both bright and trans changing
-  // Allow brightLength to be double updated only when offsetting transLength so delta=0
   int8_t delta = 0;
   if     (DimPattern::brightLength < brightLength)             { delta = 1; }
   else if(DimPattern::brightLength > brightLength)             { delta = -1; }
-  if     (DimPattern::transLength < transLength && delta <= 0) { if(delta==0) { delta = 2; } else { delta = 3; } }
-  else if(DimPattern::transLength > transLength && delta >= 0) { if(delta==0) { delta = -2; } else { delta = -3; } }
+  // Using delta = 5/-5 to signal an actual change of 1/-1, but with bright and trans changing in opposite directions
+  if     (DimPattern::transLength < transLength) { delta = delta==-1 ? 5 : delta+2; }
+  else if(DimPattern::transLength > transLength) { delta = delta==1 ? -5 : delta-2; }
+  // Allow brightLength to be double updated only when offsetting transLength so delta=0; Using delta=4 to signal this
   if(enableDoubleBrightMove) {
-    if(delta == 3 && DimPattern::brightLength > brightLength + 1) { delta = 4; }
-    else if(delta == -3 && DimPattern::brightLength + 1 < brightLength) { delta = 4; }
+    if(delta == 5 && DimPattern::brightLength > brightLength + 1) { delta = 4; }
+    else if(delta == -5 && DimPattern::brightLength + 1 < brightLength) { delta = 4; }
   }
 
   if(delta == 0) {
@@ -340,68 +341,66 @@ bool PatternScroller::WalkDimParams() {
   
     if(changeType == GROW_F) {
       switch(delta) {
-        case 3:
+        case 5:
         case 1:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC() } break;
-        case -3:
+        case -5:
         case -1: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC() } break;
         case 2:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC2() } break;
         case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC2() } break;
-        //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT_DEC() } break;
-        //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
+        case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT_DEC() } break;
+        case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
         default: DUMP(delta)
       }
     }
     else if(changeType == GROW_R) {
       switch(delta) {
-        case 3:
+        case 5:
         case 1:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT() } break;
-        case -3:
+        case -5:
         case -1: if(dimSpeed > 0) { ADJ_UPBEAT_INC() } else { ADJ_UPBEAT() } break;
         case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT() } break;
         case -2: if(dimSpeed > 0) { ADJ_UPBEAT_INC2() } else { ADJ_UPBEAT() } break;
-        //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
-        //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC2() } break;
+        case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
+        case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC2() } break;
         default: DUMP(delta)
       }
     }
     else if(changeType == WORM) {
       switch(delta) {
-        case 3:
+        case 5:
         case 1:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC() } break;
-        case -3:
+        case -5:
         case -1: if(dimSpeed > 0) { ADJ_UPBEAT_INC() } else { ADJ_UPBEAT() } break;
         case 2:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC2() } break;
         case -2: if(dimSpeed > 0) { ADJ_UPBEAT_INC2() } else { ADJ_UPBEAT() } break;
-        //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
-        //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
+        case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
+        case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
         default: DUMP(delta)
       }
     }
     else if(changeType == FREEZE) {
       switch(delta) {
-        case 3:
+        case 5:
         case 1:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT() } break;
-        case -3:
+        case -5:
         case -1: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC() } break;
         case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT() } break;
         case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC2() } break;
-        //case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT_DEC() } break;
-        //case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC2() } break;
+        case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT_DEC() } break;
+        case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC2() } break;
         default: DUMP(delta)
       }
     }
     else if(changeType == CENTER) {
       switch(delta) {
-        case 3:
+        case 5:
         case 1: if(DimPattern::brightLength % 2 == 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_DEC() } break;
-        case -3:
+        case -5:
         case -1: if(DimPattern::brightLength % 2 == 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT() } break;
         case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC() } break;
         case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC() } break;
-        //case 3:
-          //if(DimPattern::brightLength % 2 == 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
-        //case -3:
-          //if(DimPattern::brightLength % 2 == 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
+        case 3:  if(DimPattern::brightLength % 2 == 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
+        case -3: if(DimPattern::brightLength % 2 == 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
         default: DUMP(delta)
       }
     }
@@ -416,7 +415,6 @@ bool PatternScroller::WalkDimParams() {
 }
 bool PatternScroller::ScrollPatterns() {
   bool dimMoved = false;
-
   // Move dim pattern
   if(dimSpeed == 0) {
     lastDimMove = *curTime;
@@ -430,7 +428,10 @@ bool PatternScroller::ScrollPatterns() {
     else {
       if(++dimIndexFirst == dimPeriod) { dimIndexFirst = 0; }
     }
-    
+
+  //  static uint32_t lastActualDimMove = 0;
+  //  PRINTLN((*curTime - lastActualDimMove) + "\t" + FPS_TO_TIME(abs(dimSpeed)))
+  //  lastActualDimMove = *curTime;
     lastDimMove += FPS_TO_TIME(abs(dimSpeed));
   }
 
@@ -496,11 +497,9 @@ void PatternScroller::BlendColorPattern() {
     // Blending just finished
     memcpy(oldColorPattern, targetColorPattern, sizeof(CRGB)*colorPeriod);
     memcpy(curColorPattern, targetColorPattern, sizeof(CRGB)*colorPeriod);
-
-    WriteColorPattern(targetColorPatternIndex, targetColorPattern);
-
     lastColorPatternChange = *curTime;
     colorBlendOn = false;
+    WriteColorPattern(targetColorPatternIndex, targetColorPattern); // Todo: It's possible that this isn't needed; and if so, targetColorPattern and curColorPattern could be merged?
   }
 }
 void PatternScroller::BlendDimPattern() {
@@ -534,23 +533,19 @@ void PatternScroller::BlendDimPattern() {
 
 param_change_type PatternScroller::GetPreferredDimParamChangeType(uint8_t patternIndex, int8_t delta) {
   // delta can be +/- 3. If so, the actual change was +/- 1, but both bright and trans were updated
-  switch(patternIndex) {
-    case (int)DimPatternName::COMET_F:         return dimSpeed > 0 ? GROW_R : GROW_F;
-    case (int)DimPatternName::COMET_R:         return dimSpeed < 0 ? GROW_R : GROW_F;
-    case (int)DimPatternName::TWO_SIDED:       return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM; // 2
-    case (int)DimPatternName::BARBELL:         return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM;
-    case (int)DimPatternName::SLOPED_TOWERS_H: return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM; // 4
-    case (int)DimPatternName::SLOPED_TOWERS_L: return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM;
-    case (int)DimPatternName::SLIDE_H:         return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM; // 6
-    case (int)DimPatternName::SLIDE_L:         return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM;
-    case (int)DimPatternName::BOWTIES_F:       return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM; // 8
-    case (int)DimPatternName::BOWTIES_R:       return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM;
-    case (int)DimPatternName::TOWERS:          return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM; // 10
-    case (int)DimPatternName::SNAKE:           return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? WORM : WORM;
-    case (int)DimPatternName::SNAKE3:          return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM; // 12
-    case (int)DimPatternName::THREE_COMETS_F:  return abs(delta)==3 ? WORM : abs(delta)==2 ? CENTER : (dimSpeed > 0 ? GROW_R : WORM);
-    case (int)DimPatternName::THREE_COMETS_R:  return abs(delta)==3 ? WORM : abs(delta)==2 ? CENTER : (dimSpeed < 0 ? GROW_R : WORM);
-    default: THROW_DUMP("Unrecognized patternIndex", patternIndex); break;
+  
+  switch(allDimPatterns[patternIndex]->patternType) {
+    case PatternType::SYMMETRIC:
+      return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM;
+    case PatternType::FRONT:
+      return dimSpeed > 0 ? GROW_R : GROW_F;
+    case PatternType::REVERSE:
+      return dimSpeed < 0 ? GROW_R : GROW_F;
+    case PatternType::FRONT3:
+      return abs(delta)==3 ? WORM : abs(delta)==2 ? CENTER : (dimSpeed > 0 ? GROW_F : WORM); 
+    case PatternType::REVERSE3:
+      return abs(delta)==3 ? WORM : abs(delta)==2 ? CENTER : (dimSpeed > 0 ? GROW_R : WORM);
+
   }
   
   return delta == 1 ? WORM : CENTER;

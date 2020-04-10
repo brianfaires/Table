@@ -1,7 +1,7 @@
 #include "PatternScrolling\PatternController.h"
 #include "Util.h"
 
-//#define ALLOW_ZERO_SPEED
+#define ALLOW_ZERO_SPEED // Todo: Why does this make everything glitchy??
 
 PatternController::PatternController() {
 }

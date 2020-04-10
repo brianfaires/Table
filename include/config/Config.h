@@ -4,28 +4,24 @@
 #define INIT_GLOBAL_BRIGHTNESS 128
 
 ////////////////////////////////////////
-//////////// Runtime config ////////////
+////////// Debugging config ////////////
 //#define USING_DEBUG_BOARD
 #define MANUAL_PARAMS
 //#define TEST_PALETTES
-//#define TEST_COLOR_CORRECTION // Overrides everything else
 //#define EXPLICIT_PARAMETERS
-////////////////////////////////////////
+//#define TIMING_ANALYSIS
+#define CHECK_FOR_CLIPPING
+//#define RUN_GAMMA_TESTS // Overrides everything else
 
-
-////////////////////////////////////////
-//////////// Debugging Level ///////////
-#define DEBUG_BTN(msg)        DEBUG(msg)
+#define DEBUG_BTN(msg)        //DEBUG(msg)
 #define DEBUG_ANIMATION(msg)  //DEBUG(msg)
-#define DEBUG_TIMING(msg)     //DEBUG(msg)
-#define DEBUG_CLIPPING(msg)   //THROW(msg)
 ////////////////////////////////////////
 
 
 /////////////////////////////////////////////
 ////////// Init Animation Settings //////////
 #define INIT_BASE_ANIMATION BaseAnimation::Scroller
-#define INIT_BASE_DIM_SPEED 16
+#define INIT_BASE_DIM_SPEED 32
 #define INIT_BASE_COLOR_SPEED 64
 #define INIT_BASE_BRIGHT_LENGTH 64
 #define INIT_BASE_TRANS_LENGTH 240
@@ -100,9 +96,9 @@
 
 /////////////////////////////////////////
 //////////// Hardware config ////////////
-#define REFRESH_RATE 100 // Todo: investigate - This once had flickering at 100FPS, no idea why - may be APA102 manufacturer (See FastLED FAQ)
+#define REFRESH_RATE 160
 #define STARTUP_DELAY_MS 1000
-#define LED_DATA_RATE_MHZ 24
+#define LED_DATA_RATE_MHZ 18
 #define SERIAL_DATA_RATE_HZ 115200
 #define BTN1_PIN 14
 #define BTN2_PIN 15

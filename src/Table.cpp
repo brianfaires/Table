@@ -1,7 +1,7 @@
 #include "Globals.h"
 
 void setup() {
-  #if DEBUG_TIMING
+  #ifdef TIMING_ANALYSIS
     uint32_t startupTime = SYSTEM_TIME;
   #endif
 
@@ -45,13 +45,14 @@ void setup() {
 }
 
 void loop() {
-  #ifdef TEST_COLOR_CORRECTION
+  timing.now = SYSTEM_TIME;
+  TIMING_ANALYSIS_BEGIN_LOOP
+
+  #ifdef RUN_GAMMA_TESTS
     Gamma.RunTests(4, 32);
     return;
   #endif
-
-  timing.now = SYSTEM_TIME;
-
+  
   UpdateIO();
 
   if(timing.now - timing.lastDraw >= FPS_TO_TIME(REFRESH_RATE)) {
@@ -76,25 +77,25 @@ void loop() {
       }
     #else
       TransitionBaseAnimation(timing.now);
-      TransitionTopAnimation(timing.now);
-      DrawBaseLayer();
-      DrawTopLayer();
-      OverlayLayers();
+      TransitionTopAnimation(timing.now); TIMING_ANALYSIS_POINT
+      DrawBaseLayer(); TIMING_ANALYSIS_POINT
+      DrawTopLayer(); TIMING_ANALYSIS_POINT
+      OverlayLayers(); TIMING_ANALYSIS_POINT
     #endif
 
-    Gamma.PrepPixelsForFastLED();
-    FastLED.show();
+    Gamma.PrepPixelsForFastLED(); TIMING_ANALYSIS_POINT
+    FastLED.show(); TIMING_ANALYSIS_POINT
 
     timing.lastDraw += FPS_TO_TIME(REFRESH_RATE);
-    #ifdef DEBUG_CLIPPING
+    #ifdef CHECK_FOR_CLIPPING
       if((timing.now > timing.lastDraw + FPS_TO_TIME(REFRESH_RATE)) && (timing.now-lastClippedTime > ONE_SEC)) {
-        DEBUG_CLIPPING("ERROR: Drawing clipped by " + (timing.now - timing.lastDraw) + "us")
+        DEBUG("ERROR: Drawing clipped by " + (timing.now - timing.lastDraw) + "us")
         lastClippedTime = timing.now;
       }
     #endif
-  }
 
-  DEBUG_TIMING("Total loop time = " +  (SYSTEM_TIME - timing.now) + "us");
+    TIMING_ANALYSIS_END_LOOP
+  }
 }
 
 void SkipTime(uint32_t amount) {
@@ -102,7 +103,7 @@ void SkipTime(uint32_t amount) {
   SkipTimeForIO(amount);
   pm.SkipTime(amount);
   pc.SkipTime(amount);
-  #ifdef DEBUG_CLIPPING
+  #if DEBUG_CLIPPING
     lastClippedTime += amount;
   #endif
 }

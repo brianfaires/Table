@@ -1,12 +1,14 @@
 #include "Globals.h"
 
 // Timing debug tools
-#if DEBUG_TIMING
-  uint32_t timingValues[10];
-  uint32_t curDebugTime;
-  uint32_t lastDebugTime;
+#ifdef TIMING_ANALYSIS
+  uint32_t timingValues[NUM_TIMING_POINTS] = {0};
+  uint32_t curDebugTime = 0;
+  uint32_t lastDebugTime = 0;
+  uint8_t curTiminingAnalysisPoint = 0;
 #endif
-#ifdef DEBUG_CLIPPING
+
+#ifdef CHECK_FOR_CLIPPING
   uint32_t lastClippedTime = 0;
 #endif
 

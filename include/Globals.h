@@ -6,13 +6,24 @@
 #include "Util.h"
 #include "PatternScrolling\PatternController.h"
 
-// Timing debug tools
-#if DEBUG_TIMING
-  extern uint32_t timingValues[10];
-  extern uint32_t curDebugTime;
-  extern uint32_t lastDebugTime;
+#ifdef TIMING_ANALYSIS
+    #define NUM_TIMING_POINTS 20
+    extern uint32_t timingValues[NUM_TIMING_POINTS];
+    extern uint32_t curDebugTime;
+    extern uint32_t lastDebugTime;
+    extern uint8_t curTiminingAnalysisPoint;
+    #define TIMING_ANALYSIS_BEGIN_LOOP  curDebugTime = SYSTEM_TIME; curTiminingAnalysisPoint=0; for(uint8_t i=0;i<NUM_TIMING_POINTS;i++) { timingValues[i]=0; }
+    #define TIMING_ANALYSIS_POINT       lastDebugTime = curDebugTime; curDebugTime = SYSTEM_TIME; timingValues[curTiminingAnalysisPoint++] = curDebugTime-lastDebugTime;
+    #define TIMING_ANALYSIS_END_LOOP    for(uint8_t i=0; i<NUM_TIMING_POINTS; i++) { if(timingValues[i]!=0) { PRINT(timingValues[i] + "\t"); } else  { PRINTLN((SYSTEM_TIME - timing.now) + "\t"); break; } }
+    #define DEBUG_TIMING(msg)           DEBUG(msg)
+  #else
+    #define TIMING_ANALYSIS_BEGIN_LOOP
+    #define TIMING_ANALYSIS_POINT
+    #define TIMING_ANALYSIS_END_LOOP
+    #define DEBUG_TIMING(msg)
 #endif
-#ifdef DEBUG_CLIPPING
+
+#ifdef CHECK_FOR_CLIPPING
   extern uint32_t lastClippedTime;
 #endif
 
