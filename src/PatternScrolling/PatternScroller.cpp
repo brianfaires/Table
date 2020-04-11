@@ -169,7 +169,7 @@ bool PatternScroller::IsRandomDimPattern() {
 void PatternScroller::Init(struct_base_show_params& params, uint32_t* _curTime, PaletteManager* _pm, GammaManager* _gm, uint16_t _numLEDs) {
   if(_pm) { pm = _pm; }
   if(_gm) { Gamma = _gm; }
-  if(_pm || _gm) { ColorPattern::Init(pm, Gamma); }
+  if(_pm || _gm) { colorPattern.Init(pm, Gamma); }
   if(_numLEDs > 0) { numLEDs = _numLEDs; }
   if(_curTime) { curTime = _curTime; }
   
@@ -179,11 +179,11 @@ void PatternScroller::Init(struct_base_show_params& params, uint32_t* _curTime, 
   dimSpeed = params.dimSpeed;
   colorSpeed = params.colorSpeed;
   
-  dimPeriod = DimPattern::dimPeriod = params.dimPeriod;
-  brightLength = DimPattern::brightLength = params.brightLength;
-  transLength = DimPattern::transLength = params.transLength;
-  colorPeriod = ColorPattern::colorPeriod = params.colorPeriod;
-  numColors = ColorPattern::numColors = params.numColors;
+  dimPeriod = dimPattern.dimPeriod = params.dimPeriod;
+  brightLength = dimPattern.brightLength = params.brightLength;
+  transLength = dimPattern.transLength = params.transLength;
+  colorPeriod = colorPattern.colorPeriod = params.colorPeriod;
+  numColors = colorPattern.numColors = params.numColors;
 
   uint32_t tempDim = dimPauseLength;
   uint32_t tempColor = colorPauseLength;
@@ -274,12 +274,12 @@ bool PatternScroller::WalkColorParams() {
   bool updateMade = false;
 
   // Instantly update params
-  if(ColorPattern::numColors != numColors) {
+  if(colorPattern.numColors != numColors) {
     updateMade = true;
-    ColorPattern::numColors = numColors;
+    colorPattern.numColors = numColors;
   }
 
-  if(ColorPattern::colorPeriod != colorPeriod) { THROW("colorPeriod mismatch!") }
+  if(colorPattern.colorPeriod != colorPeriod) { THROW("colorPeriod mismatch!") }
 
   return updateMade;
 }
@@ -287,10 +287,10 @@ bool PatternScroller::WalkDimParams() {
   static bool blendParamsOn = false;
   static param_change_type changeType = CENTER;
 
-  #define ADJUST_BOTH() if(DimPattern::brightLength < brightLength) { DimPattern::brightLength++; } \
-                        else if(DimPattern::brightLength > brightLength) { DimPattern::brightLength--; } \
-                        if(DimPattern::transLength < transLength) { DimPattern::transLength++; if(enableDoubleBrightMove && DimPattern::brightLength > brightLength) { DimPattern::brightLength--; } } \
-                        else if(DimPattern::transLength > transLength) { DimPattern::transLength--; if(enableDoubleBrightMove && DimPattern::brightLength < brightLength) { DimPattern::brightLength++; } } 
+  #define ADJUST_BOTH() if(dimPattern.brightLength < brightLength) { dimPattern.brightLength++; } \
+                        else if(dimPattern.brightLength > brightLength) { dimPattern.brightLength--; } \
+                        if(dimPattern.transLength < transLength) { dimPattern.transLength++; if(enableDoubleBrightMove && dimPattern.brightLength > brightLength) { dimPattern.brightLength--; } } \
+                        else if(dimPattern.transLength > transLength) { dimPattern.transLength--; if(enableDoubleBrightMove && dimPattern.brightLength < brightLength) { dimPattern.brightLength++; } } 
   
   #define SCROLL_BACK() ScrollPatternsWithoutTimer(false);
   #define SCROLL_FORWARD() ScrollPatternsWithoutTimer(true);
@@ -307,15 +307,15 @@ bool PatternScroller::WalkDimParams() {
   
 
   int8_t delta = 0;
-  if     (DimPattern::brightLength < brightLength)             { delta = 1; }
-  else if(DimPattern::brightLength > brightLength)             { delta = -1; }
+  if     (dimPattern.brightLength < brightLength)             { delta = 1; }
+  else if(dimPattern.brightLength > brightLength)             { delta = -1; }
   // Using delta = 5/-5 to signal an actual change of 1/-1, but with bright and trans changing in opposite directions
-  if     (DimPattern::transLength < transLength) { delta = delta==-1 ? 5 : delta+2; }
-  else if(DimPattern::transLength > transLength) { delta = delta==1 ? -5 : delta-2; }
+  if     (dimPattern.transLength < transLength) { delta = delta==-1 ? 5 : delta+2; }
+  else if(dimPattern.transLength > transLength) { delta = delta==1 ? -5 : delta-2; }
   // Allow brightLength to be double updated only when offsetting transLength so delta=0; Using delta=4 to signal this
   if(enableDoubleBrightMove) {
-    if(delta == 5 && DimPattern::brightLength > brightLength + 1) { delta = 4; }
-    else if(delta == -5 && DimPattern::brightLength + 1 < brightLength) { delta = 4; }
+    if(delta == 5 && dimPattern.brightLength > brightLength + 1) { delta = 4; }
+    else if(delta == -5 && dimPattern.brightLength + 1 < brightLength) { delta = 4; }
   }
 
   if(delta == 0) {
@@ -394,13 +394,13 @@ bool PatternScroller::WalkDimParams() {
     else if(changeType == CENTER) {
       switch(delta) {
         case 5:
-        case 1: if(DimPattern::brightLength % 2 == 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_DEC() } break;
+        case 1: if(dimPattern.brightLength % 2 == 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_DEC() } break;
         case -5:
-        case -1: if(DimPattern::brightLength % 2 == 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT() } break;
+        case -1: if(dimPattern.brightLength % 2 == 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT() } break;
         case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC() } break;
         case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC() } break;
-        case 3:  if(DimPattern::brightLength % 2 == 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
-        case -3: if(DimPattern::brightLength % 2 == 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
+        case 3:  if(dimPattern.brightLength % 2 == 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
+        case -3: if(dimPattern.brightLength % 2 == 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
         default: DUMP(delta)
       }
     }
@@ -410,7 +410,7 @@ bool PatternScroller::WalkDimParams() {
     }
   }
       
-  if(DimPattern::dimPeriod != dimPeriod) { THROW("dimPeriod mismatch without a split!") }
+  if(dimPattern.dimPeriod != dimPeriod) { THROW("dimPeriod mismatch without a split!") }
   return delta != 0;
 }
 bool PatternScroller::ScrollPatterns() {
@@ -530,11 +530,10 @@ void PatternScroller::BlendDimPattern() {
   }
 }
 
-
 param_change_type PatternScroller::GetPreferredDimParamChangeType(uint8_t patternIndex, int8_t delta) {
   // delta can be +/- 3. If so, the actual change was +/- 1, but both bright and trans were updated
   
-  switch(allDimPatterns[patternIndex]->patternType) {
+  switch(dimPattern.getPatternType(DimPatternName(patternIndex))) {
     case PatternType::SYMMETRIC:
       return !changeDimParamsWithMovement ? CENTER : abs(delta)==2 ? CENTER : WORM;
     case PatternType::FRONT:
@@ -551,19 +550,15 @@ param_change_type PatternScroller::GetPreferredDimParamChangeType(uint8_t patter
   return delta == 1 ? WORM : CENTER;
 }
 
-
-
-
-
 void PatternScroller::WriteDimPattern(uint8_t patternIndex, uint8_t* outputArray) {
   // All patterns have a length (excluding spacing) of this
-  uint8_t brightPeriod = 2*DimPattern::transLength + DimPattern::brightLength + 9;
-  if(brightPeriod > DimPattern::dimPeriod) { THROW_DUMP("Out of bounds dimPeriod", brightPeriod) }
-  allDimPatterns[patternIndex]->Draw(outputArray);
+  uint8_t brightPeriod = 2*dimPattern.transLength + dimPattern.brightLength + 9;
+  if(brightPeriod > dimPattern.dimPeriod) { THROW_DUMP("Out of bounds dimPeriod", brightPeriod) }
+  dimPattern.Draw(DimPatternName(patternIndex), outputArray);
   //for(uint8_t i =0; i < dimPeriod; i++) { Serial.println(String(i) + ": " + outputArray[i]);}
 }
 
 void PatternScroller::WriteColorPattern(uint8_t patternIndex, CRGB* outputArray) {
-  allColorPatterns[patternIndex]->Draw(outputArray);
+  colorPattern.Draw(ColorPatternName(patternIndex), outputArray);
   //for(uint8_t i =0; i < colorPeriod; i++) { Serial.println(String(i) + ": (" + outputArray[i].r + ", " + outputArray[i].g + ", " + outputArray[i].b + ")"); }
 }

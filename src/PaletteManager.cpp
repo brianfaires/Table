@@ -25,7 +25,7 @@ void PaletteManager::SkipTime(uint32_t amount) {
 /// Accessors
 PaletteIndex PaletteManager::getTarget() { return target; }
 void PaletteManager::setTarget(PaletteIndex newTarget) {
-  target = static_cast<PaletteIndex>(static_cast<uint8_t>(newTarget) % NUM_PALETTES);
+  target = PaletteIndex(uint8_t(newTarget) % NUM_PALETTES);
   
   if(*curTime - lastSwitchTime > pauseLength) {
     // Already blending. Reset target and start blending from current palette.
@@ -66,7 +66,7 @@ void PaletteManager::setPauseLength(uint32_t newPauseLength) {
 
 /// Logic
 void PaletteManager::Update() {
-  const CHSV* targetPalette = allPalettes[static_cast<uint8_t>(target)];
+  const CHSV* targetPalette = allPalettes[uint8_t(target)];
 
   if(*curTime - lastSwitchTime >= pauseLength) {
     // Currently transitioning
@@ -87,7 +87,7 @@ void PaletteManager::Update() {
 void PaletteManager::NextPalette() {
   memcpy(oldPalette, allPalettes[(uint8_t)target], sizeof(CHSV)*PALETTE_SIZE);
   memcpy(palette, allPalettes[(uint8_t)target], sizeof(CHSV)*PALETTE_SIZE);
-  target = static_cast<PaletteIndex>((static_cast<uint8_t>(target) + 1) % NUM_PALETTES);
+  target = PaletteIndex((uint8_t(target) + 1) % NUM_PALETTES);
   lastSwitchTime = *curTime;
 }
 

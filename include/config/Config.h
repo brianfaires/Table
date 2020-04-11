@@ -21,12 +21,12 @@
 /////////////////////////////////////////////
 ////////// Init Animation Settings //////////
 #define INIT_BASE_ANIMATION BaseAnimation::Scroller
-#define INIT_BASE_DIM_SPEED 32
-#define INIT_BASE_COLOR_SPEED 64
+#define INIT_BASE_DIM_SPEED 2
+#define INIT_BASE_COLOR_SPEED 0
 #define INIT_BASE_BRIGHT_LENGTH 64
 #define INIT_BASE_TRANS_LENGTH 240
 #define INIT_BASE_NUM_COLORS 200
-#define INIT_BASE_DISPLAY_MODE 0
+#define INIT_BASE_DISPLAY_MODE 8
 #define INIT_BASE_DIM_PERIOD 16
 #define INIT_BASE_COLOR_PERIOD 255
 
@@ -38,9 +38,9 @@
 
 /////////////////////////////////////////////
 //////// Init PaletteManager Settings ///////
-#define INIT_PALETTE static_cast<PaletteIndex>(8)
+#define INIT_PALETTE PaletteIndex(8)
 #define INIT_PM_WALK_LENGTH   3 * ONE_SEC
-#define INIT_PM_PAUSE_LENGTH  0 * ONE_MIN
+#define INIT_PM_PAUSE_LENGTH  30 * ONE_MIN
 #define INIT_FADE_IN_FROM_BLACK false
 /////////////////////////////////////////////
 
@@ -65,7 +65,7 @@
 #define INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH  2 * ONE_SEC
 #define INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH  1 * ONE_SEC
 #define INIT_PATTERN_SCROLLER_BRIGHTNESS 255
-#define INIT_DIM_PARAM_CHANGE_TYPE WORM
+#define INIT_DIM_PARAM_CHANGE_TYPE param_change_type::PREFERRED
 #define INIT_CHANGE_DIM_PARAMS_WITH_MOVEMENT true
 #define INIT_ENABLE_DOUBLE_BRIGHT_MOVE false
 ////////////////////////////////////////////////////////////////////////

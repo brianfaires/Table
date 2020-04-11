@@ -97,7 +97,7 @@ void TransitionBaseAnimation(uint32_t curTime) {
 }
 void NextBaseAnimation(uint32_t curTime) {
   BaseAnimation lastBaseAnimation = baseParams.animation;
-  baseParams.animation = static_cast<BaseAnimation>(1 + ((uint8_t)baseParams.animation % NUM_BASE_ANIMATIONS));
+  baseParams.animation = BaseAnimation(1 + ((uint8_t)baseParams.animation % NUM_BASE_ANIMATIONS));
   CleanupBaseLayer(lastBaseAnimation);
   InitBaseLayer();
 }
@@ -177,7 +177,7 @@ void TransitionTopAnimation(uint32_t curTime) {
 void NextTopAnimation(uint32_t curTime) {
   if(NUM_TOP_ANIMATIONS > 0) {
     TopAnimation lastTopAnimation = topParams.animation;
-    topParams.animation = static_cast<TopAnimation>(1 + ((uint8_t)topParams.animation % NUM_TOP_ANIMATIONS));
+    topParams.animation = TopAnimation(1 + ((uint8_t)topParams.animation % NUM_TOP_ANIMATIONS));
     CleanupTopLayer(lastTopAnimation);
     InitTopLayer();
   }

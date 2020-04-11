@@ -138,7 +138,7 @@ bool ProcessSerialInput() {
       s = s.substring(2);
       long b = s.toInt();
       if(b < 0 || b > 255) { return false; }
-      pm.setTarget(static_cast<PaletteIndex>(b));
+      pm.setTarget(PaletteIndex(b));
       return true;
     }
     else if(s.startsWith("nb")) {
@@ -198,7 +198,7 @@ bool ProcessSerialInput() {
     uint8_t next = 0;
     if(paramNum == next++) {
       CleanupBaseLayer(baseParams.animation);
-      baseParams.animation = static_cast<BaseAnimation>((uint8_t)value);
+      baseParams.animation = BaseAnimation(value);
       InitBaseLayer();
     }
     else if(paramNum == next++) { baseParams.colorSpeed = value; }
@@ -211,7 +211,7 @@ bool ProcessSerialInput() {
     else if(paramNum == next++) { baseParams.colorPeriod = value; }
     else if(paramNum == next++) {
       CleanupTopLayer(topParams.animation);
-      topParams.animation = static_cast<TopAnimation>((uint8_t)value);
+      topParams.animation = TopAnimation(value);
       InitTopLayer();
     }
     else if(paramNum == next++) { topParams.portion = value; }
