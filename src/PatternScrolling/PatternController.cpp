@@ -1,7 +1,7 @@
 #include "PatternScrolling\PatternController.h"
 #include "Util.h"
 
-#define ALLOW_ZERO_SPEED // Todo: Why does this make everything glitchy??
+#define ALLOW_ZERO_SPEED
 
 PatternController::PatternController() {
 }
@@ -38,22 +38,22 @@ void PatternController::setDimBlendLength(uint32_t value) {
   ps2.setDimBlendLength(value);
 }
 
-param_change_type PatternController::getDimParamChangeType() {
-  return ps1.dimParamChangeType;
+DimParamChangeMode PatternController::getDimParamChangeMode() {
+  return ps1.dimParamChangeMode;
 }
 bool PatternController::getChangeDimParamsWithMovement() {
   return ps1.changeDimParamsWithMovement;
 }
-void PatternController::setDimParamChangeType(param_change_type value) {
-  setDimParamChangeType(value, ps1.changeDimParamsWithMovement);
+void PatternController::setDimParamChangeMode(DimParamChangeMode value) {
+  setDimParamChangeMode(value, ps1.changeDimParamsWithMovement);
 }
-void PatternController::setDimParamChangeType(bool changeDimParamsWithMovement) {
-  setDimParamChangeType(ps1.dimParamChangeType, changeDimParamsWithMovement);
+void PatternController::setDimParamChangeMode(bool changeDimParamsWithMovement) {
+  setDimParamChangeMode(ps1.dimParamChangeMode, changeDimParamsWithMovement);
 }
-void PatternController::setDimParamChangeType(param_change_type value, bool changeDimParamsWithMovement) {
-  ps1.dimParamChangeType = value;
+void PatternController::setDimParamChangeMode(DimParamChangeMode value, bool changeDimParamsWithMovement) {
+  ps1.dimParamChangeMode = value;
   ps1.changeDimParamsWithMovement = changeDimParamsWithMovement;
-  ps2.dimParamChangeType = value;
+  ps2.dimParamChangeMode = value;
   ps2.changeDimParamsWithMovement = changeDimParamsWithMovement;
 }
 bool PatternController::getEnableDoubleBrightMove() { return ps1.enableDoubleBrightMove; }
@@ -84,7 +84,7 @@ void PatternController::Init(uint16_t _numLEDs, uint32_t* curTime, struct_base_s
   setColorBlendLength(INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH);
   setDimPauseLength(INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH);
   setColorPauseLength(INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH);
-  setDimParamChangeType(INIT_DIM_PARAM_CHANGE_TYPE, INIT_CHANGE_DIM_PARAMS_WITH_MOVEMENT);
+  setDimParamChangeMode(INIT_DIM_PARAM_CHANGE_TYPE, INIT_CHANGE_DIM_PARAMS_WITH_MOVEMENT);
   setBrightness(INIT_PATTERN_SCROLLER_BRIGHTNESS);
   setEnableDoubleBrightMove(INIT_ENABLE_DOUBLE_BRIGHT_MOVE);
 
@@ -151,7 +151,7 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
 
     // Always move the split point with the dim pattern, even if a change in colorPeriod is being applied
     if(psMoved) {
-      if(!secMoved) { THROW("ps moved and secondary didn't") }
+      if(!secMoved) { THROW(F("ps moved and secondary didn't")) }
       
       if(ps->getDimSpeed() > 0) {
         splitIndex++;
@@ -162,10 +162,10 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
         if(splitIndex == 0) { EndSplit(); }
       }
       else {
-        THROW("Error: dimMovedLastUpdate==true while dimSpeed == 0")
+        THROW(F("Error: dimMovedLastUpdate==true while dimSpeed == 0"))
       }
     }
-    else if(secMoved) { THROW("Error: secondary moved and ps didn't") }
+    else if(secMoved) { THROW(F("Error: secondary moved and ps didn't")) }
   }
 }
 

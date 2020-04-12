@@ -8,7 +8,7 @@ void ColorPattern::Init(PaletteManager* _pm, GammaManager* _gm) {
 void ColorPattern::Draw(ColorPatternName pattern, CRGB* outputArray) {
   switch(pattern)
   {
-    case ColorPatternName::GRADIENT:
+    case ColorPatternName::Gradient:
     {
       uint8_t segLength = colorPeriod / numColors;
       uint8_t extraPixels = 0;
@@ -36,7 +36,7 @@ void ColorPattern::Draw(ColorPatternName pattern, CRGB* outputArray) {
       break;
     }
     
-    case ColorPatternName::BLOCKS:
+    case ColorPatternName::Blocks:
     {
       uint16_t colorLengths[numColors];
       uint16_t minLength = colorPeriod / numColors;

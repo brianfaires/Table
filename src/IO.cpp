@@ -130,23 +130,11 @@ bool ProcessSerialInput() {
       PRINT(output)
       return true;
     }
-    else if(s.startsWith("np")) {
-      pm.NextPalette();
-      return true;
-    }
     else if(s.startsWith("tp")) {
       s = s.substring(2);
       long b = s.toInt();
-      if(b < 0 || b > 255) { return false; }
+      if(b < 0 || b >= 255) { return false; } // Todo: This does not have visibility on # of palettes
       pm.setTarget(PaletteIndex(b));
-      return true;
-    }
-    else if(s.startsWith("nb")) {
-      NextBaseAnimation(timing.now);
-      return true;
-    }
-    else if(s.startsWith("nt")) {
-      NextTopAnimation(timing.now);
       return true;
     }
     else if(s.startsWith("sb")) {
@@ -172,6 +160,18 @@ bool ProcessSerialInput() {
       topParams.speed = random8();
       return true;
     }
+    else if(s.startsWith("np")) {
+      pm.NextPalette();
+      return true;
+    }
+    else if(s.startsWith("nb")) {
+      NextBaseAnimation(timing.now);
+      return true;
+    }
+    else if(s.startsWith("nt")) {
+      NextTopAnimation(timing.now);
+      return true;
+    }
     
     long paramNum = s.toInt();
     if(paramNum < 0 || paramNum >= NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS + NUM_LAYER_PARAMS + NUM_PATTERN_PARAMS) { return false; }
@@ -180,6 +180,7 @@ bool ProcessSerialInput() {
     long value = s.toInt();
 
     if(paramNum == 0) {
+      if(s[0] != '0') { THROW("Invalid input") return false; }
       if(value < 0 || value > NUM_BASE_ANIMATIONS) { THROW("OOB baseAnimation") return false; }
     }
     else if(paramNum == 9) {
@@ -195,6 +196,7 @@ bool ProcessSerialInput() {
       if(value < 0 || value > 4294967) { THROW("OOB uint32_t") return false; } // 4294967 is max uint32_t / 1000
     }
 
+    #define ASSIGN_PARAM(x) x = x==0 && value==0 ? 255 : value;
     uint8_t next = 0;
     if(paramNum == next++) {
       CleanupBaseLayer(baseParams.animation);
@@ -203,19 +205,19 @@ bool ProcessSerialInput() {
     }
     else if(paramNum == next++) { baseParams.colorSpeed = value; }
     else if(paramNum == next++) { baseParams.dimSpeed = value; }
-    else if(paramNum == next++) { baseParams.brightLength = value; }
-    else if(paramNum == next++) { baseParams.transLength = value; }
-    else if(paramNum == next++) { baseParams.numColors = value; }
-    else if(paramNum == next++) { baseParams.displayMode = value; }
-    else if(paramNum == next++) { baseParams.dimPeriod = value; }
-    else if(paramNum == next++) { baseParams.colorPeriod = value; }
+    else if(paramNum == next++) { ASSIGN_PARAM(baseParams.brightLength) }
+    else if(paramNum == next++) { ASSIGN_PARAM(baseParams.transLength) }
+    else if(paramNum == next++) { ASSIGN_PARAM(baseParams.numColors) }
+    else if(paramNum == next++) { ASSIGN_PARAM(baseParams.displayMode) }
+    else if(paramNum == next++) { ASSIGN_PARAM(baseParams.dimPeriod) }
+    else if(paramNum == next++) { ASSIGN_PARAM(baseParams.colorPeriod) }
     else if(paramNum == next++) {
       CleanupTopLayer(topParams.animation);
       topParams.animation = TopAnimation(value);
       InitTopLayer();
     }
-    else if(paramNum == next++) { topParams.portion = value; }
-    else if(paramNum == next++) { topParams.speed = value; }
+    else if(paramNum == next++) { ASSIGN_PARAM(topParams.portion) }
+    else if(paramNum == next++) { ASSIGN_PARAM(topParams.speed) }
     else if(paramNum == next++) { pm.setPauseLength(IO_TIME_FACTOR * value); }
     else if(paramNum == next++) { pm.setWalkLength(IO_TIME_FACTOR * value); }
     else if(paramNum == next++) { layerConfig.basePauseLength = IO_TIME_FACTOR * value; }
@@ -230,7 +232,7 @@ bool ProcessSerialInput() {
     else if(paramNum == next++) { pc.setColorBlendLength(IO_TIME_FACTOR * value); }
     else if(paramNum == next++) { pc.setDimPauseLength(IO_TIME_FACTOR * value); }
     else if(paramNum == next++) { pc.setDimBlendLength(IO_TIME_FACTOR * value); }
-    else if(paramNum == next++) { pc.setDimParamChangeType((param_change_type)(value % NUM_DIM_PARAM_CHANGE_TYPES), value >= NUM_DIM_PARAM_CHANGE_TYPES); }
+    else if(paramNum == next++) { pc.setDimParamChangeMode(DimParamChangeMode(value % NUM_DIM_PARAM_CHANGE_TYPES), value >= NUM_DIM_PARAM_CHANGE_TYPES); }
     else { THROW("Invalid paramNum") return false; }
 
     return true;
@@ -241,7 +243,7 @@ bool ProcessSerialInput() {
 
 void PrintParams() {
   #ifndef TEST_COLOR_CORRECTION
-    PRINTLN("\nCommands: np (NextPalette), nb (NextBase), nt (NextTop)\n\t  sb ### (setBrightness), rb (RandomizeBaseParams), rt (RandomizeTopParams)\n\t  tp (TargetPalette), sp # ### ### ### (SetPalette)")
+    PRINTLN(F("\nCommands: np (NextPalette), nb (NextBase), nt (NextTop)\n\t  sb ### (setBrightness), rb (RandomizeBaseParams), rt (RandomizeTopParams)\n\t  tp (TargetPalette), sp # ### ### ### (SetPalette)"))
     
     PrintBaseTopAndPMParams();
     PrintLayerParams();
@@ -255,7 +257,7 @@ void PrintBaseTopAndPMParams() {
   uint8_t pmParameterCounter = NUM_BASE_PARAMS + NUM_TOP_PARAMS;
   String output = "Base Parameters:\t\tTop Parameters:\n";
   
-  output += String(parameterCounter++) + ".Animation:\t  " + (uint8_t)baseParams.animation + "\t\t" + (topParameterCounter++) + ".Animation:\t  " + (uint8_t)topParams.animation + "\n";
+  output += String(parameterCounter++) + ".Animation:\t  " + uint8_t(baseParams.animation) + "\t\t" + (topParameterCounter++) + ".Animation:\t  " + (uint8_t)topParams.animation + "\n";
   output += String(parameterCounter++) + ".ColorSpeed:\t  " + baseParams.colorSpeed + "\t\t" + (topParameterCounter++) + ".Portion:\t  " + topParams.portion + "\n";
   output += String(parameterCounter++) + ".DimSpeed:\t  " + baseParams.dimSpeed + "\t\t" + (topParameterCounter++) + ".Speed:\t  " + topParams.speed + "\n";
   output += String(parameterCounter++) + ".BrightLength:\t  " + baseParams.brightLength + "\n";
@@ -275,7 +277,7 @@ void PrintBaseParams() {
   uint8_t parameterCounter = 0;
   String output = "Base Parameters:\n";
   
-  output += "\t" + String(parameterCounter++) + ".Animation:\t  " + (uint8_t)baseParams.animation + "\n";
+  output += "\t" + String(parameterCounter++) + ".Animation:\t  " + uint8_t(baseParams.animation) + "\n";
   output += "\t" + String(parameterCounter++) + ".ColorSpeed:\t  " + baseParams.colorSpeed + "\n";
   output += "\t" + String(parameterCounter++) + ".DimSpeed:\t  " + baseParams.dimSpeed + "\n";
   output += "\t" + String(parameterCounter++) + ".BrightLength:\t  " + baseParams.brightLength + "\n";
@@ -293,7 +295,7 @@ void PrintTopParams() {
   uint8_t parameterCounter = NUM_BASE_PARAMS;
   String output = "Top Parameters:\n";
   
-  output += "\t" + String(parameterCounter++) + ".Animation:\t  " + (uint8_t)topParams.animation + "\n";
+  output += "\t" + String(parameterCounter++) + ".Animation:\t  " + uint8_t(topParams.animation) + "\n";
   output += "\t" + String(parameterCounter++) + ".Portion:\t  " + topParams.portion + "\n";
   output += "\t" + String(parameterCounter++) + ".Speed:\t  " + topParams.speed + "\n";
   PRINT(output)
@@ -338,7 +340,7 @@ void PrintPatternControllerParams() {
   output += String(parameterCounter++) + ".ColorBlendLength:\t  " + (pc.getColorBlendLength()/IO_TIME_FACTOR) + "\n";
   output += String(parameterCounter++) + ".DimPauseLength:\t  " + (pc.getDimPauseLength()/IO_TIME_FACTOR) + "\n";
   output += String(parameterCounter++) + ".DimBlendLength:\t  " + (pc.getDimBlendLength()/IO_TIME_FACTOR) + "\n";
-  output += String(parameterCounter++) + ".DimParamChangeType:\t  " + (NUM_DIM_PARAM_CHANGE_TYPES*pc.getChangeDimParamsWithMovement() + pc.getDimParamChangeType()) + "\n";
+  output += String(parameterCounter++) + ".DimParamChangeType:\t  " + (NUM_DIM_PARAM_CHANGE_TYPES*pc.getChangeDimParamsWithMovement() + int(pc.getDimParamChangeMode())) + "\n";
   
   PRINT(output)
   if(parameterCounter != NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS + NUM_LAYER_PARAMS + NUM_PATTERN_PARAMS) { THROW_DUMP("Parameter count mismatch.", parameterCounter) }

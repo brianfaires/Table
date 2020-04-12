@@ -5,8 +5,8 @@
 
 #define MAX_PERIOD 210
 
-#define NUM_DIM_PARAM_CHANGE_TYPES 6
-enum param_change_type { PREFERRED, GROW_F, GROW_R, WORM, FREEZE, CENTER, MIX_F }; //todo: use MIX_F and MIX_R; worm on bright and freeze on trans, and vice versa
+enum class DimParamChangeMode { Preferred, Grow_F, Grow_R, Worm, Freeze, Center, Mix_F, Mix_R, Count };
+#define NUM_DIM_PARAM_CHANGE_TYPES uint8_t(DimParamChangeMode::Center)
 
 class PatternScroller {
   public:
@@ -36,7 +36,7 @@ class PatternScroller {
     void setColorSpeed(int8_t value);
     
     // Params
-    param_change_type dimParamChangeType;
+    DimParamChangeMode dimParamChangeMode;
     bool changeDimParamsWithMovement;
     bool enableDoubleBrightMove;
     uint8_t brightness;
@@ -58,13 +58,16 @@ class PatternScroller {
     void BlendDimPattern();
     bool ScrollPatterns();
     void ScrollPatternsWithoutTimer(bool moveForward);
-    param_change_type GetPreferredDimParamChangeType(uint8_t patternIndex, int8_t delta);
+    DimParamChangeMode GetPreferredDimParamChangeMode(uint8_t patternIndex, int8_t delta);
 
     // Utility
     bool IsReadyForDimMove();
     bool IsHalfwayToDimMove();
     uint8_t getTargetDimPatternIndex();
     bool IsRandomDimPattern();
+    void WriteDimPattern(uint8_t patternIndex, uint8_t* outputArray);
+    void WriteColorPattern(uint8_t patternIndex, CRGB* outputArray);
+
     
     // Blending
     bool dimBlendOn = false;
@@ -91,7 +94,4 @@ class PatternScroller {
     // Timers
     uint32_t lastDimMove, lastColorMove;
     uint32_t lastDimPatternChange, lastColorPatternChange;
-
-    void WriteDimPattern(uint8_t patternIndex, uint8_t* outputArray);
-    void WriteColorPattern(uint8_t patternIndex, CRGB* outputArray);
 };

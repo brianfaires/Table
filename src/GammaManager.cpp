@@ -108,7 +108,7 @@ void GammaManager::RunTests(uint16_t thickness, uint16_t gradientLength) {
     }
     else if(curMode == 3) {
       // A single strip of white
-      RunWhiteTest(leds, leds_b, min(uint16_t(numLEDs), uint16_t(2*thickness)), 0); // todo: investigate this: this is a hack to get around a bug in the esp libraries
+      RunWhiteTest(leds, leds_b, min(uint16_t(numLEDs), uint16_t(2*thickness)), 0); // this is a hack to get around a bug in the esp libraries
 	    if(numLEDs > 4*thickness) {
         RunWhiteTest(&leds[numLEDs-2*thickness], &leds_b[numLEDs-2*thickness], 2*thickness, 0);
       }
@@ -267,12 +267,12 @@ void GammaManager::RunDimmingTest(CRGB* leds, uint8_t* leds_b, uint16_t numLEDs,
 
 // Handles serial IO while running RunTests()
 bool GammaManager::ProcessSerialInput() {
-  Serial.println("\nTo edit Gamma, enter: r,g,b, or a(all). 'w' to write matrices. 'u' to toggle matrix use");
-  Serial.println("'###' sets brightness (1-255). 'n' for next pattern. 'c' for colorCorrection");
-  Serial.println("brightness +/- with '-', '='. Shift for *2");
+  Serial.println(F("\nTo edit Gamma, enter: r,g,b, or a(all). 'w' to write matrices. 'u' to toggle matrix use"));
+  Serial.println(F("'###' sets brightness (1-255). 'n' for next pattern. 'c' for colorCorrection"));
+  Serial.println(F("brightness +/- with '-', '='. Shift for *2"));
   uint32_t colCorrectInt = (colorCorrections[0].r<<16) + (colorCorrections[0].g<<8)+ (colorCorrections[0].b);
   Serial.println("Brightness: " + String(*globalBrightness) + ", Color Correction: 0x" + String(colCorrectInt, HEX));
-  if(useLookupMatrices) { Serial.println("------------- Using matrices defined in your project -------------"); }
+  if(useLookupMatrices) { Serial.println(F("------------- Using matrices defined in your project -------------")); }
   else { Serial.println("Gammas: R:" + String(fGammaR) + "\tG:" + String(fGammaG) + "\tB:" + String(fGammaB)); }
   
   while(Serial.available() == 0) ;
@@ -298,7 +298,7 @@ bool GammaManager::ProcessSerialInput() {
     useLookupMatrices = !useLookupMatrices;
   }
   else if(s == "a") {
-    Serial.println("Enter new gamma value.");
+    Serial.println(F("Enter new gamma value."));
     while(Serial.available() == 0) ;
     s = Serial.readString();
     s.trim();
@@ -307,21 +307,21 @@ bool GammaManager::ProcessSerialInput() {
     fGammaB = fGammaR;
   }
   else if(s == "r") {
-    Serial.println("Enter new red gamma value. (Current is " + String(fGammaR) + ")");
+    Serial.println(F("Enter new red gamma value. (Current is ") + String(fGammaR) + ")");
     while(Serial.available() == 0) ;
     s = Serial.readString();
     s.trim();
     fGammaR = s.toFloat();
   }
   else if(s == "g") {
-    Serial.println("Enter new green gamma value. (Current is " + String(fGammaG) + ")");
+    Serial.println(F("Enter new green gamma value. (Current is ") + String(fGammaG) + ")");
     while(Serial.available() == 0) ;
     s = Serial.readString();
     s.trim();
     fGammaG = s.toFloat();    
   }
   else if(s == "b") {
-    Serial.println("Enter new blue gamma value. (Current is " + String(fGammaB) + ")");
+    Serial.println(F("Enter new blue gamma value. (Current is ") + String(fGammaB) + ")");
     while(Serial.available() == 0) ;
     s = Serial.readString();
     s.trim();
@@ -335,7 +335,7 @@ bool GammaManager::ProcessSerialInput() {
     Serial.println();
   }
   else if(s == "c") {
-    Serial.println("Enter new color correction as a 6-digit hex number");
+    Serial.println(F("Enter new color correction as a 6-digit hex number"));
     while(Serial.available() == 0) ;
     s = Serial.readString();
     s.trim();

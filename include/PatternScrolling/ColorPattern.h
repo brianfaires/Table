@@ -3,8 +3,8 @@
 #include "GammaManager.h"
 #include "PaletteManager.h"
 
-#define NUM_COLOR_PATTERNS 2
-enum class ColorPatternName : uint8_t { GRADIENT, BLOCKS };
+enum class ColorPatternName : uint8_t { Gradient, Blocks, Count };
+#define NUM_COLOR_PATTERNS uint8_t(ColorPatternName::Count)
 
 class ColorPattern {
   public:

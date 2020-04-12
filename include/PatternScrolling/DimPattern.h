@@ -3,9 +3,10 @@
 #include "GammaManager.h"
 #include "PaletteManager.h"
 
-enum class PatternType : uint8_t { SYMMETRIC, FRONT, REVERSE, FRONT3, REVERSE3 };
-enum class DimPatternName : uint8_t { NONE, COMET_F, COMET_R, TWO_SIDED, BARBELL, SLOPED_TOWERS_H, SLOPED_TOWERS_L, SLIDE_H, SLIDE_L, BOWTIES_F, BOWTIES_R, TOWERS, SNAKE, SNAKE3, THREE_COMETS_F, THREE_COMETS_R };
-#define NUM_DIM_PATTERNS 16
+enum class PatternType : uint8_t { Symmetric, Front, Reverse, Front3, Reverse3, Count };
+enum class DimPatternName : uint8_t { Random, Comet_F, Comet_R, Two_Sided, Barbell, Towers_H, Towers_L, Slide_H, Slide_L, Bowties_F, Bowties_R, Towers, Snake, Snake3, Comets3_F, Comets3_R, Count };
+#define NUM_PATTERN_TYPES uint8_t(PatternType::Count)
+#define NUM_DIM_PATTERNS uint8_t(DimPatternName::Count)
 
 class DimPattern {
   public:

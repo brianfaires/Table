@@ -22,22 +22,22 @@
 PatternType DimPattern::getPatternType(DimPatternName pattern) { return allDimPatternTypes[int(pattern)]; }
 
 DimPattern::DimPattern() {
-  allDimPatternTypes[int(DimPatternName::NONE)] =            PatternType::SYMMETRIC;
-  allDimPatternTypes[int(DimPatternName::BARBELL)] =         PatternType::SYMMETRIC;
-  allDimPatternTypes[int(DimPatternName::BOWTIES_F)] =       PatternType::SYMMETRIC;
-  allDimPatternTypes[int(DimPatternName::BOWTIES_R)] =       PatternType::SYMMETRIC;
-  allDimPatternTypes[int(DimPatternName::COMET_F)] =         PatternType::FRONT;
-  allDimPatternTypes[int(DimPatternName::COMET_R)] =         PatternType::REVERSE;
-  allDimPatternTypes[int(DimPatternName::SLIDE_H)] =         PatternType::SYMMETRIC;
-  allDimPatternTypes[int(DimPatternName::SLIDE_L)] =         PatternType::SYMMETRIC;
-  allDimPatternTypes[int(DimPatternName::SLOPED_TOWERS_H)] = PatternType::SYMMETRIC;
-  allDimPatternTypes[int(DimPatternName::SLOPED_TOWERS_L)] = PatternType::SYMMETRIC;
-  allDimPatternTypes[int(DimPatternName::SNAKE)] =           PatternType::SYMMETRIC;
-  allDimPatternTypes[int(DimPatternName::SNAKE3)] =          PatternType::SYMMETRIC;
-  allDimPatternTypes[int(DimPatternName::TOWERS)] =          PatternType::SYMMETRIC;
-  allDimPatternTypes[int(DimPatternName::THREE_COMETS_F)] =  PatternType::FRONT3;
-  allDimPatternTypes[int(DimPatternName::THREE_COMETS_R)] =  PatternType::REVERSE3;
-  allDimPatternTypes[int(DimPatternName::TWO_SIDED)] =       PatternType::SYMMETRIC;
+  allDimPatternTypes[int(DimPatternName::Random)] =          PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Barbell)] =         PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Bowties_F)] =       PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Bowties_R)] =       PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Comet_F)] =         PatternType::Front;
+  allDimPatternTypes[int(DimPatternName::Comet_R)] =         PatternType::Reverse;
+  allDimPatternTypes[int(DimPatternName::Slide_H)] =         PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Slide_L)] =         PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Towers_H)] = PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Towers_L)] = PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Snake)] =           PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Snake3)] =          PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Towers)] =          PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Comets3_F)] =  PatternType::Front3;
+  allDimPatternTypes[int(DimPatternName::Comets3_R)] =  PatternType::Reverse3;
+  allDimPatternTypes[int(DimPatternName::Two_Sided)] =       PatternType::Symmetric;
 }
 
 void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
@@ -46,14 +46,14 @@ void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
 
   switch(pattern)
   {
-    case DimPatternName::COMET_F:
+    case DimPatternName::Comet_F:
     {
       SETUP_FADES(2*transLength+9)
       FADE_UP(2*transLength+9)
       DRAW_BRIGHT(brightLength)
       break;
     }
-    case DimPatternName::COMET_R:
+    case DimPatternName::Comet_R:
     {
 
       SETUP_FADE_DOWN(2*transLength+9)
@@ -61,7 +61,7 @@ void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
       FADE_DOWN(2*transLength+9)
       break;
     }
-    case DimPatternName::TWO_SIDED:
+    case DimPatternName::Two_Sided:
     {
       SETUP_FADES(transLength+4);
       FADE_UP(transLength+4)
@@ -69,7 +69,7 @@ void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
       FADE_DOWN(transLength+4)
       break;
     }
-    case DimPatternName::BARBELL:// Reverses trans and bright to keep the 2*trans + bright period
+    case DimPatternName::Barbell:// Reverses trans and bright to keep the 2*trans + bright period
     {
       uint8_t halfFade = (brightLength+9) / 2;
       SETUP_FADES(halfFade);
@@ -78,8 +78,9 @@ void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
       if(2*halfFade < brightLength+9) { DRAW_SINGLE(fadeStepSize) }
       FADE_UP(halfFade)
       DRAW_BRIGHT(transLength)
+      break;
     }
-    case DimPatternName::SLOPED_TOWERS_H:
+    case DimPatternName::Towers_H:
     {
       SETUP_FADES(transLength+2)
       SINGLE_BRIGHT()
@@ -91,7 +92,7 @@ void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
       SINGLE_BRIGHT()
       break;
     }
-    case DimPatternName::SLOPED_TOWERS_L:
+    case DimPatternName::Towers_L:
     {
       SETUP_FADES(transLength+2)
       SINGLE_BRIGHT()
@@ -104,7 +105,7 @@ void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
       FILL_SPACING()
       break;
     }
-    case DimPatternName::SLIDE_H:
+    case DimPatternName::Slide_H:
     {
       SETUP_FADES(transLength+2)
       FADE_UP(transLength+2)
@@ -116,7 +117,7 @@ void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
       FADE_DOWN(transLength+2)
       break;
     }
-    case DimPatternName::SLIDE_L:
+    case DimPatternName::Slide_L:
     {
       SETUP_FADES(transLength+2)
       FADE_UP(transLength+2)
@@ -128,7 +129,7 @@ void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
       FADE_DOWN(transLength+2)
       break;
     }
-    case DimPatternName::BOWTIES_F:
+    case DimPatternName::Bowties_F:
     {
       uint8_t transOuter = (transLength+3) / 2;
       uint8_t transInner = transLength + 3 - transOuter;
@@ -145,7 +146,7 @@ void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
       SINGLE_BRIGHT()
       break;
     }
-    case DimPatternName::BOWTIES_R:
+    case DimPatternName::Bowties_R:
     {
       uint8_t transOuter = (transLength+2) / 2;
       uint8_t transInner = transLength + 2 - transOuter;
@@ -164,7 +165,7 @@ void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
       FADE_DOWN(transOuter)
       break;
     }
-    case DimPatternName::TOWERS:
+    case DimPatternName::Towers:
     {
       DRAW_DIM(transLength+2)
       SINGLE_SPACE()
@@ -173,12 +174,12 @@ void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
       DRAW_DIM(transLength+2)
       break;
     }
-    case DimPatternName::SNAKE:
+    case DimPatternName::Snake:
     {
       DRAW_BRIGHT(brightLength + 2*transLength + 9)
       break;
     }
-    case DimPatternName::SNAKE3:
+    case DimPatternName::Snake3:
     {
       DRAW_BRIGHT(transLength+2)
       SINGLE_SPACE()
@@ -189,7 +190,7 @@ void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
       DRAW_BRIGHT(transLength+2)
       break;
     }
-    case DimPatternName::THREE_COMETS_F:
+    case DimPatternName::Comets3_F:
     {
       SETUP_FADES(transLength+1)
       SETUP_FADE2(brightLength+2)
@@ -206,7 +207,7 @@ void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
       SINGLE_BRIGHT()
       break;
     }
-    case DimPatternName::THREE_COMETS_R:
+    case DimPatternName::Comets3_R:
     {
       SETUP_FADE_DOWN(transLength+1)
       SETUP_FADE2(brightLength+2)

@@ -1,12 +1,12 @@
 #pragma once
 #include "PaletteManager.h"
 
-#define NUM_PALETTES 32
-
 enum class PaletteIndex : uint8_t {
 	analagousRed, analagousRedOrange, analagousOrange, analagousYellow, analagousGreen, analagousSeaGreen, analagousCyan, analagousBlue, analagousPurple, analagousFusia, analagousPink, analagousPaleRed1, analagousPaleRed2, analagousPaleRed3,
-	triadRed,     triadRedOrange,     triadorange,     triadyellow,     triadGreen,     triadSeaGreen,     triadCyan,     triadBlue,     triadPurple,     triadFusia,     triadPink,     triadPaleOrange,   triadPalePink
+	Red, 		  Orange, 			  Green, 		   Blue,			Pink,
+	triadRed,     triadRedOrange,     triadorange,     triadyellow,     triadGreen,     triadSeaGreen,     triadCyan,     triadBlue,     triadPurple,     triadFusia,     triadPink,     triadPaleOrange,   triadPalePink, 	   Count
 };
+#define NUM_PALETTES uint8_t(PaletteIndex::Count)
 
 static const PROGMEM CHSV allPalettes[NUM_PALETTES][PALETTE_SIZE] = {
 	{ CHSV(255,255,255), CHSV(  0,200,255), CHSV(246,185,255), CHSV( 45,230,255), CHSV(155,230,255), CHSV( 96, 90,255) }, // analag Red

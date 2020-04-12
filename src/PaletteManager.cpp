@@ -85,9 +85,9 @@ void PaletteManager::Update() {
 }
 
 void PaletteManager::NextPalette() {
-  memcpy(oldPalette, allPalettes[(uint8_t)target], sizeof(CHSV)*PALETTE_SIZE);
-  memcpy(palette, allPalettes[(uint8_t)target], sizeof(CHSV)*PALETTE_SIZE);
-  target = PaletteIndex((uint8_t(target) + 1) % NUM_PALETTES);
+  memcpy(oldPalette, allPalettes[int(target)], sizeof(CHSV)*PALETTE_SIZE);
+  memcpy(palette, allPalettes[int(target)], sizeof(CHSV)*PALETTE_SIZE);
+  target = PaletteIndex((int(target) + 1) % NUM_PALETTES);
   lastSwitchTime = *curTime;
 }
 
