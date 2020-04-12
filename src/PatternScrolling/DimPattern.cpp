@@ -22,27 +22,30 @@
 PatternType DimPattern::getPatternType(DimPatternName pattern) { return allDimPatternTypes[int(pattern)]; }
 
 DimPattern::DimPattern() {
-  allDimPatternTypes[int(DimPatternName::Random)] =          PatternType::Symmetric;
-  allDimPatternTypes[int(DimPatternName::Barbell)] =         PatternType::Symmetric;
-  allDimPatternTypes[int(DimPatternName::Bowties_F)] =       PatternType::Symmetric;
-  allDimPatternTypes[int(DimPatternName::Bowties_R)] =       PatternType::Symmetric;
-  allDimPatternTypes[int(DimPatternName::Comet_F)] =         PatternType::Front;
-  allDimPatternTypes[int(DimPatternName::Comet_R)] =         PatternType::Reverse;
-  allDimPatternTypes[int(DimPatternName::Slide_H)] =         PatternType::Symmetric;
-  allDimPatternTypes[int(DimPatternName::Slide_L)] =         PatternType::Symmetric;
-  allDimPatternTypes[int(DimPatternName::Towers_H)] = PatternType::Symmetric;
-  allDimPatternTypes[int(DimPatternName::Towers_L)] = PatternType::Symmetric;
-  allDimPatternTypes[int(DimPatternName::Snake)] =           PatternType::Symmetric;
-  allDimPatternTypes[int(DimPatternName::Snake3)] =          PatternType::Symmetric;
-  allDimPatternTypes[int(DimPatternName::Towers)] =          PatternType::Symmetric;
-  allDimPatternTypes[int(DimPatternName::Comets3_F)] =  PatternType::Front3;
-  allDimPatternTypes[int(DimPatternName::Comets3_R)] =  PatternType::Reverse3;
-  allDimPatternTypes[int(DimPatternName::Two_Sided)] =       PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Random)] =    PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Barbell)] =   PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Bowties_F)] = PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Bowties_R)] = PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Comet_F)] =   PatternType::Front;
+  allDimPatternTypes[int(DimPatternName::Comet_R)] =   PatternType::Reverse;
+  allDimPatternTypes[int(DimPatternName::Slide_H)] =   PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Slide_L)] =   PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Towers_H)] =  PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Towers_L)] =  PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Snake)] =     PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Snake3)] =    PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Towers)] =    PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Comets3_F)] = PatternType::Front3;
+  allDimPatternTypes[int(DimPatternName::Comets3_R)] = PatternType::Reverse3;
+  allDimPatternTypes[int(DimPatternName::Two_Sided)] = PatternType::Symmetric;
 }
 
 void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
   uint8_t i = 0;
   uint8_t limit = 0; 
+
+  // Yay for magic numbers! Not sure of the best way to enforce this logic as configurable
+  if(dimPeriod < 2*transLength + brightLength + 10) { THROW_DUMP("Invalid dimPeriod!", dimPeriod) DUMP(transLength) DUMP(brightLength) }
 
   switch(pattern)
   {

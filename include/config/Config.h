@@ -7,6 +7,7 @@
 ////////// Debugging config ////////////
 //#define USING_DEBUG_BOARD
 #define MANUAL_PARAMS
+#define ALLOW_ZERO_SPEED // For PatternController
 //#define TEST_PALETTES
 //#define EXPLICIT_PARAMETERS
 //#define TIMING_ANALYSIS
@@ -21,7 +22,7 @@
 /////////////////////////////////////////////
 ////////// Init Animation Settings //////////
 #define INIT_BASE_ANIMATION BaseAnimation::Scroller
-#define INIT_BASE_DIM_SPEED 2
+#define INIT_BASE_DIM_SPEED -16
 #define INIT_BASE_COLOR_SPEED 0
 #define INIT_BASE_BRIGHT_LENGTH 64
 #define INIT_BASE_TRANS_LENGTH 240

@@ -340,7 +340,7 @@ void PrintPatternControllerParams() {
   output += String(parameterCounter++) + ".ColorBlendLength:\t  " + (pc.getColorBlendLength()/IO_TIME_FACTOR) + "\n";
   output += String(parameterCounter++) + ".DimPauseLength:\t  " + (pc.getDimPauseLength()/IO_TIME_FACTOR) + "\n";
   output += String(parameterCounter++) + ".DimBlendLength:\t  " + (pc.getDimBlendLength()/IO_TIME_FACTOR) + "\n";
-  output += String(parameterCounter++) + ".DimParamChangeType:\t  " + (NUM_DIM_PARAM_CHANGE_TYPES*pc.getChangeDimParamsWithMovement() + int(pc.getDimParamChangeMode())) + "\n";
+  output += String(parameterCounter++) + ".DimParamChangeMode:\t  " + (NUM_DIM_PARAM_CHANGE_TYPES*pc.getChangeDimParamsWithMovement() + int(pc.getDimParamChangeMode())) + "\n";
   
   PRINT(output)
   if(parameterCounter != NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS + NUM_LAYER_PARAMS + NUM_PATTERN_PARAMS) { THROW_DUMP("Parameter count mismatch.", parameterCounter) }

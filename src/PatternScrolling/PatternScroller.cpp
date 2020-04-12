@@ -130,7 +130,6 @@ void PatternScroller::setDisplayMode(uint8_t displayMode) {
 //*****************************************************************
 //******************* Simple boolean functions ********************
 //*****************************************************************
-bool dimParamWalkedThisCycle = false;
 bool PatternScroller::IsReadyForDimMove() {
   // Returns true if this cycle is going to move the pattern
   if(dimSpeed == 0) { return false; }
@@ -284,7 +283,7 @@ bool PatternScroller::WalkColorParams() {
 }
 bool PatternScroller::WalkDimParams() {
   static bool blendParamsOn = false;
-  static DimParamChangeMode changeType = DimParamChangeMode::Center;
+  static DimParamChangeMode changeMode = DimParamChangeMode::Center;
 
   #define ADJUST_BOTH() if(dimPattern.brightLength < brightLength) { dimPattern.brightLength++; } \
                         else if(dimPattern.brightLength > brightLength) { dimPattern.brightLength--; } \
@@ -327,18 +326,18 @@ bool PatternScroller::WalkDimParams() {
   }
   else {
     if(!blendParamsOn) {
-      // Lock in the changeType at the start of the blend
+      // Lock in the changeMode at the start of the blend
       blendParamsOn = true;
-      if(dimParamChangeMode != DimParamChangeMode::Preferred) { changeType = dimParamChangeMode; }
+      if(dimParamChangeMode != DimParamChangeMode::Preferred) { changeMode = dimParamChangeMode; }
       else if(dimBlendOn && (*curTime - lastDimPatternChange - dimBlendLength/2 >= dimPauseLength)) {
-        changeType = GetPreferredDimParamChangeMode(getTargetDimPatternIndex(), delta);
+        changeMode = GetPreferredDimParamChangeMode(getTargetDimPatternIndex(), delta);
       }
       else {
-        changeType = GetPreferredDimParamChangeMode(oldDimPatternIndex, delta);
+        changeMode = GetPreferredDimParamChangeMode(oldDimPatternIndex, delta);
       }
     }
   
-    switch(changeType)
+    switch(changeMode)
     {
       case DimParamChangeMode::Grow_F:
         switch(delta) {
@@ -405,7 +404,7 @@ bool PatternScroller::WalkDimParams() {
           default: DUMP(delta)
         }
         break;
-      case DimParamChangeMode::Mix_F:
+      case DimParamChangeMode::Mix_F://worm on bright and freeze on trans, and vice versa for Mix_R
         break;
       case DimParamChangeMode::Mix_R:
         break;
@@ -470,17 +469,19 @@ void PatternScroller::ScrollPatternsWithoutTimer(bool moveForward) {
 //*****************************************************************
 //************************ Display/Blending ***********************
 //*****************************************************************
-void PatternScroller::SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs) {
+void PatternScroller::SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs, uint16_t numLEDsToSkip) {
   uint16_t curColorIndex = colorIndexFirst;
   uint16_t curDimIndex = dimIndexFirst;
 
   for(uint16_t i = 0; i < numLEDs; i++) {
-    if(curDimPattern[curDimIndex] == 0) { target_b[i] = 0; }
-    else {
-      target[i] = curColorPattern[curColorIndex];
-      uint16_t pixelBrightness = uint16_t(curDimPattern[curDimIndex]) * uint16_t(brightness+1) / 0x100;
-      target_b[i] = max(1, pixelBrightness & 0xFF);
-    } 
+    if(i >= numLEDsToSkip) {
+      if(curDimPattern[curDimIndex] == 0) { target_b[i] = 0; }
+      else {
+        target[i] = curColorPattern[curColorIndex];
+        uint16_t pixelBrightness = uint16_t(curDimPattern[curDimIndex]) * uint16_t(brightness+1) / 0x100;
+        target_b[i] = max(1, pixelBrightness & 0xFF);
+      }
+    }
   
     if(curDimIndex >= dimPeriod) { THROW("ERROR: SetCRGBs(): curDimIndex out of bounds: " + curDimIndex + " / " + dimPeriod) }
     if(curColorIndex >= colorPeriod) { THROW("ERROR: SetCRGBs(): curColorIndex out of bounds: " + curColorIndex + " / " + colorPeriod) }

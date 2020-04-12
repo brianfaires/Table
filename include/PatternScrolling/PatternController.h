@@ -6,7 +6,6 @@
 
 class PatternController {
   public:
-    PatternController();
     void Init(uint16_t _numLEDs, uint32_t* curTime, struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, const uint16_t* _allowedDimPeriods, const uint16_t* allowedColorPeriods);
     void Update(struct_base_show_params& params, CRGB* target, uint8_t* target_b);
     void SkipTime(uint32_t amount);
@@ -26,6 +25,7 @@ class PatternController {
     void setDimParamChangeMode(DimParamChangeMode value);
     void setDimParamChangeMode(bool changeDimParamsWithMovement);
     void setDimParamChangeMode(DimParamChangeMode value, bool changeDimParamsWithMovement);
+    uint8_t getBrightness();
     void setBrightness(uint8_t brightness);
     
   private:

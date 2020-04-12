@@ -6,7 +6,7 @@
 #define MAX_PERIOD 210
 
 enum class DimParamChangeMode { Preferred, Grow_F, Grow_R, Worm, Freeze, Center, Mix_F, Mix_R, Count };
-#define NUM_DIM_PARAM_CHANGE_TYPES uint8_t(DimParamChangeMode::Center)
+#define NUM_DIM_PARAM_CHANGE_TYPES uint8_t(DimParamChangeMode::Count)
 
 class PatternScroller {
   public:
@@ -15,7 +15,7 @@ class PatternScroller {
     void Clone(PatternScroller* source, struct_base_show_params& params);
     bool Update();
     void SkipTime(uint32_t amount);
-    void SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs);
+    void SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs, uint16_t numLEDsToSkip=0);
     bool IsStartOfDimPattern();
 
     // Getters/Setters
@@ -72,6 +72,7 @@ class PatternScroller {
     // Blending
     bool dimBlendOn = false;
     bool colorBlendOn = false;
+    bool dimParamWalkedThisCycle = false;
 
     // Params
     uint8_t colorPeriod, dimPeriod;

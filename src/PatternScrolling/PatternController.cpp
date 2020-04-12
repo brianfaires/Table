@@ -1,71 +1,30 @@
 #include "PatternScrolling\PatternController.h"
 #include "Util.h"
 
-#define ALLOW_ZERO_SPEED
-
-PatternController::PatternController() {
-}
-
-uint32_t PatternController::getColorPauseLength() {
-  return ps1.getColorPauseLength();
-}
-void PatternController::setColorPauseLength(uint32_t value) {
-  ps1.setColorPauseLength(value);
-  ps2.setColorPauseLength(value);
-}
-
-uint32_t PatternController::getDimPauseLength() {
-  return ps1.getDimPauseLength();
-}
-void PatternController::setDimPauseLength(uint32_t value) {
-  ps1.setDimPauseLength(value);
-  ps2.setDimPauseLength(value);
-}
-
-uint32_t PatternController::getColorBlendLength() {
-  return ps1.getColorBlendLength();
-}
-void PatternController::setColorBlendLength(uint32_t value) {
-  ps1.setColorBlendLength(value);
-  ps2.setColorBlendLength(value);
-}
-
-uint32_t PatternController::getDimBlendLength() {
-  return ps1.getDimBlendLength();
-}
-void PatternController::setDimBlendLength(uint32_t value) {
-  ps1.setDimBlendLength(value);
-  ps2.setDimBlendLength(value);
-}
-
-DimParamChangeMode PatternController::getDimParamChangeMode() {
-  return ps1.dimParamChangeMode;
-}
-bool PatternController::getChangeDimParamsWithMovement() {
-  return ps1.changeDimParamsWithMovement;
-}
-void PatternController::setDimParamChangeMode(DimParamChangeMode value) {
-  setDimParamChangeMode(value, ps1.changeDimParamsWithMovement);
-}
-void PatternController::setDimParamChangeMode(bool changeDimParamsWithMovement) {
-  setDimParamChangeMode(ps1.dimParamChangeMode, changeDimParamsWithMovement);
-}
+uint32_t PatternController::getColorPauseLength() { return ps1.getColorPauseLength(); }
+void PatternController::setColorPauseLength(uint32_t value) { ps1.setColorPauseLength(value); ps2.setColorPauseLength(value); }
+uint32_t PatternController::getDimPauseLength() { return ps1.getDimPauseLength(); }
+void PatternController::setDimPauseLength(uint32_t value) { ps1.setDimPauseLength(value); ps2.setDimPauseLength(value); }
+uint32_t PatternController::getColorBlendLength() { return ps1.getColorBlendLength(); }
+void PatternController::setColorBlendLength(uint32_t value) { ps1.setColorBlendLength(value); ps2.setColorBlendLength(value); }
+uint32_t PatternController::getDimBlendLength() { return ps1.getDimBlendLength(); }
+void PatternController::setDimBlendLength(uint32_t value) { ps1.setDimBlendLength(value); ps2.setDimBlendLength(value); }
+DimParamChangeMode PatternController::getDimParamChangeMode() { return ps1.dimParamChangeMode; }
+bool PatternController::getEnableDoubleBrightMove() { return ps1.enableDoubleBrightMove; }
+void PatternController::setEnableDoubleBrightMove(bool value) { ps1.enableDoubleBrightMove = value; ps2.enableDoubleBrightMove = value; }
+uint8_t PatternController::getBrightness() { return ps1.brightness; }
+void PatternController::setBrightness(uint8_t brightness) { ps1.brightness = brightness; ps2.brightness = brightness; }
+bool PatternController::getChangeDimParamsWithMovement() { return ps1.changeDimParamsWithMovement; }
+void PatternController::setDimParamChangeMode(DimParamChangeMode value) { setDimParamChangeMode(value, ps1.changeDimParamsWithMovement); }
+void PatternController::setDimParamChangeMode(bool changeDimParamsWithMovement) { setDimParamChangeMode(ps1.dimParamChangeMode, changeDimParamsWithMovement); }
 void PatternController::setDimParamChangeMode(DimParamChangeMode value, bool changeDimParamsWithMovement) {
   ps1.dimParamChangeMode = value;
   ps1.changeDimParamsWithMovement = changeDimParamsWithMovement;
   ps2.dimParamChangeMode = value;
   ps2.changeDimParamsWithMovement = changeDimParamsWithMovement;
 }
-bool PatternController::getEnableDoubleBrightMove() { return ps1.enableDoubleBrightMove; }
-void PatternController::setEnableDoubleBrightMove(bool value) { ps1.enableDoubleBrightMove = value; ps2.enableDoubleBrightMove = value; }
-
-void PatternController::setBrightness(uint8_t brightness) {
-  ps1.brightness = brightness;
-  ps2.brightness = brightness;
-}
 
 void PatternController::Init(uint16_t _numLEDs, uint32_t* curTime, struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, const uint16_t* _allowedDimPeriods, const uint16_t* _allowedColorPeriods) {
-  
   numLEDs = _numLEDs;
   allowedDimPeriods = _allowedDimPeriods;
   allowedColorPeriods = _allowedColorPeriods;
@@ -78,7 +37,6 @@ void PatternController::Init(uint16_t _numLEDs, uint32_t* curTime, struct_base_s
   ps1.Init(scaledParams, curTime, pm, gm, numLEDs);
   ps2.Init(scaledParams, curTime, pm, gm, numLEDs);
 
-  // Todo: personal note: (PIO, moved this from start of function)
   // Init PatternScrollers
   setDimBlendLength(INIT_PATTERN_CONTROLLER_DIM_BLEND_LENGTH);
   setColorBlendLength(INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH);
@@ -87,7 +45,6 @@ void PatternController::Init(uint16_t _numLEDs, uint32_t* curTime, struct_base_s
   setDimParamChangeMode(INIT_DIM_PARAM_CHANGE_TYPE, INIT_CHANGE_DIM_PARAMS_WITH_MOVEMENT);
   setBrightness(INIT_PATTERN_SCROLLER_BRIGHTNESS);
   setEnableDoubleBrightMove(INIT_ENABLE_DOUBLE_BRIGHT_MOVE);
-
 
   ps = &ps1;
   secondary = &ps2;
@@ -106,7 +63,8 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
   colorSpeed = scaledParams.colorSpeed;
   WalkSpeeds();
 
-  // Check for changes in dimPeriod and colorPeriod. If so, correct param scaling for old periods and be ready to start splitting to bring in the new pattern
+  // Check for changes in dimPeriod and colorPeriod. If so, scaling will be off because its based on period.
+  // So correct param scaling for old periods and be ready to start splitting to bring in the new pattern.
   if(ps->getDimPeriod() != scaledParams.dimPeriod || ps->getColorPeriod() != scaledParams.colorPeriod) {
     if(!splitDisplay && dimSpeed != 0 && ps->IsStartOfDimPattern()) {
       StartSplit(scaledParams);
@@ -114,7 +72,6 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
     ScaleParams(params, scaledParams, ps->getDimPeriod(), ps->getColorPeriod()); // Re-scale params with old periods
   }
 
-  //todo: Use ASSERT method
   if(ps->getDimSpeed() != secondary->getDimSpeed()) { THROW(ps->getDimSpeed() + " DOES NOT EQUAL " + secondary->getDimSpeed()); }
 
   // Update primary PatternScroller
@@ -138,17 +95,8 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
     secondary->setDisplayMode(scaledParams.displayMode);
     bool secMoved = secondary->Update();
 
-    if(secondaryScrollerIsLow) {
-      //ps->SetCRGBs(&target[splitIndex], &target_b[splitIndex], numLEDs - splitIndex);
-      ps->SetCRGBs(target, target_b, numLEDs); //todo: this is wasteful but simple. Otherwise pattern will move 2 pixels per move. Just overwrite the pixels in next line
-      secondary->SetCRGBs(target, target_b, splitIndex);
-    }
-    else {
-      //secondary->SetCRGBs(&target[splitIndex], &target_b[splitIndex], numLEDs - splitIndex);
-      secondary->SetCRGBs(target, target_b, numLEDs); //todo: this is wasteful but simple. Otherwise pattern will move 2 pixels per move. Just overwrite the pixels in next line
-      ps->SetCRGBs(target, target_b, splitIndex);
-    }
 
+    // Move split point (must be before drawing)
     // Always move the split point with the dim pattern, even if a change in colorPeriod is being applied
     if(psMoved) {
       if(!secMoved) { THROW(F("ps moved and secondary didn't")) }
@@ -166,6 +114,16 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
       }
     }
     else if(secMoved) { THROW(F("Error: secondary moved and ps didn't")) }
+
+    // Draw
+    if(secondaryScrollerIsLow) {
+      ps->SetCRGBs(target, target_b, numLEDs, splitIndex);
+      secondary->SetCRGBs(target, target_b, splitIndex);
+    }
+    else {
+      secondary->SetCRGBs(target, target_b, numLEDs, splitIndex);
+      ps->SetCRGBs(target, target_b, splitIndex);
+    }
   }
 }
 
@@ -224,8 +182,11 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_base
     output.colorSpeed = output.dimSpeed/2;//scaleParam(params.colorSpeed, colorSpeed_lower, colorSpeed_upper);
     output.displayMode = scaleParam(params.displayMode, 0, NUM_DIM_PATTERNS * NUM_COLOR_PATTERNS - 1);
     output.numColors = scaleParam(params.numColors, 2, PALETTE_SIZE-1);
-    output.transLength = scaleParam(params.transLength, 0, (output.dimPeriod-10) / 3);
-    output.brightLength = scaleParam(params.brightLength, 0, (output.dimPeriod-10) / 3);
+    uint8_t extraPixels = (output.dimPeriod-10) % 3;
+    uint8_t transUpperLimit =  (output.dimPeriod-10)/3 + (extraPixels==2 ? 1 : 0);
+    uint8_t brightUpperLimit = (output.dimPeriod-10)/3 + (extraPixels==1 ? 1 : 0);
+    output.transLength =  scaleParam(params.transLength,  0, transUpperLimit);
+    output.brightLength = scaleParam(params.brightLength, 0, brightUpperLimit);
     //DEBUG(params.brightLength+"/"+output.brightLength + ", " + params.transLength+"/"+output.transLength);
   #endif
 }
@@ -234,11 +195,7 @@ void PatternController::StartSplit(struct_base_show_params& params) {
   DEBUG("Start Split");
   splitDisplay = true;
   splitIndex = ps->getDimSpeed() > 0 ? 0 : numLEDs-1;
-
   secondary->Clone(ps, params);
-  //secondary->Init(params);
-  //secondary->SyncMovement(ps);
-
   secondaryScrollerIsLow = ps->getDimSpeed() > 0;
 }
 
@@ -248,19 +205,20 @@ void PatternController::EndSplit() {
     PatternScroller* swap = ps;
     ps = secondary;
     secondary = swap;
+    secondaryScrollerIsLow = !secondaryScrollerIsLow;
     DEBUG("SWAP!");
   }
   DEBUG("End Split");
 }
 
 void PatternController::WalkSpeeds() {
-// Perform everything on ps1, then copy to ps2. They should always match to be fully sync'd in movements
+  // Perform everything on ps1, then copy to ps2. They should always match to be fully sync'd in movements
 
   #ifdef EXPLICIT_PARAMETERS
     ps1.setDimSpeed(dimSpeed);
     ps1.setColorSpeed(colorSpeed);
   #else
-    // Gradually update speeds even if not ready for a pattern change; slow down at lower levels
+    // Gradually update speeds in the PatternScrollers; slow down at lower levels
     int8_t initSpeed = ps1.getDimSpeed();
     if(initSpeed != dimSpeed) {
       uint8_t absSpeed = abs(initSpeed);
