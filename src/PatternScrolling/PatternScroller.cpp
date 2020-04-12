@@ -8,8 +8,6 @@
 #define PATTERN_PARAM_CHANGE_DISTANCE    0// NUM_LEDS
 #define BRIGHTNESS_PARAM_CHANGE_DISTANCE 0// NUM_LEDS
 
-
-
 PatternScroller::PatternScroller() {
   dimParamChangeType = PREFERRED;//CENTER;//GROW_F;//GROW_R;//WORM;//FREEZE;
   changeDimParamsWithMovement = true;
@@ -40,16 +38,22 @@ uint8_t PatternScroller::getDimPeriod() { return dimPeriod; }
 uint8_t PatternScroller::getColorPeriod() { return colorPeriod; }
 uint32_t PatternScroller::getDimBlendLength() { return dimBlendLength; }
 void PatternScroller::setDimBlendLength(uint32_t value) {
-  if(dimBlendOn) {
-    float blendPerc = dimBlendLength == 0 ? 0 : (*curTime - lastDimPatternChange - dimPauseLength) / dimBlendLength;
+  if((*curTime - lastDimPatternChange > dimPauseLength) && dimBlendOn) { // Overkill because of random mode
+    float blendPerc = dimBlendLength == 0 ? 0 : float(*curTime - lastDimPatternChange - dimPauseLength) / dimBlendLength;
+    DUMP(blendPerc)
+    DUMP(dimBlendLength)
+    DUMP(dimPauseLength)
+    DUMP(lastDimPatternChange)
     lastDimPatternChange = *curTime - blendPerc*value - dimPauseLength; // Preserve same blend %
+    DUMP(lastDimPatternChange)
+    DUMP(*curTime)
   }
   dimBlendLength = value;
 }
 uint32_t PatternScroller::getColorBlendLength() { return colorBlendLength; }
 void PatternScroller::setColorBlendLength(uint32_t value) {
-  if(colorBlendOn) {
-    float blendPerc = colorBlendLength == 0 ? 0 : (*curTime - lastColorPatternChange - colorPauseLength) / colorBlendLength;
+  if((*curTime - lastColorPatternChange > colorPauseLength) && colorBlendOn) { // Overkill because of random mode
+    float blendPerc = colorBlendLength == 0 ? 0 : float(*curTime - lastColorPatternChange - colorPauseLength) / colorBlendLength;
     lastColorPatternChange = *curTime - blendPerc*value - colorPauseLength; // Preserve same blend %
   }
   colorBlendLength = value;
@@ -92,7 +96,7 @@ void PatternScroller::setDisplayMode(uint8_t displayMode) {
 
   if(targetColorPatternIndex != colorPatternIndex) {
     if(*curTime - lastColorPatternChange >= colorPauseLength) {
-      // Begin blending into new colorPattern
+      // Begin blending into new colorPattern; even if in the middle of a blend
       memcpy(oldColorPattern, curColorPattern, sizeof(CRGB)*colorPeriod);
       targetColorPatternIndex = colorPatternIndex;
       WriteColorPattern(targetColorPatternIndex, targetColorPattern);
@@ -116,6 +120,7 @@ void PatternScroller::setDisplayMode(uint8_t displayMode) {
       }
     }    
     else if(!dimBlendOn && isTimeForChange) {
+      // Don't accept new targets while blending
       dimBlendOn = true;
       oldDimPatternIndex = targetDimPatternIndex;
       memcpy(oldDimPattern, targetDimPattern, dimPeriod);
@@ -331,7 +336,7 @@ bool PatternScroller::WalkDimParams() {
       // Lock in the changeType at the start of the blend
       blendParamsOn = true;
       if(dimParamChangeType != PREFERRED) { changeType = dimParamChangeType; }
-      else if(dimBlendOn && *curTime - lastDimPatternChange >= dimPauseLength + dimBlendLength/2) {
+      else if(dimBlendOn && (*curTime - lastDimPatternChange - dimBlendLength/2 >= dimPauseLength)) {
         changeType = GetPreferredDimParamChangeType(getTargetDimPatternIndex(), delta);
       }
       else {
@@ -487,7 +492,7 @@ void PatternScroller::SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs
 void PatternScroller::BlendColorPattern() {
   uint32_t transitionTime = *curTime - lastColorPatternChange - colorPauseLength;
   if(transitionTime < colorBlendLength) {
-    uint8_t blendAmount = 255 * transitionTime / colorBlendLength;
+    float blendAmount = 255.0 * float(transitionTime) / colorBlendLength;
 
     for(uint8_t i = 0; i < colorPeriod; i++) {
       curColorPattern[i] = Gamma->Blend(oldColorPattern[i], targetColorPattern[i], blendAmount);
@@ -505,10 +510,9 @@ void PatternScroller::BlendColorPattern() {
 void PatternScroller::BlendDimPattern() {
   uint32_t transitionTime = *curTime - lastDimPatternChange - dimPauseLength;
   if(transitionTime < dimBlendLength) {
-    uint8_t blendAmount = 255 * transitionTime / dimBlendLength;
-
+    float blendAmount = float(transitionTime) / dimBlendLength;
     for(uint8_t i = 0; i < dimPeriod; i++) {
-      curDimPattern[i] = (255 - blendAmount) * oldDimPattern[i] / 255 + blendAmount * targetDimPattern[i] / 255;
+      curDimPattern[i] = (1 - blendAmount) * oldDimPattern[i] + blendAmount * targetDimPattern[i];
     }
   }
   else {
