@@ -66,7 +66,7 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
   // Check for changes in dimPeriod and colorPeriod. If so, scaling will be off because its based on period.
   // So correct param scaling for old periods and be ready to start splitting to bring in the new pattern.
   if(ps->getDimPeriod() != scaledParams.dimPeriod || ps->getColorPeriod() != scaledParams.colorPeriod) {
-    if(!splitDisplay && dimSpeed != 0 && ps->IsStartOfDimPattern()) {
+    if(!splitDisplay && dimSpeed != 0 && ps->IsStartOfDimPattern() && ps->IsReadyForDimMove()) {
       StartSplit(scaledParams);
     }
     ScaleParams(params, scaledParams, ps->getDimPeriod(), ps->getColorPeriod()); // Re-scale params with old periods
@@ -80,7 +80,8 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
   ps->brightLength = scaledParams.brightLength;
   ps->transLength = scaledParams.transLength;
   ps->setDisplayMode(scaledParams.displayMode);
-  bool psMoved = ps->Update();
+  int8_t dummy = 0;
+  bool psMoved = ps->Update(dummy);
 
   if(!splitDisplay) {
     ps->SetCRGBs(target, target_b, numLEDs);
@@ -93,36 +94,40 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
     secondary->brightLength = scaledParams.brightLength;
     secondary->transLength = scaledParams.transLength;
     secondary->setDisplayMode(scaledParams.displayMode);
-    bool secMoved = secondary->Update();
+    int8_t shiftAmount = 0;
+    bool secMoved = secondary->Update(shiftAmount);
 
-
-    // Move split point (must be before drawing)
+    // Scroll split point (must be before drawing)
+    // splitIndex is part of the higher pattern
     // Always move the split point with the dim pattern, even if a change in colorPeriod is being applied
     if(psMoved) {
       if(!secMoved) { THROW(F("ps moved and secondary didn't")) }
-      
-      if(ps->getDimSpeed() > 0) {
-        splitIndex++;
-        if(splitIndex == numLEDs) { EndSplit(); }
-      }
-      else if(ps->getDimSpeed() < 0) {
-        splitIndex--;
-        if(splitIndex == 0) { EndSplit(); }
-      }
-      else {
-        THROW(F("Error: dimMovedLastUpdate==true while dimSpeed == 0"))
-      }
+      if(ps->getDimSpeed() > 0) { splitIndex++; }
+      else if(ps->getDimSpeed() < 0) { splitIndex--; }
+      else { THROW(F("Error: dimMovedLastUpdate==true while dimSpeed == 0")) }
     }
     else if(secMoved) { THROW(F("Error: secondary moved and ps didn't")) }
 
-    // Draw
-    if(secondaryScrollerIsLow) {
-      ps->SetCRGBs(target, target_b, numLEDs, splitIndex);
-      secondary->SetCRGBs(target, target_b, splitIndex);
-    }
-    else {
+    // Handle splitPoint movement from paramChanges; determined by the amount it shifted in secondary pattern
+    splitIndex += shiftAmount;
+    
+    if(!secondaryScrollerIsLow)  {
+      if(splitIndex >= numLEDs) { splitIndex = numLEDs; EndSplit(false); }
+      else if(splitIndex <= 0) { splitIndex = numLEDs; EndSplit(true); } // Would be splitIndex==0, but just draw primary after EndSplit()
+
       secondary->SetCRGBs(target, target_b, numLEDs, splitIndex);
       ps->SetCRGBs(target, target_b, splitIndex);
+    }
+    else {
+      // Treat the final empty pixels of the secondary pattern as transparent; don't end split until they clear
+      uint16_t ledsToSkip = splitIndex;
+      uint8_t transparent = secondary->getNumBlanks();
+      if(splitIndex >= numLEDs + transparent) { ledsToSkip = 0; EndSplit(true); } // Would be splitIndex==numLEDs, but just draw primary after EndSplit()
+      else if(splitIndex <= 0) { ledsToSkip = 0; EndSplit(false); }
+      else { ledsToSkip = transparent >= ledsToSkip ? 0 : ledsToSkip-transparent; }
+
+      ps->SetCRGBs(target, target_b, numLEDs, ledsToSkip);
+      secondary->SetCRGBs(target, target_b, ledsToSkip);
     }
   }
 }
@@ -194,14 +199,14 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_base
 void PatternController::StartSplit(struct_base_show_params& params) {
   DEBUG("Start Split");
   splitDisplay = true;
-  splitIndex = ps->getDimSpeed() > 0 ? 0 : numLEDs-1;
+  splitIndex = ps->getDimSpeed() > 0 ? 0 : numLEDs;
   secondary->Clone(ps, params);
   secondaryScrollerIsLow = ps->getDimSpeed() > 0;
 }
 
-void PatternController::EndSplit() {
+void PatternController::EndSplit(bool swap) {
   splitDisplay = false;
-  if((ps->getDimSpeed() > 0 && secondaryScrollerIsLow) || (ps->getDimSpeed() < 0 && !secondaryScrollerIsLow)) {
+  if(swap) {
     PatternScroller* swap = ps;
     ps = secondary;
     secondary = swap;

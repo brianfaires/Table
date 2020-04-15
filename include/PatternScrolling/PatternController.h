@@ -35,11 +35,11 @@ class PatternController {
     void ScaleParams(struct_base_show_params& params, struct_base_show_params& output, uint8_t dimPeriod = 0, uint8_t colorPeriod = 0);
     void WalkSpeeds();
     void StartSplit(struct_base_show_params& params);
-    void EndSplit();
+    void EndSplit(bool swap);
 
     bool splitDisplay = false;
     bool secondaryScrollerIsLow = true;
-    uint16_t splitIndex = 0;
+    int16_t splitIndex = 0;
     uint16_t numLEDs;
     int8_t colorSpeed, dimSpeed;
     

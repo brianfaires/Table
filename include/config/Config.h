@@ -13,7 +13,7 @@
 //#define TIMING_ANALYSIS
 #define CHECK_FOR_CLIPPING
 //#define RUN_GAMMA_TESTS // Overrides everything else
-
+#define DEBUG_COLOR_PATTERNS
 #define DEBUG_BTN(msg)        //DEBUG(msg)
 #define DEBUG_ANIMATION(msg)  //DEBUG(msg)
 ////////////////////////////////////////
@@ -22,13 +22,13 @@
 /////////////////////////////////////////////
 ////////// Init Animation Settings //////////
 #define INIT_BASE_ANIMATION BaseAnimation::Scroller
-#define INIT_BASE_DIM_SPEED -16
+#define INIT_BASE_DIM_SPEED 0
 #define INIT_BASE_COLOR_SPEED 0
-#define INIT_BASE_BRIGHT_LENGTH 64
-#define INIT_BASE_TRANS_LENGTH 240
+#define INIT_BASE_BRIGHT_LENGTH 255
+#define INIT_BASE_TRANS_LENGTH 255
 #define INIT_BASE_NUM_COLORS 200
 #define INIT_BASE_DISPLAY_MODE 0
-#define INIT_BASE_DIM_PERIOD 16
+#define INIT_BASE_DIM_PERIOD 0
 #define INIT_BASE_COLOR_PERIOD 255
 
 #define INIT_TOP_ANIMATION TopAnimation::None

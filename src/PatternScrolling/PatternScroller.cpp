@@ -83,6 +83,7 @@ void PatternScroller::setColorSpeed(int8_t value) {
   colorSpeed = value;
 }
 uint8_t PatternScroller::getTargetDimPatternIndex() { return IsRandomDimPattern() ? randomDimPatternIndex : targetDimPatternIndex; }
+uint8_t PatternScroller::getNumBlanks() { return dimPeriod - 9 - 2*dimPattern.transLength - dimPattern.brightLength; }
 void PatternScroller::setDisplayMode(uint8_t displayMode) {
   if(displayMode >= NUM_DIM_PATTERNS * NUM_COLOR_PATTERNS) { THROW_DUMP("Invalid display mode", displayMode) }
   uint8_t dimPatternIndex = displayMode % NUM_DIM_PATTERNS;
@@ -157,7 +158,10 @@ bool PatternScroller::IsStartOfDimPattern() {
   else { return dimIndexFirst == numLEDs % dimPeriod; }
 }
 bool PatternScroller::IsRandomDimPattern() {
-  return targetDimPatternIndex == 0;
+  #ifdef DEBUG_COLOR_PATTERNS
+    return false;
+  #endif
+  return targetDimPatternIndex == uint8_t(DimPatternName::Random);
 }
 
 
@@ -226,7 +230,7 @@ void PatternScroller::SkipTime(uint32_t amount) {
 //*****************************************************************
 //*********************** Walking/Scrolling ***********************
 //*****************************************************************
-bool PatternScroller::Update() { // Returns true if dim pattern moved
+bool PatternScroller::Update(int8_t& shiftAmount) { // Returns true if dim pattern moved
   // Color changing - params and pattern can only change after pauseLength, because they both force a fade.
   if(*curTime - lastColorPatternChange >= colorPauseLength) {
     if(WalkColorParams()) {
@@ -247,7 +251,7 @@ bool PatternScroller::Update() { // Returns true if dim pattern moved
 
   // Dim changing - Always walk params, because they are being slow-walked to their true targets. Pattern changing respects pauseLength.
   // While randomDimPattern, dimBlendOn is always on; even during pauseLength period
-  if(WalkDimParams()) {
+  if(WalkDimParams(shiftAmount)) {
     WriteDimPattern(getTargetDimPatternIndex(), targetDimPattern);
     WriteDimPattern(oldDimPatternIndex, oldDimPattern);
   }
@@ -281,7 +285,7 @@ bool PatternScroller::WalkColorParams() {
 
   return updateMade;
 }
-bool PatternScroller::WalkDimParams() {
+bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
   static bool blendParamsOn = false;
   static DimParamChangeMode changeMode = DimParamChangeMode::Center;
 
@@ -290,20 +294,20 @@ bool PatternScroller::WalkDimParams() {
                         if(dimPattern.transLength < transLength) { dimPattern.transLength++; if(enableDoubleBrightMove && dimPattern.brightLength > brightLength) { dimPattern.brightLength--; } } \
                         else if(dimPattern.transLength > transLength) { dimPattern.transLength--; if(enableDoubleBrightMove && dimPattern.brightLength < brightLength) { dimPattern.brightLength++; } } 
   
-  #define SCROLL_BACK() ScrollPatternsWithoutTimer(false);
-  #define SCROLL_FORWARD() ScrollPatternsWithoutTimer(true);
+  #define SCROLL_BACK() ScrollPatternsWithoutTimer(false); shiftAmount--;
+  #define SCROLL_FORWARD() ScrollPatternsWithoutTimer(true); shiftAmount++;
   #define ADJ_DOWNBEAT() if(!changeDimParamsWithMovement || IsReadyForDimMove()) { ADJUST_BOTH() }
   #define ADJ_UPBEAT() if(!changeDimParamsWithMovement || IsHalfwayToDimMove()) { ADJUST_BOTH() }
   #define ADJ_DOWNBEAT_INC() if(!changeDimParamsWithMovement || IsReadyForDimMove()) { ADJUST_BOTH() SCROLL_FORWARD() }
   #define ADJ_DOWNBEAT_INC2() if(!changeDimParamsWithMovement || IsReadyForDimMove()) { ADJUST_BOTH() SCROLL_FORWARD() SCROLL_FORWARD() }
   #define ADJ_DOWNBEAT_DEC() if(!changeDimParamsWithMovement || IsReadyForDimMove()) { ADJUST_BOTH() SCROLL_BACK() }
-  #define ADJ_DOWNBEAT_DEC2() if(!changeDimParamsWithMovement || IsReadyForDimMove()) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK()  }
+  #define ADJ_DOWNBEAT_DEC2() if(!changeDimParamsWithMovement || IsReadyForDimMove()) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK() }
   #define ADJ_UPBEAT_INC() if(!changeDimParamsWithMovement || IsHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_FORWARD() }
   #define ADJ_UPBEAT_INC2() if(!changeDimParamsWithMovement || IsHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_FORWARD() SCROLL_FORWARD() }
   #define ADJ_UPBEAT_DEC() if(!changeDimParamsWithMovement || IsHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_BACK() }
   #define ADJ_UPBEAT_DEC2() if(!changeDimParamsWithMovement || IsHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK() }
   
-
+  shiftAmount = 0; // Initialize to 0 and then increment/decrement - returns to PatternScroller to affect splitIndex
   int8_t delta = 0;
   if     (dimPattern.brightLength < brightLength)             { delta = 1; }
   else if(dimPattern.brightLength > brightLength)             { delta = -1; }

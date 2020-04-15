@@ -13,10 +13,11 @@ class PatternScroller {
     PatternScroller();
     void Init(struct_base_show_params& params, uint32_t* curTime = NULL, PaletteManager* _pm = NULL, GammaManager* _gm = NULL, uint16_t _numLEDs = 0);
     void Clone(PatternScroller* source, struct_base_show_params& params);
-    bool Update();
+    bool Update(int8_t& shiftAmount);
     void SkipTime(uint32_t amount);
     void SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs, uint16_t numLEDsToSkip=0);
     bool IsStartOfDimPattern();
+    bool IsReadyForDimMove();
 
     // Getters/Setters
     void setDisplayMode(uint8_t displayMode);
@@ -34,7 +35,8 @@ class PatternScroller {
     void setDimSpeed(int8_t value);
     int8_t getColorSpeed();
     void setColorSpeed(int8_t value);
-    
+    uint8_t getNumBlanks();
+        
     // Params
     DimParamChangeMode dimParamChangeMode;
     bool changeDimParamsWithMovement;
@@ -53,7 +55,7 @@ class PatternScroller {
 
     // Smoothing
     bool WalkColorParams();
-    bool WalkDimParams();
+    bool WalkDimParams(int8_t& shiftAmount);
     void BlendColorPattern();
     void BlendDimPattern();
     bool ScrollPatterns();
@@ -61,7 +63,6 @@ class PatternScroller {
     DimParamChangeMode GetPreferredDimParamChangeMode(uint8_t patternIndex, int8_t delta);
 
     // Utility
-    bool IsReadyForDimMove();
     bool IsHalfwayToDimMove();
     uint8_t getTargetDimPatternIndex();
     bool IsRandomDimPattern();

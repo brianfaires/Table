@@ -227,6 +227,9 @@ void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
       FADE_DOWN(transLength+1)
       break;
     }
+    case DimPatternName::Random:
+      DRAW_BRIGHT(dimPeriod) // Used to debug color patterns
+      break;
     default:
       THROW_DUMP("Unrecognized DimPatternName", uint8_t(pattern))
   }
