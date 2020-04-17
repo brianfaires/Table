@@ -82,7 +82,7 @@ void PatternScroller::setColorSpeed(int8_t value) {
   }
   colorSpeed = value;
 }
-uint8_t PatternScroller::getTargetDimPatternIndex() { return IsRandomDimPattern() ? randomDimPatternIndex : targetDimPatternIndex; }
+uint8_t PatternScroller::getTargetDimPatternIndex() { return isRandomDimPattern() ? randomDimPatternIndex : targetDimPatternIndex; }
 uint8_t PatternScroller::getNumBlanks() { return dimPeriod - 9 - 2*dimPattern.transLength - dimPattern.brightLength; }
 void PatternScroller::setDisplayMode(uint8_t displayMode) {
   if(displayMode >= NUM_DIM_PATTERNS * NUM_COLOR_PATTERNS) { THROW_DUMP("Invalid display mode", displayMode) }
@@ -102,7 +102,7 @@ void PatternScroller::setDisplayMode(uint8_t displayMode) {
 
   if(targetDimPatternIndex != dimPatternIndex) {
     bool isTimeForChange = *curTime - lastDimPatternChange >= dimPauseLength;
-    if(IsRandomDimPattern()) {
+    if(isRandomDimPattern()) {
       if(isTimeForChange) {
         // Currently on or blending toward randomDimPatternIndex
         targetDimPatternIndex = randomDimPatternIndex;
@@ -120,7 +120,7 @@ void PatternScroller::setDisplayMode(uint8_t displayMode) {
       oldDimPatternIndex = targetDimPatternIndex;
       memcpy(oldDimPattern, targetDimPattern, dimPeriod);
       targetDimPatternIndex = dimPatternIndex;
-      if(IsRandomDimPattern()) { do { randomDimPatternIndex = random8(1, NUM_DIM_PATTERNS-1); } while (randomDimPatternIndex == oldDimPatternIndex); }
+      if(isRandomDimPattern()) { do { randomDimPatternIndex = random8(1, NUM_DIM_PATTERNS-1); } while (randomDimPatternIndex == oldDimPatternIndex); }
       WriteDimPattern(getTargetDimPatternIndex(), targetDimPattern);
       lastDimPatternChange = *curTime - dimPauseLength;
     }
@@ -131,7 +131,7 @@ void PatternScroller::setDisplayMode(uint8_t displayMode) {
 //*****************************************************************
 //******************* Simple boolean functions ********************
 //*****************************************************************
-bool PatternScroller::IsReadyForDimMove() {
+bool PatternScroller::isReadyForDimMove() {
   // Returns true if this cycle is going to move the pattern
   if(dimSpeed == 0) { return false; }
   
@@ -143,7 +143,7 @@ bool PatternScroller::IsReadyForDimMove() {
 
   return false;
 }
-bool PatternScroller::IsHalfwayToDimMove() {
+bool PatternScroller::isHalfwayToDimMove() {
   // Only return true once per cycle
   if(dimSpeed == 0) { return false; }
   if(dimParamWalkedThisCycle) { return false; }
@@ -152,16 +152,20 @@ bool PatternScroller::IsHalfwayToDimMove() {
   if(*curTime - lastDimMove >= stepSize/2) { dimParamWalkedThisCycle = true; }
   return dimParamWalkedThisCycle;
 }
-bool PatternScroller::IsStartOfDimPattern() {
+bool PatternScroller::isStartOfDimPattern() {
   if(dimSpeed == 0) { return false; }
-  else if(dimSpeed > 0) { return dimIndexFirst == 0; }
+  else if(isMovingForward()) { return dimIndexFirst == 0; }
   else { return dimIndexFirst == numLEDs % dimPeriod; }
 }
-bool PatternScroller::IsRandomDimPattern() {
+bool PatternScroller::isRandomDimPattern() {
   #ifdef DEBUG_COLOR_PATTERNS
     return false;
   #endif
   return targetDimPatternIndex == uint8_t(DimPatternName::Random);
+}
+bool PatternScroller::isMovingForward()
+{
+  return dimSpeed > 0;
 }
 
 
@@ -252,6 +256,16 @@ bool PatternScroller::Update(int8_t& shiftAmount) { // Returns true if dim patte
   // Dim changing - Always walk params, because they are being slow-walked to their true targets. Pattern changing respects pauseLength.
   // While randomDimPattern, dimBlendOn is always on; even during pauseLength period
   if(WalkDimParams(shiftAmount)) {
+    #ifdef JUMP_DIM_PARAMS
+      if(!changeDimParamsWithMovement){
+        int8_t deltaShift;
+        do {
+          deltaShift = 0;
+          WalkDimParams(deltaShift);
+          shiftAmount += deltaShift;
+        } while(deltaShift != 0);
+      }
+    #endif
     WriteDimPattern(getTargetDimPatternIndex(), targetDimPattern);
     WriteDimPattern(oldDimPatternIndex, oldDimPattern);
   }
@@ -296,16 +310,16 @@ bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
   
   #define SCROLL_BACK() ScrollPatternsWithoutTimer(false); shiftAmount--;
   #define SCROLL_FORWARD() ScrollPatternsWithoutTimer(true); shiftAmount++;
-  #define ADJ_DOWNBEAT() if(!changeDimParamsWithMovement || IsReadyForDimMove()) { ADJUST_BOTH() }
-  #define ADJ_UPBEAT() if(!changeDimParamsWithMovement || IsHalfwayToDimMove()) { ADJUST_BOTH() }
-  #define ADJ_DOWNBEAT_INC() if(!changeDimParamsWithMovement || IsReadyForDimMove()) { ADJUST_BOTH() SCROLL_FORWARD() }
-  #define ADJ_DOWNBEAT_INC2() if(!changeDimParamsWithMovement || IsReadyForDimMove()) { ADJUST_BOTH() SCROLL_FORWARD() SCROLL_FORWARD() }
-  #define ADJ_DOWNBEAT_DEC() if(!changeDimParamsWithMovement || IsReadyForDimMove()) { ADJUST_BOTH() SCROLL_BACK() }
-  #define ADJ_DOWNBEAT_DEC2() if(!changeDimParamsWithMovement || IsReadyForDimMove()) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK() }
-  #define ADJ_UPBEAT_INC() if(!changeDimParamsWithMovement || IsHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_FORWARD() }
-  #define ADJ_UPBEAT_INC2() if(!changeDimParamsWithMovement || IsHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_FORWARD() SCROLL_FORWARD() }
-  #define ADJ_UPBEAT_DEC() if(!changeDimParamsWithMovement || IsHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_BACK() }
-  #define ADJ_UPBEAT_DEC2() if(!changeDimParamsWithMovement || IsHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK() }
+  #define ADJ_DOWNBEAT() if(!changeDimParamsWithMovement || isReadyForDimMove()) { ADJUST_BOTH() }
+  #define ADJ_UPBEAT() if(!changeDimParamsWithMovement || isHalfwayToDimMove()) { ADJUST_BOTH() }
+  #define ADJ_DOWNBEAT_INC() if(!changeDimParamsWithMovement || isReadyForDimMove()) { ADJUST_BOTH() SCROLL_FORWARD() }
+  #define ADJ_DOWNBEAT_INC2() if(!changeDimParamsWithMovement || isReadyForDimMove()) { ADJUST_BOTH() SCROLL_FORWARD() SCROLL_FORWARD() }
+  #define ADJ_DOWNBEAT_DEC() if(!changeDimParamsWithMovement || isReadyForDimMove()) { ADJUST_BOTH() SCROLL_BACK() }
+  #define ADJ_DOWNBEAT_DEC2() if(!changeDimParamsWithMovement || isReadyForDimMove()) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK() }
+  #define ADJ_UPBEAT_INC() if(!changeDimParamsWithMovement || isHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_FORWARD() }
+  #define ADJ_UPBEAT_INC2() if(!changeDimParamsWithMovement || isHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_FORWARD() SCROLL_FORWARD() }
+  #define ADJ_UPBEAT_DEC() if(!changeDimParamsWithMovement || isHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_BACK() }
+  #define ADJ_UPBEAT_DEC2() if(!changeDimParamsWithMovement || isHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK() }
   
   shiftAmount = 0; // Initialize to 0 and then increment/decrement - returns to PatternScroller to affect splitIndex
   int8_t delta = 0;
@@ -333,7 +347,7 @@ bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
       // Lock in the changeMode at the start of the blend
       blendParamsOn = true;
       if(dimParamChangeMode != DimParamChangeMode::Preferred) { changeMode = dimParamChangeMode; }
-      else if(dimBlendOn && (*curTime - lastDimPatternChange - dimBlendLength/2 >= dimPauseLength)) {
+      else if(dimBlendOn && (*curTime - lastDimPatternChange - dimPauseLength >= dimBlendLength/2)) {
         changeMode = GetPreferredDimParamChangeMode(getTargetDimPatternIndex(), delta);
       }
       else {
@@ -346,52 +360,52 @@ bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
       case DimParamChangeMode::Grow_F:
         switch(delta) {
           case 5:
-          case 1:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC() } break;
+          case 1:  if(isMovingForward()) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC() } break;
           case -5:
-          case -1: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC() } break;
-          case 2:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC2() } break;
-          case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC2() } break;
-          case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT_DEC() } break;
-          case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
+          case -1: if(isMovingForward()) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC() } break;
+          case 2:  if(isMovingForward()) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC2() } break;
+          case -2: if(isMovingForward()) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC2() } break;
+          case 3:  if(isMovingForward()) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT_DEC() } break;
+          case -3: if(isMovingForward()) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
           default: DUMP(delta)
         }
         break;
       case DimParamChangeMode::Grow_R:
         switch(delta) {
           case 5:
-          case 1:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT() } break;
+          case 1:  if(isMovingForward()) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT() } break;
           case -5:
-          case -1: if(dimSpeed > 0) { ADJ_UPBEAT_INC() } else { ADJ_UPBEAT() } break;
-          case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT() } break;
-          case -2: if(dimSpeed > 0) { ADJ_UPBEAT_INC2() } else { ADJ_UPBEAT() } break;
-          case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
-          case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC2() } break;
+          case -1: if(isMovingForward()) { ADJ_UPBEAT_INC() } else { ADJ_UPBEAT() } break;
+          case 2:  if(isMovingForward()) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT() } break;
+          case -2: if(isMovingForward()) { ADJ_UPBEAT_INC2() } else { ADJ_UPBEAT() } break;
+          case 3:  if(isMovingForward()) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
+          case -3: if(isMovingForward()) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC2() } break;
           default: DUMP(delta)
         }
         break;
       case DimParamChangeMode::Worm:
         switch(delta) {
           case 5:
-          case 1:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC() } break;
+          case 1:  if(isMovingForward()) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC() } break;
           case -5:
-          case -1: if(dimSpeed > 0) { ADJ_UPBEAT_INC() } else { ADJ_UPBEAT() } break;
-          case 2:  if(dimSpeed > 0) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC2() } break;
-          case -2: if(dimSpeed > 0) { ADJ_UPBEAT_INC2() } else { ADJ_UPBEAT() } break;
-          case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
-          case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
+          case -1: if(isMovingForward()) { ADJ_UPBEAT_INC() } else { ADJ_UPBEAT() } break;
+          case 2:  if(isMovingForward()) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC2() } break;
+          case -2: if(isMovingForward()) { ADJ_UPBEAT_INC2() } else { ADJ_UPBEAT() } break;
+          case 3:  if(isMovingForward()) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
+          case -3: if(isMovingForward()) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
           default: DUMP(delta)
         }
         break;
       case DimParamChangeMode::Freeze:
         switch(delta) {
           case 5:
-          case 1:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT() } break;
+          case 1:  if(isMovingForward()) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT() } break;
           case -5:
-          case -1: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC() } break;
-          case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT() } break;
-          case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC2() } break;
-          case 3:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT_DEC() } break;
-          case -3: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC2() } break;
+          case -1: if(isMovingForward()) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC() } break;
+          case 2:  if(isMovingForward()) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT() } break;
+          case -2: if(isMovingForward()) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC2() } break;
+          case 3:  if(isMovingForward()) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT_DEC() } break;
+          case -3: if(isMovingForward()) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC2() } break;
           default: DUMP(delta)
         }
         break;
@@ -401,16 +415,38 @@ bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
           case 1: if(dimPattern.brightLength % 2 == 0) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_DEC() } break;
           case -5:
           case -1: if(dimPattern.brightLength % 2 == 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT() } break;
-          case 2:  if(dimSpeed > 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC() } break;
-          case -2: if(dimSpeed > 0) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC() } break;
+          case 2:  if(isMovingForward()) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC() } break;
+          case -2: if(isMovingForward()) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC() } break;
           case 3:  if(dimPattern.brightLength % 2 == 0) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
           case -3: if(dimPattern.brightLength % 2 == 0) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
           default: DUMP(delta)
         }
         break;
-      case DimParamChangeMode::Mix_F://worm on bright and freeze on trans, and vice versa for Mix_R
+      case DimParamChangeMode::Mix_F://worm on 1, center on 2
+        switch(delta) {
+          case 5:
+          case 1:  if(isMovingForward()) { ADJ_UPBEAT() } else { ADJ_UPBEAT_DEC() } break;
+          case -5:
+          case -1: if(isMovingForward()) { ADJ_UPBEAT_INC() } else { ADJ_UPBEAT() } break;
+          case 2:  if(isMovingForward()) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC() } break;
+          case -2: if(isMovingForward()) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC() } break;
+          case 3:  if(isMovingForward()) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC2() } break;
+          case -3: if(isMovingForward()) { ADJ_DOWNBEAT_INC2() } else { ADJ_DOWNBEAT_INC() } break;
+          default: DUMP(delta)
+        }
         break;
-      case DimParamChangeMode::Mix_R:
+      case DimParamChangeMode::Mix_R: // freeze on 1, center on 2
+        switch(delta) {
+          case 5:
+          case 1:  if(isMovingForward()) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT() } break;
+          case -5:
+          case -1: if(isMovingForward()) { ADJ_DOWNBEAT() } else { ADJ_DOWNBEAT_INC() } break;
+          case 2:  if(isMovingForward()) { ADJ_DOWNBEAT_DEC() } else { ADJ_DOWNBEAT_DEC() } break;
+          case -2: if(isMovingForward()) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC() } break;
+          case 3:  if(isMovingForward()) { ADJ_DOWNBEAT_DEC2() } else { ADJ_DOWNBEAT_DEC() } break;
+          case -3: if(isMovingForward()) { ADJ_DOWNBEAT_INC() } else { ADJ_DOWNBEAT_INC2() } break;
+          default: DUMP(delta)
+        }
         break;
       default:
         THROW("unknown dimParamChangeMode!")
@@ -427,10 +463,10 @@ bool PatternScroller::ScrollPatterns() {
   if(dimSpeed == 0) {
     lastDimMove = *curTime;
   }
-  else if(IsReadyForDimMove()) {
+  else if(isReadyForDimMove()) {
     dimMoved = true;
     // Scroll dim pattern
-    if(dimSpeed > 0) {
+    if(isMovingForward()) {
       if(--dimIndexFirst == 0xFF) { dimIndexFirst = dimPeriod - 1; }
     }
     else {
@@ -522,7 +558,7 @@ void PatternScroller::BlendDimPattern() {
   }
   else {
     // Blending just finished
-    if(IsRandomDimPattern()) {
+    if(isRandomDimPattern()) {
       oldDimPatternIndex = randomDimPatternIndex;
       do { randomDimPatternIndex = random8(1, NUM_DIM_PATTERNS-1); } while (randomDimPatternIndex == oldDimPatternIndex);
       WriteDimPattern(randomDimPatternIndex, targetDimPattern);
@@ -547,13 +583,13 @@ DimParamChangeMode PatternScroller::GetPreferredDimParamChangeMode(uint8_t patte
     case PatternType::Symmetric:
       return !(changeDimParamsWithMovement || abs(delta)==2) ? DimParamChangeMode::Center : DimParamChangeMode::Worm;
     case PatternType::Front:
-      return dimSpeed > 0 ? DimParamChangeMode::Grow_R : DimParamChangeMode::Grow_F;
+      return isMovingForward() ? DimParamChangeMode::Grow_R : DimParamChangeMode::Grow_F;
     case PatternType::Reverse:
-      return dimSpeed < 0 ? DimParamChangeMode::Grow_R : DimParamChangeMode::Grow_F;
+      return isMovingForward() ? DimParamChangeMode::Grow_F : DimParamChangeMode::Grow_R;
     case PatternType::Front3:
-      return abs(delta)==5 ? DimParamChangeMode::Worm : abs(delta)==2 ? DimParamChangeMode::Center : (dimSpeed > 0 ? DimParamChangeMode::Grow_F : DimParamChangeMode::Worm); 
+      return abs(delta)==5 ? DimParamChangeMode::Worm : abs(delta)==2 ? DimParamChangeMode::Center : (isMovingForward() ? DimParamChangeMode::Grow_F : DimParamChangeMode::Worm); 
     case PatternType::Reverse3:
-      return abs(delta)==5 ? DimParamChangeMode::Worm : abs(delta)==2 ? DimParamChangeMode::Center : (dimSpeed > 0 ? DimParamChangeMode::Grow_R : DimParamChangeMode::Worm);
+      return abs(delta)==5 ? DimParamChangeMode::Worm : abs(delta)==2 ? DimParamChangeMode::Center : (isMovingForward() ? DimParamChangeMode::Grow_R : DimParamChangeMode::Worm);
     default:
       THROW_DUMP(F("Invalid dimPattern used"), int(patternType))
   }

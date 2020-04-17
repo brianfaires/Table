@@ -8,14 +8,16 @@
 //#define USING_DEBUG_BOARD
 #define MANUAL_PARAMS
 #define ALLOW_ZERO_SPEED // For PatternController
-//#define TEST_PALETTES
 //#define EXPLICIT_PARAMETERS
-//#define TIMING_ANALYSIS
 #define CHECK_FOR_CLIPPING
+#define JUMP_DIM_PARAMS // For PatternScroller
+//#define TEST_PALETTES
+//#define TIMING_ANALYSIS
+//#define DEBUG_COLOR_PATTERNS
 //#define RUN_GAMMA_TESTS // Overrides everything else
-#define DEBUG_COLOR_PATTERNS
-#define DEBUG_BTN(msg)        //DEBUG(msg)
-#define DEBUG_ANIMATION(msg)  //DEBUG(msg)
+#define DEBUG_BTN(msg)            //DEBUG(msg)
+#define DEBUG_ANIMATION(msg)      //DEBUG(msg)
+#define DEBUG_PATTERN_SPLITS(msg) //DEBUG(msg)
 ////////////////////////////////////////
 
 

@@ -66,7 +66,7 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
   // Check for changes in dimPeriod and colorPeriod. If so, scaling will be off because its based on period.
   // So correct param scaling for old periods and be ready to start splitting to bring in the new pattern.
   if(ps->getDimPeriod() != scaledParams.dimPeriod || ps->getColorPeriod() != scaledParams.colorPeriod) {
-    if(!splitDisplay && dimSpeed != 0 && ps->IsStartOfDimPattern() && ps->IsReadyForDimMove()) {
+    if(!splitDisplay && dimSpeed != 0 && ps->isStartOfDimPattern() && ps->isReadyForDimMove()) {
       StartSplit(scaledParams);
     }
     ScaleParams(params, scaledParams, ps->getDimPeriod(), ps->getColorPeriod()); // Re-scale params with old periods
@@ -76,7 +76,6 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
 
   // Update primary PatternScroller
   ps->numColors = scaledParams.numColors;
-  //ps->colorPeriod = scaledParams.colorPeriod;
   ps->brightLength = scaledParams.brightLength;
   ps->transLength = scaledParams.transLength;
   ps->setDisplayMode(scaledParams.displayMode);
@@ -90,7 +89,6 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
     // Update secondary PatternScroller, using its existing periods
     ScaleParams(params, scaledParams, secondary->getDimPeriod(), secondary->getColorPeriod());
     secondary->numColors = scaledParams.numColors;
-    //secondary->colorPeriod = scaledParams.colorPeriod; // Don't update colorPeriod if already splitting
     secondary->brightLength = scaledParams.brightLength;
     secondary->transLength = scaledParams.transLength;
     secondary->setDisplayMode(scaledParams.displayMode);
@@ -197,7 +195,7 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_base
 }
 
 void PatternController::StartSplit(struct_base_show_params& params) {
-  DEBUG("Start Split");
+  DEBUG_PATTERN_SPLITS("Start Split");
   splitDisplay = true;
   splitIndex = ps->getDimSpeed() > 0 ? 0 : numLEDs;
   secondary->Clone(ps, params);
@@ -211,9 +209,9 @@ void PatternController::EndSplit(bool swap) {
     ps = secondary;
     secondary = swap;
     secondaryScrollerIsLow = !secondaryScrollerIsLow;
-    DEBUG("SWAP!");
+    DEBUG_PATTERN_SPLITS("SWAP!");
   }
-  DEBUG("End Split");
+  DEBUG_PATTERN_SPLITS("End Split");
 }
 
 void PatternController::WalkSpeeds() {

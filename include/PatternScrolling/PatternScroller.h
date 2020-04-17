@@ -16,8 +16,8 @@ class PatternScroller {
     bool Update(int8_t& shiftAmount);
     void SkipTime(uint32_t amount);
     void SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs, uint16_t numLEDsToSkip=0);
-    bool IsStartOfDimPattern();
-    bool IsReadyForDimMove();
+    bool isStartOfDimPattern();
+    bool isReadyForDimMove();
 
     // Getters/Setters
     void setDisplayMode(uint8_t displayMode);
@@ -63,9 +63,10 @@ class PatternScroller {
     DimParamChangeMode GetPreferredDimParamChangeMode(uint8_t patternIndex, int8_t delta);
 
     // Utility
-    bool IsHalfwayToDimMove();
+    bool isHalfwayToDimMove();
     uint8_t getTargetDimPatternIndex();
-    bool IsRandomDimPattern();
+    bool isRandomDimPattern();
+    bool isMovingForward();
     void WriteDimPattern(uint8_t patternIndex, uint8_t* outputArray);
     void WriteColorPattern(uint8_t patternIndex, CRGB* outputArray);
 
