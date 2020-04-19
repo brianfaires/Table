@@ -331,30 +331,14 @@ int8_t PatternScroller::GetDimParamDelta() {
     }
     case BaseDimParamChangeType::Opposite:
     {
-      if(dimPattern.brightLength < brightLength) {
-        dimPattern.brightLength++;
-        dimPattern.transLength = (dimPattern.dimPeriod-10)/3 - dimPattern.brightLength;
-        return -5;
-      }
-      else if(dimPattern.brightLength > brightLength) {
-        dimPattern.brightLength--;
-        dimPattern.transLength = (dimPattern.dimPeriod-10)/3 - dimPattern.brightLength;
-        return 5;
-      }
+      if(dimPattern.brightLength < brightLength) { return -5; }
+      else if(dimPattern.brightLength > brightLength) { return 5; }
       else { return 0; }
     }
     case BaseDimParamChangeType::Matched:
     {
-      if(dimPattern.brightLength < brightLength) {
-        dimPattern.brightLength++;
-        dimPattern.transLength = dimPattern.brightLength;
-        return 3;
-      }
-      else if(dimPattern.brightLength > brightLength) {
-        dimPattern.brightLength--;
-        dimPattern.transLength = dimPattern.brightLength;
-        return -3;
-      }
+      if(dimPattern.brightLength < brightLength) { return 3; }
+      else if(dimPattern.brightLength > brightLength) { return -3; }
       else { return 0; }
     }
     default:
@@ -364,7 +348,7 @@ int8_t PatternScroller::GetDimParamDelta() {
 }
 
 bool PatternScroller::StepDimParams(bool onDownbeat) {
-  // If sync'd with movement, and not time for a move, return false.
+  //If sync'd with movement, and not time for a move, return false.
   if(changeDimParamsWithMovement) {
     if(onDownbeat) { if(!isReadyForDimMove() ) { return false; } }
     else           { if(!isHalfwayToDimMove()) { return false; } }
@@ -389,7 +373,7 @@ bool PatternScroller::StepDimParams(bool onDownbeat) {
           dimPattern.brightLength++;
         }
       }
-      break;
+      return true;
     }
     case BaseDimParamChangeType::Opposite:
     {
@@ -401,7 +385,7 @@ bool PatternScroller::StepDimParams(bool onDownbeat) {
         dimPattern.brightLength--;
         dimPattern.transLength = (dimPattern.dimPeriod-10)/3 - dimPattern.brightLength;
       }
-      break;
+      return true;
     }
     case BaseDimParamChangeType::Matched:
     {
@@ -413,14 +397,12 @@ bool PatternScroller::StepDimParams(bool onDownbeat) {
         dimPattern.brightLength--;
         dimPattern.transLength = dimPattern.brightLength;
       }
-      break;
+      return true;
     }
     default:
       THROW_DUMP("Unrecognized baseDimParamChangeType.", int(baseDimParamChangeType))
       return false;
   }
-
-  return true;
 }
 
 bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
@@ -465,7 +447,7 @@ bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
           case -1: if(isMovingForward()) { WALK_DIM(true,0)  } else { WALK_DIM(true,1)   } break;
           case 2:  if(isMovingForward()) { WALK_DIM(false,0) } else { WALK_DIM(false,-2) } break;
           case -2: if(isMovingForward()) { WALK_DIM(true,0)  } else { WALK_DIM(true,2)   } break;
-          case 3:  if(isMovingForward()) { WALK_DIM(true,-2) } else { WALK_DIM(true,-1)  } break;
+          case 3:  if(isMovingForward()) { WALK_DIM(true,-1) } else { WALK_DIM(true,-1)  } break;
           case -3: if(isMovingForward()) { WALK_DIM(true,2)  } else { WALK_DIM(true,1)   } break;
           default: DUMP(delta)
         }
@@ -479,7 +461,7 @@ bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
           case 2:  if(isMovingForward()) { WALK_DIM(true,-2) } else { WALK_DIM(true,0)  } break;
           case -2: if(isMovingForward()) { WALK_DIM(false,2) } else { WALK_DIM(false,0) } break;
           case 3:  if(isMovingForward()) { WALK_DIM(true,-1) } else { WALK_DIM(true,-2) } break;
-          case -3: if(isMovingForward()) { WALK_DIM(true,1)  } else { WALK_DIM(true,2)  } break;
+          case -3: if(isMovingForward()) { WALK_DIM(true,2)  } else { WALK_DIM(true,2)  } break;
           default: DUMP(delta)
         }
         break;
@@ -553,10 +535,11 @@ bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
         DUMP(int(dimPatternChangeType))
     }
   }
-      
+
   if(dimPattern.dimPeriod != dimPeriod) { THROW("dimPeriod mismatch without a split!") }
   return delta != 0;
 }
+
 bool PatternScroller::ScrollPatterns() {
   bool dimMoved = false;
   // Move dim pattern
@@ -596,7 +579,7 @@ bool PatternScroller::ScrollPatterns() {
 
   return dimMoved;
 }
-void PatternScroller::ScrollPatternsWithoutTimer(int moveAmount) {
+void PatternScroller::ScrollPatternsWithoutTimer(int8_t moveAmount) {
   if(moveAmount > 0) {
     for(int i = 0; i < moveAmount; i++) {
       if(--dimIndexFirst == 0xFF) { dimIndexFirst = dimPeriod - 1; }

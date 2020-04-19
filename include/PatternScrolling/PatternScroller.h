@@ -66,7 +66,7 @@ class PatternScroller {
     void BlendColorPattern();
     void BlendDimPattern();
     bool ScrollPatterns();
-    void ScrollPatternsWithoutTimer(int moveAmount);
+    void ScrollPatternsWithoutTimer(int8_t moveAmount);
     DimPatternChangeType GetPreferredDimPatternChangeType(uint8_t patternIndex, int8_t delta);
 
     // Utility
