@@ -11,6 +11,7 @@
 //#define EXPLICIT_PARAMETERS
 #define CHECK_FOR_CLIPPING
 #define JUMP_DIM_PARAMS // For PatternScroller
+#define PULSE_BASE_PARAMS
 //#define TEST_PALETTES
 //#define TIMING_ANALYSIS
 //#define DEBUG_COLOR_PATTERNS
@@ -24,13 +25,13 @@
 /////////////////////////////////////////////
 ////////// Init Animation Settings //////////
 #define INIT_BASE_ANIMATION BaseAnimation::Scroller
-#define INIT_BASE_DIM_SPEED 0
+#define INIT_BASE_DIM_SPEED 64
 #define INIT_BASE_COLOR_SPEED 0
-#define INIT_BASE_BRIGHT_LENGTH 255
+#define INIT_BASE_BRIGHT_LENGTH 0
 #define INIT_BASE_TRANS_LENGTH 255
 #define INIT_BASE_NUM_COLORS 200
 #define INIT_BASE_DISPLAY_MODE 0
-#define INIT_BASE_DIM_PERIOD 0
+#define INIT_BASE_DIM_PERIOD 64
 #define INIT_BASE_COLOR_PERIOD 255
 
 #define INIT_TOP_ANIMATION TopAnimation::None
@@ -63,7 +64,7 @@
 
 ////////////////////////////////////////////////////////////////////////
 //////////////////// Init PatternController Settings ///////////////////
-#define INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH    5 * ONE_SEC
+#define INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH    2 * ONE_SEC
 #define INIT_PATTERN_CONTROLLER_DIM_BLEND_LENGTH    1.5 * ONE_SEC
 #define INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH  2 * ONE_SEC
 #define INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH  1 * ONE_SEC

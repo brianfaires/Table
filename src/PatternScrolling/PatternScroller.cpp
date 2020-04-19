@@ -163,8 +163,7 @@ bool PatternScroller::isRandomDimPattern() {
   #endif
   return targetDimPatternIndex == uint8_t(DimPatternName::Random);
 }
-bool PatternScroller::isMovingForward()
-{
+bool PatternScroller::isMovingForward() {
   return dimSpeed > 0;
 }
 
@@ -303,11 +302,6 @@ bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
   static bool blendParamsOn = false;
   static DimParamChangeMode changeMode = DimParamChangeMode::Center;
 
-  #define ADJUST_BOTH() if(dimPattern.brightLength < brightLength) { dimPattern.brightLength++; } \
-                        else if(dimPattern.brightLength > brightLength) { dimPattern.brightLength--; } \
-                        if(dimPattern.transLength < transLength) { dimPattern.transLength++; if(enableDoubleBrightMove && dimPattern.brightLength > brightLength) { dimPattern.brightLength--; } } \
-                        else if(dimPattern.transLength > transLength) { dimPattern.transLength--; if(enableDoubleBrightMove && dimPattern.brightLength < brightLength) { dimPattern.brightLength++; } } 
-  
   #define SCROLL_BACK() ScrollPatternsWithoutTimer(false); shiftAmount--;
   #define SCROLL_FORWARD() ScrollPatternsWithoutTimer(true); shiftAmount++;
   #define ADJ_DOWNBEAT() if(!changeDimParamsWithMovement || isReadyForDimMove()) { ADJUST_BOTH() }
@@ -321,18 +315,38 @@ bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
   #define ADJ_UPBEAT_DEC() if(!changeDimParamsWithMovement || isHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_BACK() }
   #define ADJ_UPBEAT_DEC2() if(!changeDimParamsWithMovement || isHalfwayToDimMove()) { ADJUST_BOTH() SCROLL_BACK() SCROLL_BACK() }
   
-  shiftAmount = 0; // Initialize to 0 and then increment/decrement - returns to PatternScroller to affect splitIndex
+  // Set delta, then let the rest follow based on that
   int8_t delta = 0;
-  if     (dimPattern.brightLength < brightLength)             { delta = 1; }
-  else if(dimPattern.brightLength > brightLength)             { delta = -1; }
-  // Using delta = 5/-5 to signal an actual change of 1/-1, but with bright and trans changing in opposite directions
-  if     (dimPattern.transLength < transLength) { delta = delta==-1 ? 5 : delta+2; }
-  else if(dimPattern.transLength > transLength) { delta = delta==1 ? -5 : delta-2; }
-  // Allow brightLength to be double updated only when offsetting transLength so delta=0; Using delta=4 to signal this
-  if(enableDoubleBrightMove) {
-    if(delta == 5 && dimPattern.brightLength > brightLength + 1) { delta = 4; }
-    else if(delta == -5 && dimPattern.brightLength + 1 < brightLength) { delta = 4; }
-  }
+
+  #if 0
+    #define ADJUST_BOTH() if(dimPattern.brightLength < brightLength) { dimPattern.brightLength++; } \
+                          else if(dimPattern.brightLength > brightLength) { dimPattern.brightLength--; } \
+                          if(dimPattern.transLength < transLength) { dimPattern.transLength++; if(enableDoubleBrightMove && dimPattern.brightLength > brightLength) { dimPattern.brightLength--; } } \
+                          else if(dimPattern.transLength > transLength) { dimPattern.transLength--; if(enableDoubleBrightMove && dimPattern.brightLength < brightLength) { dimPattern.brightLength++; } } 
+  
+
+    if     (dimPattern.brightLength < brightLength)             { delta = 1; }
+    else if(dimPattern.brightLength > brightLength)             { delta = -1; }
+    // Using delta = 5/-5 to signal an actual change of 1/-1, but with bright and trans changing in opposite directions
+    if     (dimPattern.transLength < transLength) { delta = delta==-1 ? 5 : delta+2; }
+    else if(dimPattern.transLength > transLength) { delta = delta==1 ? -5 : delta-2; }
+
+    if(enableDoubleBrightMove) {
+      // Allow brightLength to be double updated only when offsetting transLength so delta=0; Using delta=4 to signal this
+      if(delta == 5 && dimPattern.brightLength > brightLength + 1) { delta = 4; }
+      else if(delta == -5 && dimPattern.brightLength + 1 < brightLength) { delta = 4; }
+    }
+  #else
+    #define ADJUST_BOTH() if(dimPattern.brightLength < brightLength) { dimPattern.brightLength++; dimPattern.transLength = (dimPattern.dimPeriod-10)/3 - dimPattern.brightLength; } \
+                          else if(dimPattern.brightLength > brightLength) { dimPattern.brightLength--; dimPattern.transLength = (dimPattern.dimPeriod-10)/3 - dimPattern.brightLength; }
+    // Sync trans and bright - bright is driving
+    if     (dimPattern.brightLength < brightLength)             { delta = -5;}
+    else if(dimPattern.brightLength > brightLength)             { delta = 5; }
+  #endif
+
+
+  // Delta is set.  Now do the adjustment and movement accordingly
+  shiftAmount = 0; // Initialize to 0 and then increment/decrement - returns to PatternScroller to affect splitIndex
 
   if(delta == 0) {
     // No changes
@@ -347,7 +361,7 @@ bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
       // Lock in the changeMode at the start of the blend
       blendParamsOn = true;
       if(dimParamChangeMode != DimParamChangeMode::Preferred) { changeMode = dimParamChangeMode; }
-      else if(dimBlendOn && (*curTime - lastDimPatternChange - dimPauseLength >= dimBlendLength/2)) {
+      else if(dimBlendOn && (*curTime - lastDimPatternChange >= dimPauseLength + dimBlendLength/2)) {
         changeMode = GetPreferredDimParamChangeMode(getTargetDimPatternIndex(), delta);
       }
       else {
@@ -581,7 +595,7 @@ DimParamChangeMode PatternScroller::GetPreferredDimParamChangeMode(uint8_t patte
   PatternType patternType = dimPattern.getPatternType(DimPatternName(patternIndex));
   switch(patternType) {
     case PatternType::Symmetric:
-      return !(changeDimParamsWithMovement || abs(delta)==2) ? DimParamChangeMode::Center : DimParamChangeMode::Worm;
+      return (!changeDimParamsWithMovement || abs(delta)==2) ? DimParamChangeMode::Center : DimParamChangeMode::Worm;
     case PatternType::Front:
       return isMovingForward() ? DimParamChangeMode::Grow_R : DimParamChangeMode::Grow_F;
     case PatternType::Reverse:

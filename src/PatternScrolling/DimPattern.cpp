@@ -24,8 +24,8 @@ PatternType DimPattern::getPatternType(DimPatternName pattern) { return allDimPa
 DimPattern::DimPattern() {
   allDimPatternTypes[int(DimPatternName::Random)] =    PatternType::Symmetric;
   allDimPatternTypes[int(DimPatternName::Barbell)] =   PatternType::Symmetric;
-  allDimPatternTypes[int(DimPatternName::Bowties_F)] = PatternType::Symmetric;
-  allDimPatternTypes[int(DimPatternName::Bowties_R)] = PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Bowties)] =   PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Diamonds)] =  PatternType::Symmetric;
   allDimPatternTypes[int(DimPatternName::Comet_F)] =   PatternType::Front;
   allDimPatternTypes[int(DimPatternName::Comet_R)] =   PatternType::Reverse;
   allDimPatternTypes[int(DimPatternName::Slide_H)] =   PatternType::Symmetric;
@@ -132,7 +132,7 @@ void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
       FADE_DOWN(transLength+2)
       break;
     }
-    case DimPatternName::Bowties_F:
+    case DimPatternName::Bowties:
     {
       uint8_t transOuter = (transLength+3) / 2;
       uint8_t transInner = transLength + 3 - transOuter;
@@ -149,7 +149,7 @@ void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
       SINGLE_BRIGHT()
       break;
     }
-    case DimPatternName::Bowties_R:
+    case DimPatternName::Diamonds:
     {
       uint8_t transOuter = (transLength+2) / 2;
       uint8_t transInner = transLength + 2 - transOuter;

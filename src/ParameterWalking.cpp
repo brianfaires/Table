@@ -1,17 +1,20 @@
 #include "Globals.h"
 
 void UpdateAnimationParameters(uint32_t curTime) {
-  if(timing.now - timing.lastBaseParamWalk >= layerConfig.baseParamWalkTime) {
-    RandomizeBaseParams();
-    timing.lastBaseParamWalk = timing.now;
-  }
+  #ifdef PULSE_BASE_PARAMS
+    PulseBaseParams(curTime);
+  #else
+    if(timing.now - timing.lastBaseParamWalk >= layerConfig.baseParamWalkTime) {
+      RandomizeBaseParams();
+      timing.lastBaseParamWalk = timing.now;
+    }
+  #endif
   
   if(timing.now - timing.lastTopParamWalk >= layerConfig.topParamWalkTime) {
     WalkTopParams();
     timing.lastTopParamWalk = timing.now;
   }
 
-  //PulseBaseParams(curTime);
   
   #ifdef MANUAL_PARAMS
     if(ProcessSerialInput()) { 
@@ -22,25 +25,36 @@ void UpdateAnimationParameters(uint32_t curTime) {
 }
 
 void PulseBaseParams(uint32_t curTime) {
-  const uint32_t pulseLength = 2.3*ONE_SEC;//MIN / 128;
+  const uint32_t pulseLength = 0.6*ONE_SEC;//MIN / 128;
   
   static uint32_t curCycle = 0;
-  //static bool brightLow = false;
+  static bool brightLow = false;
   static bool transLow = false;
   //static bool brightMove = false;
   //static bool transMove = true;
   
   if(curTime / pulseLength != curCycle) {
     curCycle = curTime / pulseLength;
+
+    /////// Changes to make each period ///////
     //if(brightMove) { brightLow = !brightLow; }
     //if(transMove) { transLow = !transLow; }
     transLow = !transLow;
+    brightLow = !brightLow;
+    
     //brightMove = false;
     //transMove = !brightMove;
     //if(!brightMove) { transMove = true; }
     //else if(brightLow != transLow) { transMove = random8(2); }
   }
 
+
+  float curPulseLength = float(curTime % pulseLength) / pulseLength;
+  //baseParams.transLength = transLow ? 255*curPulseLength : 255*(1-curPulseLength);
+  baseParams.brightLength = brightLow ? 255*curPulseLength : 255*(1-curPulseLength);
+  //baseParams.brightLength = 255 - baseParams.transLength;
+  
+/*
   //baseParams.transLength = transLow ? 0 : 255;
   //baseParams.brightLength = transLow ? 255 : 0;
 
@@ -52,6 +66,7 @@ void PulseBaseParams(uint32_t curTime) {
   
   //if(brightMove) { baseParams.brightLength = brightLow ? curPulseLength : 255 - curPulseLength; }
   //if(transMove)  { baseParams.transLength  = transLow  ? curPulseLength : 255 - curPulseLength; }
+*/
 }
 
 void RandomizeBaseParams() {

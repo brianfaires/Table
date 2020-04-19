@@ -185,9 +185,16 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_base
     output.colorSpeed = output.dimSpeed/2;//scaleParam(params.colorSpeed, colorSpeed_lower, colorSpeed_upper);
     output.displayMode = scaleParam(params.displayMode, 0, NUM_DIM_PATTERNS * NUM_COLOR_PATTERNS - 1);
     output.numColors = scaleParam(params.numColors, 2, PALETTE_SIZE-1);
-    uint8_t extraPixels = (output.dimPeriod-10) % 3;
-    uint8_t transUpperLimit =  (output.dimPeriod-10)/3 + (extraPixels==2 ? 1 : 0);
-    uint8_t brightUpperLimit = (output.dimPeriod-10)/3 + (extraPixels==1 ? 1 : 0);
+
+    #ifdef PAD_PATTERN_PIXELS
+      uint8_t extraPixels = (output.dimPeriod-10) % 3;
+      uint8_t transUpperLimit =  (output.dimPeriod-10)/3 + (extraPixels==2 ? 1 : 0);
+      uint8_t brightUpperLimit = (output.dimPeriod-10)/3 + (extraPixels==1 ? 1 : 0);
+    #else
+      uint8_t transUpperLimit =  (output.dimPeriod-10)/3;
+      uint8_t brightUpperLimit = (output.dimPeriod-10)/3;
+    #endif
+
     output.transLength =  scaleParam(params.transLength,  0, transUpperLimit);
     output.brightLength = scaleParam(params.brightLength, 0, brightUpperLimit);
     //DEBUG(params.brightLength+"/"+output.brightLength + ", " + params.transLength+"/"+output.transLength);
