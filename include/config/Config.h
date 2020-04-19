@@ -69,7 +69,8 @@
 #define INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH  2 * ONE_SEC
 #define INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH  1 * ONE_SEC
 #define INIT_PATTERN_SCROLLER_BRIGHTNESS 255
-#define INIT_DIM_PARAM_CHANGE_TYPE DimParamChangeMode::Preferred
+#define INIT_DIM_PARAM_CHANGE_TYPE DimPatternChangeType::Preferred
+#define INIT_BASE_DIM_PARAM_CHANGE_TYPE BaseDimParamChangeType::Opposite
 #define INIT_CHANGE_DIM_PARAMS_WITH_MOVEMENT true
 #define INIT_ENABLE_DOUBLE_BRIGHT_MOVE false
 ////////////////////////////////////////////////////////////////////////

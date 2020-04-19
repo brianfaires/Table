@@ -18,13 +18,14 @@ class PatternController {
     void setDimPauseLength(uint32_t value);
     uint32_t getDimBlendLength();
     void setDimBlendLength(uint32_t value);
-    DimParamChangeMode getDimParamChangeMode();
+    DimPatternChangeType getDimPatternChangeType();
     bool getChangeDimParamsWithMovement();
     bool getEnableDoubleBrightMove();
     void setEnableDoubleBrightMove(bool value);
-    void setDimParamChangeMode(DimParamChangeMode value);
-    void setDimParamChangeMode(bool changeDimParamsWithMovement);
-    void setDimParamChangeMode(DimParamChangeMode value, bool changeDimParamsWithMovement);
+    void setDimPatternChangeType(DimPatternChangeType value);
+    void setDimPatternChangeType(bool changeDimParamsWithMovement);
+    void setDimPatternChangeType(DimPatternChangeType value, bool changeDimParamsWithMovement);
+    void setBaseDimParamChangeType(BaseDimParamChangeType value);
     uint8_t getBrightness();
     void setBrightness(uint8_t brightness);
     

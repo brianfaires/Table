@@ -5,8 +5,11 @@
 
 #define MAX_PERIOD 210
 
-enum class DimParamChangeMode { Preferred, Grow_F, Grow_R, Worm, Freeze, Center, Mix_F, Mix_R, Count };
-#define NUM_DIM_PARAM_CHANGE_TYPES uint8_t(DimParamChangeMode::Count)
+enum class BaseDimParamChangeType { Manual, Matched, Opposite, Count };
+#define NUM_BASE_DIM_PARAM_CHANGE_TYPES uint8_t(BaseDimParamChangeType::Count)
+
+enum class DimPatternChangeType { Preferred, Grow_F, Grow_R, Worm, Freeze, Center, Mix_F, Mix_R, Count };
+#define NUM_DIM_PARAM_CHANGE_TYPES uint8_t(DimPatternChangeType::Count)
 
 class PatternScroller {
   public:
@@ -38,9 +41,11 @@ class PatternScroller {
     uint8_t getNumBlanks();
         
     // Params
-    DimParamChangeMode dimParamChangeMode;
+    BaseDimParamChangeType baseDimParamChangeType;
     bool changeDimParamsWithMovement;
     bool enableDoubleBrightMove;
+
+    DimPatternChangeType dimPatternChangeType;
     uint8_t brightness;
     uint8_t numColors, brightLength, transLength;
         
@@ -56,11 +61,13 @@ class PatternScroller {
     // Smoothing
     bool WalkColorParams();
     bool WalkDimParams(int8_t& shiftAmount);
+    int8_t GetDimParamDelta();
+    bool StepDimParams(bool onDownbeat);
     void BlendColorPattern();
     void BlendDimPattern();
     bool ScrollPatterns();
-    void ScrollPatternsWithoutTimer(bool moveForward);
-    DimParamChangeMode GetPreferredDimParamChangeMode(uint8_t patternIndex, int8_t delta);
+    void ScrollPatternsWithoutTimer(int moveAmount);
+    DimPatternChangeType GetPreferredDimPatternChangeType(uint8_t patternIndex, int8_t delta);
 
     // Utility
     bool isHalfwayToDimMove();

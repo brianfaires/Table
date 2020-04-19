@@ -232,7 +232,7 @@ bool ProcessSerialInput() {
     else if(paramNum == next++) { pc.setColorBlendLength(IO_TIME_FACTOR * value); }
     else if(paramNum == next++) { pc.setDimPauseLength(IO_TIME_FACTOR * value); }
     else if(paramNum == next++) { pc.setDimBlendLength(IO_TIME_FACTOR * value); }
-    else if(paramNum == next++) { pc.setDimParamChangeMode(DimParamChangeMode(value % NUM_DIM_PARAM_CHANGE_TYPES), value >= NUM_DIM_PARAM_CHANGE_TYPES); }
+    else if(paramNum == next++) { pc.setDimPatternChangeType(DimPatternChangeType(value % NUM_DIM_PARAM_CHANGE_TYPES), value >= NUM_DIM_PARAM_CHANGE_TYPES); }
     else { THROW("Invalid paramNum") return false; }
 
     return true;
@@ -340,7 +340,7 @@ void PrintPatternControllerParams() {
   output += String(parameterCounter++) + ".ColorBlendLength:\t  " + (pc.getColorBlendLength()/IO_TIME_FACTOR) + "\n";
   output += String(parameterCounter++) + ".DimPauseLength:\t  " + (pc.getDimPauseLength()/IO_TIME_FACTOR) + "\n";
   output += String(parameterCounter++) + ".DimBlendLength:\t  " + (pc.getDimBlendLength()/IO_TIME_FACTOR) + "\n";
-  output += String(parameterCounter++) + ".DimParamChangeMode:\t  " + (NUM_DIM_PARAM_CHANGE_TYPES*pc.getChangeDimParamsWithMovement() + int(pc.getDimParamChangeMode())) + "\n";
+  output += String(parameterCounter++) + ".DimPatternChangeType:\t  " + (NUM_DIM_PARAM_CHANGE_TYPES*pc.getChangeDimParamsWithMovement() + int(pc.getDimPatternChangeType())) + "\n";
   
   PRINT(output)
   if(parameterCounter != NUM_BASE_PARAMS + NUM_TOP_PARAMS + NUM_PM_PARAMS + NUM_LAYER_PARAMS + NUM_PATTERN_PARAMS) { THROW_DUMP("Parameter count mismatch.", parameterCounter) }
