@@ -1,6 +1,5 @@
 #include "Globals.h"
 
-
 void fill_gradient_HSV_linear(CHSV* leds, uint16_t numPixels, CHSV a, CHSV b) {
   int16_t x1, y1, x2, y2;
   getCartesianFromHSV(a, x1, y1);

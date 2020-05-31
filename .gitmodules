@@ -1,0 +1,6 @@
+[submodule "lib/FastLED"]
+	path = lib/FastLED
+	url = https://github.com/brianfaires/FastLED.git
+[submodule "lib/ArduinoTrace"]
+	path = lib/ArduinoTrace
+	url = https://github.com/brianfaires/ArduinoTrace.git
