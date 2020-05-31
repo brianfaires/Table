@@ -4,35 +4,31 @@
 
 #define NUM_PATTERN_PARAMS 5
 
+struct struct_patternScrollerParams {
+  uint32_t brightness;
+  uint32_t colorPauseLength;
+  uint32_t dimPauseLength;
+  uint32_t colorBlendLength;
+  uint32_t dimBlendLength;
+
+  bool enableDoubleBrightMove;
+  bool changeDimParamsWithMovement;
+  DimPatternChangeType dimPatternChangeType;
+  BaseDimParamChangeType baseDimParamChangeType;
+};
+
 class PatternController {
   public:
+    struct_patternScrollerParams scrollParams;
+
     void Init(uint16_t _numLEDs, uint32_t* curTime, struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, const uint16_t* _allowedDimPeriods, const uint16_t* allowedColorPeriods);
     void Update(struct_base_show_params& params, CRGB* target, uint8_t* target_b);
     void SkipTime(uint32_t amount);
 
-    uint32_t getColorPauseLength();
-    void setColorPauseLength(uint32_t value);
-    uint32_t getColorBlendLength();
-    void setColorBlendLength(uint32_t value);
-    uint32_t getDimPauseLength();
-    void setDimPauseLength(uint32_t value);
-    uint32_t getDimBlendLength();
-    void setDimBlendLength(uint32_t value);
-    DimPatternChangeType getDimPatternChangeType();
-    bool getChangeDimParamsWithMovement();
-    bool getEnableDoubleBrightMove();
-    void setEnableDoubleBrightMove(bool value);
-    void setDimPatternChangeType(DimPatternChangeType value);
-    void setDimPatternChangeType(bool changeDimParamsWithMovement);
-    void setDimPatternChangeType(DimPatternChangeType value, bool changeDimParamsWithMovement);
-    void setBaseDimParamChangeType(BaseDimParamChangeType value);
-    uint8_t getBrightness();
-    void setBrightness(uint8_t brightness);
     
   private:
     PatternScroller ps1, ps2;
-    PatternScroller *ps;
-    PatternScroller *secondary;
+    PatternScroller *ps, *secondary;
     void ScaleParams(struct_base_show_params& params, struct_base_show_params& output, uint8_t dimPeriod = 0, uint8_t colorPeriod = 0);
     void WalkSpeeds();
     void StartSplit(struct_base_show_params& params);
