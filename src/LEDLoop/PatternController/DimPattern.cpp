@@ -1,4 +1,4 @@
-#include "PatternScrolling\DimPattern.h"
+#include "LEDLoop/PatternScrolling/DimPattern.h"
 
 #define GET_FADE_STEP_SIZE(x) 255.0f / (x+1)
 #define SETUP_FADE_DOWN(x)  float fadeStepSize = GET_FADE_STEP_SIZE(x);
@@ -24,8 +24,8 @@ PatternType DimPattern::getPatternType(DimPatternName pattern) { return allDimPa
 DimPattern::DimPattern() {
   allDimPatternTypes[int(DimPatternName::Random)] =    PatternType::Symmetric;
   allDimPatternTypes[int(DimPatternName::Barbell)] =   PatternType::Symmetric;
-  allDimPatternTypes[int(DimPatternName::Bowties)] =   PatternType::Symmetric;
-  allDimPatternTypes[int(DimPatternName::Diamonds)] =  PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Bowties)] =   PatternType::AllCenter;
+  allDimPatternTypes[int(DimPatternName::Diamonds)] =  PatternType::AllCenter;
   allDimPatternTypes[int(DimPatternName::Comet_F)] =   PatternType::Front;
   allDimPatternTypes[int(DimPatternName::Comet_R)] =   PatternType::Reverse;
   allDimPatternTypes[int(DimPatternName::Slide_H)] =   PatternType::Symmetric;
@@ -33,11 +33,11 @@ DimPattern::DimPattern() {
   allDimPatternTypes[int(DimPatternName::Towers_H)] =  PatternType::Symmetric;
   allDimPatternTypes[int(DimPatternName::Towers_L)] =  PatternType::Symmetric;
   allDimPatternTypes[int(DimPatternName::Snake)] =     PatternType::Symmetric;
-  allDimPatternTypes[int(DimPatternName::Snake3)] =    PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Snake3)] =    PatternType::MixR;
   allDimPatternTypes[int(DimPatternName::Towers)] =    PatternType::Symmetric;
   allDimPatternTypes[int(DimPatternName::Comets3_F)] = PatternType::Front3;
   allDimPatternTypes[int(DimPatternName::Comets3_R)] = PatternType::Reverse3;
-  allDimPatternTypes[int(DimPatternName::Two_Sided)] = PatternType::Symmetric;
+  allDimPatternTypes[int(DimPatternName::Two_Sided)] = PatternType::AllCenter;
 }
 
 void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {

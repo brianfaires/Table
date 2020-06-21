@@ -1,6 +1,6 @@
-#include "Globals.h"
+#include "LEDLoop/LEDLoop.h"
 
-void Glitter() {
+void LEDLoop::Glitter() {
   static uint32_t lastGlitter = 0;
 
   int8_t refreshRate = scaleParam(topParams.speed, 9, 13);
@@ -16,7 +16,7 @@ void Glitter() {
   }
 }
 
-void Rain() {
+void LEDLoop::Rain() {
   static uint32_t lastMove = 0;
   
   uint8_t portion = scaleParam(topParams.portion, 8, 15);
@@ -53,7 +53,7 @@ void Rain() {
   }
 }
 
-void Twinkle() {
+void LEDLoop::Twinkle() {
   uint8_t spawnRate = scaleParam(topParams.portion, 1, 20);
   uint8_t growRate = 2*scaleParam(topParams.speed, 1, 8);
 
@@ -85,7 +85,7 @@ typedef struct {
   CRGB color;
 } Bouncy;
 
-void Bounce() {
+void LEDLoop::Bounce() {
   const uint8_t MAX_BOUNCY_SPAWN_HEIGHT = 100;
   const uint8_t MIN_BOUNCY_SPAWN_HEIGHT = 40;
   const uint8_t MAX_BOUNCIES = 4;
@@ -134,7 +134,7 @@ void Bounce() {
   }
 }
 
-void SpawnNewBouncy() {
+void LEDLoop::SpawnNewBouncy() {
   uint8_t i;
   for(i = 0; i < MAX_BOUNCIES; i++) {
     if(!objects[i]) {
@@ -155,11 +155,11 @@ void SpawnNewBouncy() {
 }
 */
 
-void FourComets(uint32_t curTime) {
+void LEDLoop::FourComets() {
   const uint8_t NUM_COMETS = 4;
   static struct_comet comets[NUM_COMETS];
   static uint16_t moveIndex = 0;
-  static uint32_t lastMove = curTime;
+  static uint32_t lastMove = timing.now;
   
   uint8_t cometLength = scaleParam(topParams.portion, 8, 24);
   uint8_t cometSpeed = scaleParam(topParams.speed, 8, 30);
@@ -183,14 +183,14 @@ void FourComets(uint32_t curTime) {
     DrawComet(&comets[i], cometLength, moveIndex);
   }
 
-  if(curTime - lastMove > FPS_TO_TIME(cometSpeed)) {
+  if(timing.now - lastMove > FPS_TO_TIME(cometSpeed)) {
     moveIndex++;
     if(moveIndex == 87) {
       moveIndex = 0;
     }
   }
 }
-void DrawComet(struct_comet* comet, uint8_t cometLength, uint16_t moveIndex) {
+void LEDLoop::DrawComet(struct_comet* comet, uint8_t cometLength, uint16_t moveIndex) {
   uint16_t curPixel;
   if(comet->moveForward) { curPixel = (comet->startPos + moveIndex) % NUM_LEDS; }
   else { curPixel = (comet->startPos - moveIndex + NUM_LEDS) % NUM_LEDS; }

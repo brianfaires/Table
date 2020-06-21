@@ -6,8 +6,7 @@
 
 class PatternController {
   public:
-    void Init(uint16_t _numLEDs, uint32_t* curTime, struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, const uint16_t* _allowedDimPeriods, const uint16_t* allowedColorPeriods);
-    void Update(struct_base_show_params& params, CRGB* target, uint8_t* target_b);
+    void Init(uint16_t _numLEDs, uint32_t* curTime, struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, std::vector<uint16_t> _allowedDimPeriods, std::vector<uint16_t> allowedColorPeriods, uint8_t numAllowedDimPeriods, uint8_t numAllowedColorPeriods);    void Update(struct_base_show_params& params, CRGB* target, uint8_t* target_b);
     void SkipTime(uint32_t amount);
 
     uint32_t getColorPauseLength();
@@ -30,12 +29,14 @@ class PatternController {
     void setBrightness(uint8_t brightness);
     
   private:
+    uint8_t NUM_ALLOWED_DIM_PERIODS;
+    uint8_t NUM_ALLOWED_COLOR_PERIODS;
     PatternScroller ps1, ps2;
     PatternScroller *ps;
     PatternScroller *secondary;
-    void ScaleParams(struct_base_show_params& params, struct_base_show_params& output, uint8_t dimPeriod = 0, uint8_t colorPeriod = 0);
+    void ScaleParams(struct_base_show_params& params, struct_scroller_params& output, uint8_t dimPeriod = 0, uint8_t colorPeriod = 0);
     void WalkSpeeds();
-    void StartSplit(struct_base_show_params& params);
+    void StartSplit(struct_scroller_params& params);
     void EndSplit(bool swap);
 
     bool splitDisplay = false;
@@ -44,7 +45,7 @@ class PatternController {
     uint16_t numLEDs;
     int8_t colorSpeed, dimSpeed;
     
-    const uint16_t* allowedDimPeriods;
-    const uint16_t* allowedColorPeriods;
+    std::vector<uint16_t> allowedDimPeriods;
+    std::vector<uint16_t> allowedColorPeriods;
 };
 

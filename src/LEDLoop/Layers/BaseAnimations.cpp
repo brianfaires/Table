@@ -1,11 +1,12 @@
-#include "Globals.h"
+#include "LEDLoop/LEDLoop.h"
+#include "Definitions.h"
 
 // Base animations
 const uint8_t FIRE_COOLING = 7;
 const uint8_t FIRE_SPARKING = 120;
 const uint8_t FIRE_MIN_SPARK_SIZE = 160;
 
-void Fire() {
+void LEDLoop::Fire() {
   static bool gReverseDirection = false;
   
   static CRGBPalette16 gPal = HeatColors_p;
@@ -14,7 +15,7 @@ void Fire() {
   //   static CRGBPalette16 gPal = CRGBPalette16( CRGB::Black, CRGB::Red, CRGB::White);
   CreateFirePalette(&gPal);
 
-  static byte heat[NUM_LEDS];
+  static byte heat[MAX_LEDS];
 
   // Step 1.  Cool down every cell a little
     for( int i = 0; i < NUM_LEDS; i++) {
@@ -48,7 +49,7 @@ void Fire() {
     }
 }
 
-void CreateFirePalette(CRGBPalette16 *firePalette) {
+void LEDLoop::CreateFirePalette(CRGBPalette16 *firePalette) {
   CRGB steps[3];
   hsv2rgb_rainbow(pm.palette[0], steps[0]);
   hsv2rgb_rainbow(pm.palette[2], steps[1]);
@@ -105,7 +106,7 @@ void CreateFirePalette(CRGBPalette16 *firePalette) {
 
 // Under development
 
-void ScrollingSaturation(uint8_t nWhite, uint8_t nTrans, uint8_t nPure) {
+void LEDLoop::ScrollingSaturation(uint8_t nWhite, uint8_t nTrans, uint8_t nPure) {
   const uint8_t maxBlendAmount = 160;
   //const uint8_t whiteBrightness = 210;
 
@@ -142,11 +143,11 @@ void ScrollingSaturation(uint8_t nWhite, uint8_t nTrans, uint8_t nPure) {
 }
 
 
-void DiscoFire() {
+void LEDLoop::DiscoFire() {
   
 }
 
-void Orbs() {
+void LEDLoop::Orbs() {
   const uint8_t centerPoint = 51;
   const uint8_t minRadius = 3;
   //const uint8_t maxRadius = 51;
@@ -178,7 +179,7 @@ void Orbs() {
   for(CRGB & pixel : leds) pixel.fadeToBlackBy(fadeRate);
 }
 
-void ScrollingGlimmerBands() {
+void LEDLoop::ScrollingGlimmerBands() {
   const uint8_t glimmerPortion = 4;
   const uint8_t glimmerFloor = 180;
   CRGB colorPattern[baseParams.dimPeriod];
@@ -199,7 +200,7 @@ void ScrollingGlimmerBands() {
   }
 }
 
-void CenterSpawn() {
+void LEDLoop::CenterSpawn() {
   // Propogate out
   for(uint16_t i = 0; i < NUM_LEDS/2; i++) {
     leds[i] = leds[i+1];
@@ -219,10 +220,10 @@ void CenterSpawn() {
 /////////////////// Stackers ///////////////////////
 #define NUM_STACKERS 4
 struct_stacker stackers[NUM_STACKERS];
-void Stacks(uint32_t curTime) {  
+void LEDLoop::Stacks() {  
   static uint16_t rotationIndex = NUM_LEDS - 18;
-  static uint8_t clearMode = InitStackers(rotationIndex, curTime);
-  static uint32_t lastRotation = curTime;
+  static uint8_t clearMode = InitStackers(rotationIndex);
+  static uint32_t lastRotation = timing.now;
   
   uint8_t moveSpeed = scaleParam((uint8_t)2*abs(baseParams.dimSpeed), uint8_t(20), uint8_t(REFRESH_RATE));
   int8_t rotationSpeed = scaleParam(baseParams.colorSpeed, int8_t(-REFRESH_RATE), int8_t(REFRESH_RATE));
@@ -232,7 +233,7 @@ void Stacks(uint32_t curTime) {
 
   // Rotate stackers
   if(rotationSpeed != 0) {
-    while(curTime - lastRotation >= FPS_TO_TIME(abs(rotationSpeed))) {
+    while(timing.now - lastRotation >= FPS_TO_TIME(abs(rotationSpeed))) {
       lastRotation += FPS_TO_TIME(abs(rotationSpeed));
       for(uint8_t i = 0; i < NUM_STACKERS; i++) {
         if(rotationSpeed < 0) {
@@ -255,21 +256,21 @@ void Stacks(uint32_t curTime) {
   bool done = true;
   for(uint8_t i = 0; i < NUM_STACKERS; i++) {
     stackers[i].moveSpeed = stackers[i].moveForward ? moveSpeed + rotationSpeed : abs(rotationSpeed - moveSpeed);
-    done &= DrawStacker(&stackers[i], curTime);
+    done &= DrawStacker(&stackers[i]);
   }
 
   if(done) {
     // Clear stackers
-    if(ClearStackers(clearMode, curTime)) {
+    if(ClearStackers(clearMode)) {
       // Reset animation and load new params
-      clearMode = InitStackers(rotationIndex, curTime);
+      clearMode = InitStackers(rotationIndex);
     }
   }
 }
-uint8_t InitStackers(uint16_t rotationIndex, uint32_t curTime) {
+uint8_t LEDLoop::InitStackers(uint16_t rotationIndex) {
   uint8_t numColors = scaleParam(baseParams.numColors, 1, 4);
-  uint8_t stackSize = scaleParam(baseParams.brightLength, 5, 15);
-  uint8_t spacing = scaleParam(baseParams.transLength, 0, 4);
+  uint8_t stackSize = 0;//scaleParam(baseParams.brightLength, 5, 15);
+  uint8_t spacing = 0;//scaleParam(baseParams.transLength, 0, 4);
   spacing += spacing % 2; // Keep spacing even
     
   stackers[0].startPixel = (0 + rotationIndex + NUM_LEDS) % NUM_LEDS;
@@ -297,13 +298,13 @@ uint8_t InitStackers(uint16_t rotationIndex, uint32_t curTime) {
     stackers[i].spacing = spacing;
     stackers[i].moveIndex = stackers[i].startPixel;
     stackers[i].moveForward = i % 2 == 0;
-    stackers[i].lastMove = curTime;
+    stackers[i].lastMove = timing.now;
   }
 
   // return clearMode
   return scaleParam(baseParams.displayMode, 0, 3);
 }
-bool DrawStacker(struct_stacker* s, uint32_t curTime) {
+bool LEDLoop::DrawStacker(struct_stacker* s) {
   uint16_t curPixel = s->endPixel;
   for(uint8_t i = 0; i < s->numStacks; i++) {
     // Draw stack
@@ -346,7 +347,7 @@ bool DrawStacker(struct_stacker* s, uint32_t curTime) {
   }
   
   // Move
-  while(curTime - s->lastMove >= FPS_TO_TIME(s->moveSpeed)) {
+  while(timing.now - s->lastMove >= FPS_TO_TIME(s->moveSpeed)) {
     s->lastMove += FPS_TO_TIME(s->moveSpeed);
     if(s->moveForward) {
       s->moveIndex++;
@@ -373,7 +374,7 @@ bool DrawStacker(struct_stacker* s, uint32_t curTime) {
 
   return false;
 }
-bool ClearStackers(uint8_t clearMode, uint32_t curTime) {
+bool LEDLoop::ClearStackers(uint8_t clearMode) {
   static uint16_t clearMoveIndex = 0;
   
   if(clearMode == 0) { return true; }
@@ -395,7 +396,7 @@ bool ClearStackers(uint8_t clearMode, uint32_t curTime) {
       }
     }
 
-    while(curTime - stackers[0].lastMove >= FPS_TO_TIME(stackers[0].moveSpeed)) {
+    while(timing.now - stackers[0].lastMove >= FPS_TO_TIME(stackers[0].moveSpeed)) {
       for(uint8_t i = 0; i < NUM_STACKERS; i++) { stackers[i].lastMove += FPS_TO_TIME(stackers[i].moveSpeed); }
       clearMoveIndex++;
       if(clearMoveIndex >= NUM_LEDS / NUM_STACKERS) { clearMoveIndex = 0; return true; }
@@ -419,7 +420,7 @@ bool ClearStackers(uint8_t clearMode, uint32_t curTime) {
       }
     }
 
-    while(curTime - stackers[0].lastMove >= FPS_TO_TIME(stackers[0].moveSpeed)) {
+    while(timing.now - stackers[0].lastMove >= FPS_TO_TIME(stackers[0].moveSpeed)) {
       for(uint8_t i = 0; i < NUM_STACKERS; i++) { stackers[i].lastMove += FPS_TO_TIME(stackers[i].moveSpeed); }
       clearMoveIndex++;
       if(clearMoveIndex >= NUM_LEDS / NUM_STACKERS) { clearMoveIndex = 0; return true; }
@@ -451,7 +452,7 @@ bool ClearStackers(uint8_t clearMode, uint32_t curTime) {
       }
   
       // Move and check for end of clear area
-      while((curTime - stackers[i].lastMove) >= FPS_TO_TIME(stackers[i].moveSpeed)) {
+      while((timing.now - stackers[i].lastMove) >= FPS_TO_TIME(stackers[i].moveSpeed)) {
         stackers[i].lastMove += FPS_TO_TIME(stackers[i].moveSpeed);
         if(i == NUM_STACKERS-1) { clearMoveIndex++; }
         uint16_t limit = NUM_LEDS / NUM_STACKERS - stackers[i].spacing/2 - numClearedStacks*(stackers[i].stackSize + stackers[i].spacing);
@@ -470,7 +471,7 @@ bool ClearStackers(uint8_t clearMode, uint32_t curTime) {
 }
 
 /*
-void Stacks(uint32_t curTime) {
+void LEDLoop::Stacks() {
   const uint8_t numSegments = 4;
   // Bands of color flow from spawn point to end point and stack up
   // numColors, dimSpeed=moveSpeed, colorSpeed=rotationSpeed, brightLength=bandThickness, transLength=spacing, displayMode=clearMode
@@ -484,7 +485,7 @@ void Stacks(uint32_t curTime) {
   int8_t rotationSpeed = scaleParam(baseParams.colorSpeed, int8_t(-REFRESH_RATE), int8_t(REFRESH_RATE));
   uint8_t clearMode = scaleParam(baseParams.displayMode, 0, 3);
 
-  // adjust moveSpeed by rotationSpeed to avoid flicker
+  // adjust moveSpeed by rotationSpeed to avoid LEDLoop::flicker
   int16_t moveSpeedF = rotationSpeed + moveSpeed;
   int16_t moveSpeedR = abs(rotationSpeed - moveSpeed);
   
@@ -567,14 +568,14 @@ void Stacks(uint32_t curTime) {
     if(drawPhase == 0) {
       // Move new stack and check for move completion
       if(moveForward) {
-        while((curTime - lastMoveTimeF) >= FPS_TO_TIME(moveSpeedF)) {
-          if(lastMoveTimeF == 0) { lastMoveTimeF = curTime; } else { lastMoveTimeF += FPS_TO_TIME(moveSpeedF); }
+        while((timing.now - lastMoveTimeF) >= FPS_TO_TIME(moveSpeedF)) {
+          if(lastMoveTimeF == 0) { lastMoveTimeF = timing.now; } else { lastMoveTimeF += FPS_TO_TIME(moveSpeedF); }
           movingIndexF++;
         }
       }
       else {
-        while((curTime - lastMoveTimeR) >= FPS_TO_TIME(moveSpeedR)) {
-          if(lastMoveTimeR == 0) { lastMoveTimeR = curTime; } else { lastMoveTimeR += FPS_TO_TIME(moveSpeedR); }
+        while((timing.now - lastMoveTimeR) >= FPS_TO_TIME(moveSpeedR)) {
+          if(lastMoveTimeR == 0) { lastMoveTimeR = timing.now; } else { lastMoveTimeR += FPS_TO_TIME(moveSpeedR); }
           movingIndexR++;
         }
       }
@@ -643,7 +644,7 @@ void Stacks(uint32_t curTime) {
       }
 
       // Move and check for end of clear
-      while((curTime - lastMoveTimeF) >= FPS_TO_TIME(moveSpeedF)) {
+      while((timing.now - lastMoveTimeF) >= FPS_TO_TIME(moveSpeedF)) {
         lastMoveTimeF += FPS_TO_TIME(moveSpeedF);
         lastMoveTimeR += FPS_TO_TIME(moveSpeedF);
         clearMoveIndex++;
@@ -689,7 +690,7 @@ void Stacks(uint32_t curTime) {
       }
 
       // Move and check for end of clear area
-      while((curTime - lastMoveTimeF) >= FPS_TO_TIME(moveSpeedF)) {
+      while((timing.now - lastMoveTimeF) >= FPS_TO_TIME(moveSpeedF)) {
         lastMoveTimeF += FPS_TO_TIME(moveSpeedF);
         lastMoveTimeR += FPS_TO_TIME(moveSpeedF);
         clearMoveIndex++;
@@ -715,8 +716,8 @@ void Stacks(uint32_t curTime) {
 
   // Rotate entire display
   if(rotationSpeed != 0) {
-    if(curTime - lastRotationTime > FPS_TO_TIME(abs(rotationSpeed))) {
-      if(lastRotationTime == 0) { lastRotationTime = curTime; } else { lastRotationTime += FPS_TO_TIME(abs(rotationSpeed)); }
+    if(timing.now - lastRotationTime > FPS_TO_TIME(abs(rotationSpeed))) {
+      if(lastRotationTime == 0) { lastRotationTime = timing.now; } else { lastRotationTime += FPS_TO_TIME(abs(rotationSpeed)); }
       if(rotationSpeed > 0) {
         rotationIndex = (rotationIndex+1) % NUM_LEDS;
         rotationOffset = (rotationOffset - 1 + NUM_LEDS) % NUM_LEDS;
@@ -729,17 +730,17 @@ void Stacks(uint32_t curTime) {
   }
 }
 */
-void Collision() {
+void LEDLoop::Collision() {
   // Comets flow from spawn point to end point and explode in a flash of white
   // numColors, dimSpeed, colorThickness
 }
 
-void PulseInPlace() {
+void LEDLoop::PulseInPlace() {
   
 }
 
-void ColorExplosion(uint32_t curTime) {
-  static uint32_t lastSpawnTime = curTime;
+void LEDLoop::ColorExplosion() {
+  static uint32_t lastSpawnTime = timing.now;
   
 //dimPeriod, colorPeriod / splitPoint
 #ifdef EXPLICIT_PARAMETERS
@@ -756,8 +757,8 @@ void ColorExplosion(uint32_t curTime) {
   growRate += growRate % 2;
   uint8_t fadeRate = scaleParam(2*(uint8_t)abs(baseParams.dimSpeed), (uint8_t)2, min(6, growRate+2));
   fadeRate += fadeRate % 2;
-  uint8_t spawnRate = scaleParam(baseParams.brightLength, 6, 120);
-  uint8_t growChance = scaleParam(baseParams.transLength, 220, 250);
+  uint8_t spawnRate = 0;//scaleParam(baseParams.brightLength, 6, 120);
+  uint8_t growChance = 0;//scaleParam(baseParams.transLength, 220, 250);
   uint8_t growPoint = growRate * scaleParam(baseParams.displayMode, 4, 15);
   uint8_t overridePoint = scaleParam(baseParams.dimPeriod, 1, 32); // Hardly matters
 #endif
@@ -767,7 +768,7 @@ void ColorExplosion(uint32_t curTime) {
       // Increasing brightness with odd numbers
       if(leds_b[i] >= 255 - growRate) { leds_b[i] = 254; }
       else { leds_b[i] += growRate; }
-      //todo: move the 0 and NUM_LEDS checks to single cases outside the loop, to avoid checking every pixel
+      //todo: move the 0 and NUM_LEDS checks to single cases outside the loop, to avoid LEDLoop::checking every pixel
       if(leds_b[i] >= growPoint && leds_b[i] - growRate < growPoint) {
         // Spread outward
         #define SPREAD_EXPLODE(x,y) if(leds_b[x] % 2 == 0 && leds_b[x] <= overridePoint) { leds_b[x] = 1; leds[x] = leds[y]; }
@@ -791,9 +792,9 @@ void ColorExplosion(uint32_t curTime) {
   }
 
   // Randomly light spawnRate LEDs
-  uint8_t nSpawn = (curTime - lastSpawnTime) * spawnRate / ONE_SEC;
+  uint8_t nSpawn = (timing.now - lastSpawnTime) * spawnRate / ONE_SEC;
   if(nSpawn > 0) {
-    lastSpawnTime = curTime;
+    lastSpawnTime = timing.now;
     for(uint8_t i = 0; i < nSpawn; i++) {
       uint16_t newCenter = random16(NUM_LEDS);
       if(leds_b[newCenter] == 0) {
@@ -804,22 +805,22 @@ void ColorExplosion(uint32_t curTime) {
   }
 }
 
-void MovingStrobe() {
+void LEDLoop::MovingStrobe() {
   
 }
 
-void Shutters() {
+void LEDLoop::Shutters() {
   
 }
 
-void StutterStepBands() {
+void LEDLoop::StutterStepBands() {
   
 }
 
-void ColorCycle() {
+void LEDLoop::ColorCycle() {
   
 }
 
-void HotGlow() {
+void LEDLoop::HotGlow() {
   
 }

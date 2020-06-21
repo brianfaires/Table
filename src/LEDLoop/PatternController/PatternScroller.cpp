@@ -1,4 +1,4 @@
-#include "PatternScrolling\PatternScroller.h"
+#include "LEDLoop/PatternScrolling/PatternScroller.h"
 #include "Util.h"
 
 //todo: Speed up by only do WriteDimPattern() during blend function if possible; or also when not calling blend on an update
@@ -39,6 +39,7 @@ PatternScroller::PatternScroller() {
 //*****************************************************************
 uint8_t PatternScroller::getDimPeriod() { return dimPeriod; }
 uint8_t PatternScroller::getColorPeriod() { return colorPeriod; }
+
 uint32_t PatternScroller::getDimBlendLength() { return dimBlendLength; }
 void PatternScroller::setDimBlendLength(uint32_t value) {
   if((*curTime - lastDimPatternChange > dimPauseLength) && dimBlendOn) { // Overkill because of random mode
@@ -174,7 +175,7 @@ bool PatternScroller::isMovingForward() {
 //*****************************************************************
 //************************ Object overhead ************************
 //*****************************************************************
-void PatternScroller::Init(struct_base_show_params& params, uint32_t* _curTime, PaletteManager* _pm, GammaManager* _gm, uint16_t _numLEDs) {
+void PatternScroller::Init(struct_scroller_params& params, uint32_t* _curTime, PaletteManager* _pm, GammaManager* _gm, uint16_t _numLEDs) {
   if(_pm) { pm = _pm; }
   if(_gm) { Gamma = _gm; }
   if(_pm || _gm) { colorPattern.Init(pm, Gamma); }
@@ -214,7 +215,7 @@ void PatternScroller::Init(struct_base_show_params& params, uint32_t* _curTime, 
   lastDimMove = *curTime;
   lastColorMove = *curTime;
 }
-void PatternScroller::Clone(PatternScroller* source, struct_base_show_params& params) {
+void PatternScroller::Clone(PatternScroller* source, struct_scroller_params& params) {
   randomDimPatternIndex = source->randomDimPatternIndex;
   randomColorPatternIndex = source->randomColorPatternIndex;
   Init(params);
@@ -341,6 +342,12 @@ int8_t PatternScroller::GetDimParamDelta() {
       else if(dimPattern.brightLength > brightLength) { return -3; }
       else { return 0; }
     }
+    case BaseDimParamChangeType::OppDouble:
+    {
+      if(dimPattern.brightLength+1 < brightLength) { return 4; }
+      else if(dimPattern.brightLength > brightLength+1) { return 4; }
+      else { return 0; }
+    }
     default:
       THROW_DUMP("Unrecognized baseDimParamChangeType.", int(baseDimParamChangeType))
       return 0;
@@ -398,6 +405,17 @@ bool PatternScroller::StepDimParams(bool onDownbeat) {
         dimPattern.transLength = dimPattern.brightLength;
       }
       return true;
+    }
+    case BaseDimParamChangeType::OppDouble:
+    {
+      if(dimPattern.brightLength+1 < brightLength) {
+        dimPattern.brightLength += 2;
+        if(dimPattern.transLength > 0) { dimPattern.transLength--; }
+      }
+      else if(dimPattern.brightLength > brightLength+1) {
+        dimPattern.brightLength -= 2;
+        if(dimPattern.transLength < (dimPattern.dimPeriod-10)/3) { dimPattern.transLength++; }
+      }
     }
     default:
       THROW_DUMP("Unrecognized baseDimParamChangeType.", int(baseDimParamChangeType))
@@ -494,9 +512,9 @@ bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
       case DimPatternChangeType::Center:
         switch(delta) {
           case 5:
-          case 1:  if(dimPattern.brightLength % 2 == 0) { WALK_DIM(true,0)  } else { WALK_DIM(true,-1) } break;
+          case 1:  if(dimPattern.brightLength % 2 == 0) { WALK_DIM(!isMovingForward(),0) } else { WALK_DIM(isMovingForward(),-1) } break;
           case -5:
-          case -1: if(dimPattern.brightLength % 2 == 0) { WALK_DIM(true,1)  } else { WALK_DIM(true,0)  } break;
+          case -1: if(dimPattern.brightLength % 2 == 0) { WALK_DIM(!isMovingForward(),1) } else { WALK_DIM(isMovingForward(),0)  } break;
           case 2:  if(isMovingForward())                { WALK_DIM(true,-1) } else { WALK_DIM(true,-1) } break;
           case -2: if(isMovingForward())                { WALK_DIM(true,1)  } else { WALK_DIM(true,1)  } break;
           case 3:  if(dimPattern.brightLength % 2 == 0) { WALK_DIM(true,-1) } else { WALK_DIM(true,-2) } break;
@@ -669,14 +687,18 @@ DimPatternChangeType PatternScroller::GetPreferredDimPatternChangeType(uint8_t p
   switch(patternType) {
     case PatternType::Symmetric:
       return (!changeDimParamsWithMovement || abs(delta)==2) ? DimPatternChangeType::Center : DimPatternChangeType::Worm;
+    case PatternType::AllCenter:
+      return DimPatternChangeType::Center;
     case PatternType::Front:
       return isMovingForward() ? DimPatternChangeType::Grow_R : DimPatternChangeType::Grow_F;
     case PatternType::Reverse:
       return isMovingForward() ? DimPatternChangeType::Grow_F : DimPatternChangeType::Grow_R;
     case PatternType::Front3:
-      return abs(delta)==5 ? DimPatternChangeType::Worm : abs(delta)==2 ? DimPatternChangeType::Center : (isMovingForward() ? DimPatternChangeType::Grow_F : DimPatternChangeType::Worm); 
+      return abs(delta)==5 ? DimPatternChangeType::Worm : abs(delta)==2 ? DimPatternChangeType::Center : (isMovingForward() ? DimPatternChangeType::Worm : DimPatternChangeType::Grow_F); 
     case PatternType::Reverse3:
       return abs(delta)==5 ? DimPatternChangeType::Worm : abs(delta)==2 ? DimPatternChangeType::Center : (isMovingForward() ? DimPatternChangeType::Grow_R : DimPatternChangeType::Worm);
+    case PatternType::MixR:
+      return isMovingForward() ? DimPatternChangeType::Mix_R : DimPatternChangeType::Mix_F;
     default:
       THROW_DUMP(F("Invalid dimPattern used"), int(patternType))
   }

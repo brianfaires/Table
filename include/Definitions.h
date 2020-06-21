@@ -1,5 +1,6 @@
 #pragma once
-#include "config\Config.h"
+#include "FastLED.h"
+#include "config/Config.h"
 
 //////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Animation Indexes //////////////////////////////////
@@ -33,12 +34,24 @@ struct struct_base_show_params {
   BaseAnimation animation = INIT_BASE_ANIMATION;
   int8_t dimSpeed = INIT_BASE_DIM_SPEED;
   int8_t colorSpeed = INIT_BASE_COLOR_SPEED;
-  uint8_t brightLength = INIT_BASE_BRIGHT_LENGTH;
-  uint8_t transLength = INIT_BASE_TRANS_LENGTH;
+  fract16 brightLength = INIT_BASE_BRIGHT_LENGTH;
+  fract16 transLength = INIT_BASE_TRANS_LENGTH;
   uint8_t numColors = INIT_BASE_NUM_COLORS;
   uint8_t displayMode = INIT_BASE_DISPLAY_MODE;
   uint8_t dimPeriod = INIT_BASE_DIM_PERIOD;
   uint8_t colorPeriod = INIT_BASE_COLOR_PERIOD;
+};
+
+struct struct_scroller_params {
+  BaseAnimation animation;
+  int8_t dimSpeed;
+  int8_t colorSpeed;
+  int8_t brightLength;
+  int8_t transLength;
+  uint8_t numColors;
+  uint8_t displayMode;
+  uint8_t dimPeriod;
+  uint8_t colorPeriod;
 };
 
 #define NUM_TOP_PARAMS 3

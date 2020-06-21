@@ -1,4 +1,4 @@
-#include "PatternScrolling\PatternController.h"
+#include "LEDLoop/PatternScrolling/PatternController.h"
 #include "Util.h"
 
 uint8_t PatternController::getBrightness() { return ps1.brightness; }
@@ -26,12 +26,16 @@ void PatternController::setDimPatternChangeType(DimPatternChangeType value, bool
   ps2.changeDimParamsWithMovement = changeDimParamsWithMovement;
 }
 
-void PatternController::Init(uint16_t _numLEDs, uint32_t* curTime, struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, const uint16_t* _allowedDimPeriods, const uint16_t* _allowedColorPeriods) {
+void PatternController::Init(uint16_t _numLEDs, uint32_t* curTime, struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, std::vector<uint16_t> _allowedDimPeriods, std::vector<uint16_t> _allowedColorPeriods, uint8_t numAllowedDimPeriods, uint8_t numAllowedColorPeriods) {
   numLEDs = _numLEDs;
   allowedDimPeriods = _allowedDimPeriods;
   allowedColorPeriods = _allowedColorPeriods;
+  
+  NUM_ALLOWED_DIM_PERIODS = numAllowedDimPeriods;
+  NUM_ALLOWED_COLOR_PERIODS = numAllowedColorPeriods;
+  
 
-  struct_base_show_params scaledParams;
+  struct_scroller_params scaledParams;
   ScaleParams(params, scaledParams);
 
   dimSpeed = scaledParams.dimSpeed;
@@ -60,7 +64,7 @@ void PatternController::SkipTime(uint32_t amount) {
 }
 
 void PatternController::Update(struct_base_show_params& params, CRGB* target, uint8_t* target_b) {
-  struct_base_show_params scaledParams;
+  struct_scroller_params scaledParams;
   ScaleParams(params, scaledParams);
   
   dimSpeed = scaledParams.dimSpeed;
@@ -134,7 +138,7 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
   }
 }
 
-void PatternController::ScaleParams(struct_base_show_params& params, struct_base_show_params& output, uint8_t dim_period, uint8_t color_period) {
+void PatternController::ScaleParams(struct_base_show_params& params, struct_scroller_params& output, uint8_t dim_period, uint8_t color_period) {
   // You can optionally call this function with a specific dim_period and color_period, to scale params accordingly even when struct has a new period in it
   if(dim_period == 0) {
     #ifdef EXPLICIT_PARAMETERS
@@ -199,13 +203,14 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_base
       uint8_t brightUpperLimit = (output.dimPeriod-10)/3;
     #endif
 
-    output.transLength =  scaleParam(params.transLength,  0, transUpperLimit);
-    output.brightLength = scaleParam(params.brightLength, 0, brightUpperLimit);
+    output.transLength  = scale16(transUpperLimit+1, params.transLength);
+    output.brightLength = scale16(brightUpperLimit+1, params.brightLength);
+ 
     //DEBUG(params.brightLength+"/"+output.brightLength + ", " + params.transLength+"/"+output.transLength);
   #endif
 }
 
-void PatternController::StartSplit(struct_base_show_params& params) {
+void PatternController::StartSplit(struct_scroller_params& params) {
   DEBUG_PATTERN_SPLITS("Start Split");
   splitDisplay = true;
   splitIndex = ps->getDimSpeed() > 0 ? 0 : numLEDs;

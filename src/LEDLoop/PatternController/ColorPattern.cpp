@@ -1,4 +1,4 @@
-#include "PatternScrolling\ColorPattern.h"
+#include "LEDLoop/PatternScrolling/ColorPattern.h"
 
 void ColorPattern::Init(PaletteManager* _pm, GammaManager* _gm) {
     pm = _pm;

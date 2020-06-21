@@ -1,5 +1,5 @@
-#include "GammaManager.h"
-#include "config\GammaManagerConfig.h"
+#include "LEDLoop/GammaManager.h"
+#include "config/GammaManagerConfig.h"
 
 // Applies gamma correction from matrices defined in the main project
 void GammaManager::Correct(CRGB& pixel) {

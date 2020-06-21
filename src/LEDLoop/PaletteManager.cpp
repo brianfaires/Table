@@ -1,5 +1,5 @@
-#include "PaletteManager.h"
-#include "config\PaletteManagerConfig.h"
+#include "LEDLoop/PaletteManager.h"
+#include "config/PaletteManagerConfig.h"
 
 /// Object management
 PaletteManager::PaletteManager() { }

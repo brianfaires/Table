@@ -5,7 +5,7 @@
 
 #define MAX_PERIOD 210
 
-enum class BaseDimParamChangeType { Manual, Matched, Opposite, Count };
+enum class BaseDimParamChangeType { Manual, Matched, Opposite, OppDouble, Count };
 #define NUM_BASE_DIM_PARAM_CHANGE_TYPES uint8_t(BaseDimParamChangeType::Count)
 
 enum class DimPatternChangeType { Preferred, Grow_F, Grow_R, Worm, Freeze, Center, Mix_F, Mix_R, Count };
@@ -14,8 +14,8 @@ enum class DimPatternChangeType { Preferred, Grow_F, Grow_R, Worm, Freeze, Cente
 class PatternScroller {
   public:
     PatternScroller();
-    void Init(struct_base_show_params& params, uint32_t* curTime = NULL, PaletteManager* _pm = NULL, GammaManager* _gm = NULL, uint16_t _numLEDs = 0);
-    void Clone(PatternScroller* source, struct_base_show_params& params);
+    void Init(struct_scroller_params& params, uint32_t* curTime = NULL, PaletteManager* _pm = NULL, GammaManager* _gm = NULL, uint16_t _numLEDs = 0);
+    void Clone(PatternScroller* source, struct_scroller_params& params);
     bool Update(int8_t& shiftAmount);
     void SkipTime(uint32_t amount);
     void SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs, uint16_t numLEDsToSkip=0);

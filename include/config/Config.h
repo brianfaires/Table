@@ -1,7 +1,7 @@
 #pragma once
 #include "FastLED.h"
 
-#define INIT_GLOBAL_BRIGHTNESS 128
+#define INIT_GLOBAL_BRIGHTNESS 255
 
 ////////////////////////////////////////
 ////////// Debugging config ////////////
@@ -11,7 +11,7 @@
 //#define EXPLICIT_PARAMETERS
 #define CHECK_FOR_CLIPPING
 #define JUMP_DIM_PARAMS // For PatternScroller
-#define PULSE_BASE_PARAMS
+//#define PULSE_BASE_PARAMS
 //#define TEST_PALETTES
 //#define TIMING_ANALYSIS
 //#define DEBUG_COLOR_PATTERNS
@@ -27,8 +27,8 @@
 #define INIT_BASE_ANIMATION BaseAnimation::Scroller
 #define INIT_BASE_DIM_SPEED 64
 #define INIT_BASE_COLOR_SPEED 0
-#define INIT_BASE_BRIGHT_LENGTH 0
-#define INIT_BASE_TRANS_LENGTH 255
+#define INIT_BASE_BRIGHT_LENGTH 0.0F
+#define INIT_BASE_TRANS_LENGTH 1.0F
 #define INIT_BASE_NUM_COLORS 200
 #define INIT_BASE_DISPLAY_MODE 0
 #define INIT_BASE_DIM_PERIOD 64
@@ -75,27 +75,7 @@
 #define INIT_ENABLE_DOUBLE_BRIGHT_MOVE false
 ////////////////////////////////////////////////////////////////////////
 
-
-#define NUM_LEDS 520
-#if NUM_LEDS == 420
-  // 2*2*3*5*6*7
-  #define NUM_ALLOWED_DIM_PERIODS 10
-  #define NUM_ALLOWED_COLOR_PERIODS 11
-  const uint16_t PROGMEM allowedDimPeriods[] = { 21, 28, 30, 35, 42, 60, 70, 84, 105, 210 };
-  const uint16_t PROGMEM allowedColorPeriods[] = { 20, 21, 28, 30, 35, 42, 60, 70, 84, 105, 210 };
-#elif NUM_LEDS == 408
-  // 2*2*2*3*17
-  #define NUM_ALLOWED_DIM_PERIODS 7
-  #define NUM_ALLOWED_COLOR_PERIODS 7
-  const uint16_t PROGMEM allowedDimPeriods[] = { 17, 24, 34, 51, 68, 102, 204 };
-  const uint16_t PROGMEM allowedColorPeriods[] = { 17, 24, 34, 51, 68, 102, 204 };
-#elif NUM_LEDS == 520
-  // 2*2*2*5*13
-  #define NUM_ALLOWED_DIM_PERIODS 7
-  #define NUM_ALLOWED_COLOR_PERIODS 7
-  const uint16_t PROGMEM allowedDimPeriods[] = { 20, 26, 40, 52, 65, 104, 130 };
-  const uint16_t PROGMEM allowedColorPeriods[] = { 20, 26, 40, 52, 65, 104, 130 };
-#endif
+#define MAX_LEDS 520
 ////////////////////////////////////////////////////////////////////////
 
 
@@ -112,8 +92,13 @@
   #define CLOCK_PIN 5
   #define LED_PIN 18
 #else
-  #define CLOCK_PIN 13
-  #define LED_PIN 12
+  #define CLOCK_PIN_INTERIOR 13
+  #define LED_PIN_INTERIOR 12
+  #define NUM_LEDS_INTERIOR 408
+
+  #define CLOCK_PIN_UPPER 14
+  #define LED_PIN_UPPER 15
+  #define NUM_LEDS_UPPER 420
 #endif
 /////////////////////////////////////////
 

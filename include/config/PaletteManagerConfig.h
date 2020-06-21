@@ -1,5 +1,5 @@
 #pragma once
-#include "PaletteManager.h"
+#include "LEDLoop/PaletteManager.h"
 
 enum class PaletteIndex : uint8_t {
 	analagousRed, analagousRedOrange, analagousOrange, analagousYellow, analagousGreen, analagousSeaGreen, analagousCyan, analagousBlue, analagousPurple, analagousFusia, analagousPink, analagousPaleRed1, analagousPaleRed2, analagousPaleRed3,
