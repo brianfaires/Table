@@ -20,12 +20,11 @@ void setup() {
   // Initialize Buttons
   pinMode(BTN1_PIN, INPUT_PULLUP);
 
-
   // Initialize LED Loops
   interior.Setup<LED_PIN_INTERIOR, CLOCK_PIN_INTERIOR, NUM_LEDS_INTERIOR>(&globalBrightness);
   DEBUG("Interior LEDLoop initialized.");
-  //upper.Setup<CLOCK_PIN_UPPER, LED_PIN_UPPER, NUM_LEDS_UPPER>(&globalBrightness);
-  //DEBUG("Upper LEDLoop initialized.");
+  upper.Setup<LED_PIN_UPPER, CLOCK_PIN_UPPER, NUM_LEDS_UPPER>(&globalBrightness);
+  DEBUG("Upper LEDLoop initialized.");
   FastLED.show();
   DEBUG("LEDs defined and initialized.");
 
@@ -33,7 +32,7 @@ void setup() {
   DEBUG("setup() complete.");
   DEBUG_TIMING("setup() time: " + (SYSTEM_TIME - startupTime));
   interior.SkipTime(SYSTEM_TIME);
-  //upper.SkipTime(SYSTEM_TIME);
+  upper.SkipTime(SYSTEM_TIME);
 
   #ifdef MANUAL_PARAMS
     Serial.setTimeout(100);
@@ -44,10 +43,11 @@ void setup() {
 void loop() {
   TIMING_ANALYSIS_BEGIN_LOOP
 
-  interior.Loop(); TIMING_ANALYSIS_POINT
-  //upper.Loop(); TIMING_ANALYSIS_POINT
+  bool needToDraw = false;
+  needToDraw |= interior.Loop(); TIMING_ANALYSIS_POINT
+  needToDraw |= upper.Loop(); TIMING_ANALYSIS_POINT
 
-  //FastLED.show(); TIMING_ANALYSIS_POINT
+  if(needToDraw) { FastLED.show(); } TIMING_ANALYSIS_POINT
 
   TIMING_ANALYSIS_END_LOOP
 }
@@ -149,7 +149,7 @@ bool isInterior = true;
 #define NUM_PM_PARAMS 2
 
 bool ProcessSerialInput(bool interiorStrip) {
-  if(interiorStrip != isInterior) { PRINTLN("Wrong one.") return false; }
+  if(interiorStrip != isInterior) { return false; }
 
   LEDLoop* loop = (interiorStrip ? &interior : &upper);
   
@@ -160,7 +160,10 @@ bool ProcessSerialInput(bool interiorStrip) {
     s.trim();
     PRINTLN("\nEntered: " + s)
 
-    if(s.startsWith("cs")) { isInterior = !isInterior; }
+    if(s.startsWith("cs")) {
+      isInterior = !isInterior;
+      return true;
+    }
     else if(s.startsWith("sp")) {
       // Set palette
       s = s.substring(3);

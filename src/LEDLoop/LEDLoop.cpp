@@ -67,7 +67,7 @@ void LEDLoop::Setup(uint8_t* pGlobalBrightness)
   DEBUG("Top layer init complete.");
 }
 
-void LEDLoop::Loop()
+bool LEDLoop::Loop()
 {
   timing.now = SYSTEM_TIME;
 
@@ -76,43 +76,45 @@ void LEDLoop::Loop()
     return;
   #endif
 
-  if(timing.now - timing.lastDraw >= FPS_TO_TIME(REFRESH_RATE)) {
-    UpdateAnimationParameters();
-    pm.Update();
+  if(timing.now - timing.lastDraw < FPS_TO_TIME(REFRESH_RATE)) { return false; }
+
+  UpdateAnimationParameters();
+  pm.Update();
+  
+  #ifdef TEST_PALETTES
+    const uint16_t length = 120;
+    const uint16_t offset1 = 228;
+    const uint16_t offset2 = 390;
     
-    #ifdef TEST_PALETTES
-      const uint16_t length = 120;
-      const uint16_t offset1 = 228;
-      const uint16_t offset2 = 390;
-      
-      const uint16_t pixelsPerPalette = length / PALETTE_SIZE;
-      leds = CRGB::Black;
-      for(uint16_t i = 0; i < NUM_LEDS; i++) { leds_b[i] = globalBrightness; }
-      for(uint8_t i = 0; i < PALETTE_SIZE; i++) {
-        // With spaces
-        leds(offset1 + pixelsPerPalette*i + 1, offset1 + pixelsPerPalette*(i+1) - 2) = pm.palette[i];
-        leds(offset2 + pixelsPerPalette*i + 1, offset2 + pixelsPerPalette*(i+1) - 2) = pm.palette[PALETTE_SIZE-1-i];
-        // Without spaces
-        //leds(offset1 + pixelsPerPalette*i, offset1 + pixelsPerPalette*(i+1) - 1) = pm.palette[i];
-        //leds(offset2 + pixelsPerPalette*i, offset2 + pixelsPerPalette*(i+1) - 1) = pm.palette[PALETTE_SIZE-1-i];
-      }
-    #else
-      TransitionBaseAnimation(); TIMING_ANALYSIS_POINT
-      TransitionTopAnimation(); TIMING_ANALYSIS_POINT
-      DrawBaseLayer(); TIMING_ANALYSIS_POINT
-      DrawTopLayer(); TIMING_ANALYSIS_POINT
-      OverlayLayers(); TIMING_ANALYSIS_POINT
-    #endif
+    const uint16_t pixelsPerPalette = length / PALETTE_SIZE;
+    leds = CRGB::Black;
+    for(uint16_t i = 0; i < NUM_LEDS; i++) { leds_b[i] = globalBrightness; }
+    for(uint8_t i = 0; i < PALETTE_SIZE; i++) {
+      // With spaces
+      leds(offset1 + pixelsPerPalette*i + 1, offset1 + pixelsPerPalette*(i+1) - 2) = pm.palette[i];
+      leds(offset2 + pixelsPerPalette*i + 1, offset2 + pixelsPerPalette*(i+1) - 2) = pm.palette[PALETTE_SIZE-1-i];
+      // Without spaces
+      //leds(offset1 + pixelsPerPalette*i, offset1 + pixelsPerPalette*(i+1) - 1) = pm.palette[i];
+      //leds(offset2 + pixelsPerPalette*i, offset2 + pixelsPerPalette*(i+1) - 1) = pm.palette[PALETTE_SIZE-1-i];
+    }
+  #else
+    TransitionBaseAnimation(); TIMING_ANALYSIS_POINT
+    TransitionTopAnimation(); TIMING_ANALYSIS_POINT
+    DrawBaseLayer(); TIMING_ANALYSIS_POINT
+    DrawTopLayer(); TIMING_ANALYSIS_POINT
+    OverlayLayers(); TIMING_ANALYSIS_POINT
+  #endif
 
-    Gamma.PrepPixelsForFastLED(); TIMING_ANALYSIS_POINT
-    FastLED.show(); TIMING_ANALYSIS_POINT
+  Gamma.PrepPixelsForFastLED(); TIMING_ANALYSIS_POINT
+  //FastLED.show(); TIMING_ANALYSIS_POINT
 
-    timing.lastDraw += FPS_TO_TIME(REFRESH_RATE);
-    #ifdef CHECK_FOR_CLIPPING
-      if((timing.now > timing.lastDraw + FPS_TO_TIME(REFRESH_RATE)) && (timing.now-lastClippedTime > ONE_SEC)) {
-        DEBUG("ERROR: Drawing clipped by " + (timing.now - timing.lastDraw) + "us")
-        lastClippedTime = timing.now;
-      }
-    #endif
-  }
+  timing.lastDraw += FPS_TO_TIME(REFRESH_RATE);
+  #ifdef CHECK_FOR_CLIPPING
+    if((timing.now > timing.lastDraw + FPS_TO_TIME(REFRESH_RATE)) && (timing.now-lastClippedTime > ONE_SEC)) {
+      DEBUG("ERROR: Drawing clipped by " + (timing.now - timing.lastDraw) + "us")
+      lastClippedTime = timing.now;
+    }
+  #endif
+
+  return true;
 }

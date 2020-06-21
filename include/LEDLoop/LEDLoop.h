@@ -13,13 +13,11 @@ class LEDLoop {
         template<uint8_t DATA_PIN, uint8_t CLOCK_PIN, uint16_t numLEDs> void Setup(uint8_t* pGlobalBrightness)
         {
             NUM_LEDS = numLEDs;
-            
-		Serial.println("SETUP OF FAST LED HAPPENING!");
             FastLED.addLeds<APA102, DATA_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(leds, numLEDs, 0, leds_5bit_brightness);
             Setup(pGlobalBrightness);
         }
         private: void Setup(uint8_t* pGlobalBrightness);
-        public: void Loop();
+        public: bool Loop();
 
     //private:
         void SkipTimeForTimers(uint32_t amount);

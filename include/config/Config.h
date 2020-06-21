@@ -81,7 +81,7 @@
 
 /////////////////////////////////////////
 //////////// Hardware config ////////////
-#define REFRESH_RATE 160
+#define REFRESH_RATE 100
 #define STARTUP_DELAY_MS 1000
 #define LED_DATA_RATE_MHZ 18
 #define SERIAL_DATA_RATE_HZ 115200
