@@ -6,7 +6,8 @@
 
 class PatternController {
   public:
-    void Init(uint16_t _numLEDs, uint32_t* curTime, struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, std::vector<uint16_t> _allowedDimPeriods, std::vector<uint16_t> allowedColorPeriods, uint8_t numAllowedDimPeriods, uint8_t numAllowedColorPeriods);    void Update(struct_base_show_params& params, CRGB* target, uint8_t* target_b);
+    void Init(uint16_t _numLEDs, uint32_t* curTime, struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, std::vector<uint16_t> _allowedDimPeriods, std::vector<uint16_t> allowedColorPeriods, uint8_t numAllowedDimPeriods, uint8_t numAllowedColorPeriods);
+    void Update(struct_base_show_params& params, CRGB* target, uint8_t* target_b);
     void SkipTime(uint32_t amount);
 
     uint32_t getColorPauseLength();

@@ -53,11 +53,11 @@ void LEDLoop::InitBaseLayer() {
   
   switch(baseParams.animation) {
     case BaseAnimation::Scroller:
-      pc.Init(NUM_LEDS, &(timing.now), baseParams, &pm, &Gamma, allowedDimPeriods, allowedColorPeriods, NUM_ALLOWED_DIM_PERIODS, NUM_ALLOWED_COLOR_PERIODS);
+      pc.Init(numLEDs, &(timing.now), baseParams, pm, &Gamma, allowedDimPeriods, allowedColorPeriods, NUM_ALLOWED_DIM_PERIODS, NUM_ALLOWED_COLOR_PERIODS);
       break;
 
     case BaseAnimation::Stacks:
-      //InitStackers(NUM_LEDS - 18);
+      InitStacks();
       break;
       
     default:
@@ -185,7 +185,7 @@ void LEDLoop::NextTopAnimation() {
 
 void LEDLoop::OverlayLayers() {
   uint16_t topBrightness;
-  for(uint16_t i = 0; i < NUM_LEDS; i++) {
+  for(uint16_t i = 0; i < numLEDs; i++) {
     topBrightness = leds_top_b[i];
     if(topBrightness > 0) {
       uint8_t blendAmount = 255 * topBrightness / (topBrightness + leds_b[i]);

@@ -24,10 +24,10 @@
 
 /////////////////////////////////////////////
 ////////// Init Animation Settings //////////
-#define INIT_BASE_ANIMATION BaseAnimation::Scroller
+#define INIT_BASE_ANIMATION BaseAnimation::Stacks
 #define INIT_BASE_DIM_SPEED 64
 #define INIT_BASE_COLOR_SPEED 0
-#define INIT_BASE_BRIGHT_LENGTH 0.0F
+#define INIT_BASE_BRIGHT_LENGTH 0x8000
 #define INIT_BASE_TRANS_LENGTH 1.0F
 #define INIT_BASE_NUM_COLORS 200
 #define INIT_BASE_DISPLAY_MODE 0
@@ -81,7 +81,7 @@
 
 /////////////////////////////////////////
 //////////// Hardware config ////////////
-#define REFRESH_RATE 100
+#define REFRESH_RATE 40
 #define STARTUP_DELAY_MS 1000
 #define LED_DATA_RATE_MHZ 18
 #define SERIAL_DATA_RATE_HZ 115200

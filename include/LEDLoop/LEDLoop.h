@@ -6,21 +6,18 @@
 #include "Util.h"
 #include "PatternScrolling\PatternController.h"
 
-#define IS_INTERIOR_LOOP (NUM_LEDS == 408)
-
 class LEDLoop {
     public:
-        template<uint8_t DATA_PIN, uint8_t CLOCK_PIN, uint16_t numLEDs> void Setup(uint8_t* pGlobalBrightness)
+        template<uint8_t DATA_PIN, uint8_t CLOCK_PIN, uint16_t NUM_LEDS> void Setup(uint8_t* pGlobalBrightness, PaletteManager* pPaletteManager)
         {
-            NUM_LEDS = numLEDs;
+            numLEDs = NUM_LEDS;
             FastLED.addLeds<APA102, DATA_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(leds, numLEDs, 0, leds_5bit_brightness);
-            Setup(pGlobalBrightness);
+            Setup(pGlobalBrightness, pPaletteManager);
         }
-        private: void Setup(uint8_t* pGlobalBrightness);
-        public: bool Loop();
+        private: void Setup(uint8_t* pGlobalBrightness, PaletteManager* pPaletteManager);
+        public: bool Loop(uint32_t curTime);
 
     //private:
-        void SkipTimeForTimers(uint32_t amount);
         void SkipTime(uint32_t amount);
 
         // Organizational structs for timers, configuration, and runtime parameters
@@ -30,7 +27,7 @@ class LEDLoop {
         struct_top_show_params topParams;
 
         // Color and brightness outputs
-        uint16_t NUM_LEDS;
+        uint16_t numLEDs;
         CRGBArray<MAX_LEDS> leds;
         uint8_t leds_b[MAX_LEDS];
         uint8_t leds_5bit_brightness[MAX_LEDS];
@@ -47,17 +44,10 @@ class LEDLoop {
 
 
         // Objects
-        PaletteManager pm;
+        PaletteManager* pm;
         GammaManager Gamma;
         PatternController pc;
 
-        // ParameterWalking.cpp
-        void UpdateAnimationParameters();
-        void PulseBaseParams();
-        void RandomizeBaseParams();
-        void WalkTopParams();
-        void WalkPaletteManagerParams();
-        void WalkLayerParams();
 
         // Layers.cpp
         void DrawBaseLayer();
@@ -73,23 +63,38 @@ class LEDLoop {
         void OverlayLayers();
 
         // BaseAnimations.cpp
+        void FireGlitter();
         void Fire();
         void CreateFirePalette(CRGBPalette16 *firePalette);
-        void ScrollingSaturation(uint8_t nWhite, uint8_t nTrans, uint8_t nPure);
         void DiscoFire();
-        void Orbs();
-        void ScrollingGlimmerBands();
-        void CenterSpawn();
+        
+        
         void Stacks();
+        uint8_t InitStacks();
+        void DrawAllStacks();
+        void MoveStack(struct_stack& s, bool clockwise);
+        void MoveAllStacks(bool clockwise);
+        bool Stack4();
+        bool Shutters();
+        bool StutterStepBands();
+        
+        
+        void Stackers();
         uint8_t InitStackers(uint16_t rotationIndex);
         bool DrawStacker(struct_stacker* s);
         bool ClearStackers(uint8_t clearMode);
+        
+        
+        void ScrollingSaturation(uint8_t nWhite, uint8_t nTrans, uint8_t nPure);
+        void Orbs();
+        void ScrollingGlimmerBands();
+        void CenterSpawn();
+        
+        
         void Collision();
         void PulseInPlace();
         void ColorExplosion();
         void MovingStrobe();
-        void Shutters();
-        void StutterStepBands();
         void ColorCycle();
         void HotGlow();
 
@@ -99,27 +104,5 @@ class LEDLoop {
         void Twinkle();
         void FourComets();
         void DrawComet(struct_comet* comet, uint8_t cometLength, uint16_t moveIndex);
-
-        // Timing debug tools
-        #ifdef TIMING_ANALYSIS
-            #define NUM_TIMING_POINTS 20
-            #define TIMING_ANALYSIS_BEGIN_LOOP  curDebugTime = SYSTEM_TIME; curTiminingAnalysisPoint=0; for(uint8_t i=0;i<NUM_TIMING_POINTS;i++) { timingValues[i]=0; }
-            #define TIMING_ANALYSIS_POINT       lastDebugTime = curDebugTime; curDebugTime = SYSTEM_TIME; timingValues[curTiminingAnalysisPoint++] = curDebugTime-lastDebugTime;
-            #define TIMING_ANALYSIS_END_LOOP    for(uint8_t i=0; i<NUM_TIMING_POINTS; i++) { if(timingValues[i]!=0) { PRINT(timingValues[i] + "\t"); } else  { PRINTLN((SYSTEM_TIME - timing.now) + "\t"); break; } }
-            #define DEBUG_TIMING(msg)           DEBUG(msg)
-            uint32_t timingValues[NUM_TIMING_POINTS] = {0};
-            uint32_t curDebugTime = 0;
-            uint32_t lastDebugTime = 0;
-            uint8_t curTiminingAnalysisPoint = 0;
-        #else
-            #define TIMING_ANALYSIS_BEGIN_LOOP
-            #define TIMING_ANALYSIS_POINT
-            #define TIMING_ANALYSIS_END_LOOP
-            #define DEBUG_TIMING(msg)
-        #endif
-
-        #ifdef CHECK_FOR_CLIPPING
-            uint32_t lastClippedTime = 0;
-        #endif
 
 };

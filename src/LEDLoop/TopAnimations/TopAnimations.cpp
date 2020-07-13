@@ -10,8 +10,8 @@ void LEDLoop::Glitter() {
     leds_top = CRGB::Black;
     lastGlitter = timing.now;
     for(uint16_t i = 0; i < numLitLEDs; i++) {
-      uint16_t randIdx = random16(NUM_LEDS);
-      leds_top[randIdx] = HSV2RGB(pm.palette[5], leds_top_b[randIdx]);
+      uint16_t randIdx = random16(numLEDs);
+      leds_top[randIdx] = HSV2RGB(pm->palette[5], leds_top_b[randIdx]);
     }
   }
 }
@@ -27,27 +27,27 @@ void LEDLoop::Rain() {
     lastMove = timing.now;
     
     if(moveSpeed > 0) {
-      for(uint16_t i = NUM_LEDS-1; i > 0; i--) {
+      for(uint16_t i = numLEDs-1; i > 0; i--) {
         leds_top[i] = leds_top[i-1];
         leds_top_b[i] = leds_top_b[i-1];
       }
       if(random8(portion) == 0) {
-        leds_top[0] = HSV2RGB(pm.palette[5], leds_top_b[0]);
+        leds_top[0] = HSV2RGB(pm->palette[5], leds_top_b[0]);
       }
       else {
         leds_top[0] = CRGB::Black;
       }
     }
     else {
-      for(uint16_t i = 0; i < NUM_LEDS-1; i++) {
+      for(uint16_t i = 0; i < numLEDs-1; i++) {
         leds_top[i] = leds_top[i+1];
         leds_top_b[i] = leds_top_b[i+1];
       }
       if(random8(portion) == 0) {
-        leds_top[NUM_LEDS-1] = HSV2RGB(pm.palette[5], leds_top_b[NUM_LEDS-1]);
+        leds_top[numLEDs-1] = HSV2RGB(pm->palette[5], leds_top_b[numLEDs-1]);
       }
       else {
-        leds_top[NUM_LEDS-1] = CRGB::Black;
+        leds_top[numLEDs-1] = CRGB::Black;
       }
     }
   }
@@ -57,7 +57,7 @@ void LEDLoop::Twinkle() {
   uint8_t spawnRate = scaleParam(topParams.portion, 1, 20);
   uint8_t growRate = 2*scaleParam(topParams.speed, 1, 8);
 
-  for(uint16_t i = 0; i < NUM_LEDS; i++) {
+  for(uint16_t i = 0; i < numLEDs; i++) {
     if(leds_top_b[i] % 2 == 1) {
       if(leds_top_b[i] < 255 - growRate) { leds_top_b[i] += growRate; }
       else { leds_top_b[i] = 254; }
@@ -70,9 +70,9 @@ void LEDLoop::Twinkle() {
 
   for(uint8_t i = 0; i < spawnRate; i++) {
     uint16_t index;
-    do { index = random16(NUM_LEDS); } while(leds_top_b[i] > 0);
+    do { index = random16(numLEDs); } while(leds_top_b[i] > 0);
     leds_top_b[index] = 1;
-    leds_top[index] = pm.palette[PALETTE_SIZE-1];
+    leds_top[index] = pm->palette[PALETTE_SIZE-1];
   }
 }
 
@@ -141,7 +141,7 @@ void LEDLoop::SpawnNewBouncy() {
       objects[i] = malloc(sizeof(Bouncy));
       ((Bouncy*)objects[i])->loc = random8(MIN_BOUNCY_SPAWN_HEIGHT, MAX_BOUNCY_SPAWN_HEIGHT);
       ((Bouncy*)objects[i])->vel = 0;
-      ((Bouncy*)objects[i])->color = pm.palette.entries[8 + 2*i]; // This requires MAX_BOUNCIES to be <= 4
+      ((Bouncy*)objects[i])->color = pm->palette.entries[8 + 2*i]; // This requires MAX_BOUNCIES to be <= 4
       #ifdef SERIAL_DEBUG_BOUNCY
       PRINT("Spawning Bouncy #");
       PRINTLN(i);
@@ -192,22 +192,22 @@ void LEDLoop::FourComets() {
 }
 void LEDLoop::DrawComet(struct_comet* comet, uint8_t cometLength, uint16_t moveIndex) {
   uint16_t curPixel;
-  if(comet->moveForward) { curPixel = (comet->startPos + moveIndex) % NUM_LEDS; }
-  else { curPixel = (comet->startPos - moveIndex + NUM_LEDS) % NUM_LEDS; }
+  if(comet->moveForward) { curPixel = (comet->startPos + moveIndex) % numLEDs; }
+  else { curPixel = (comet->startPos - moveIndex + numLEDs) % numLEDs; }
 
   if(comet->moveForward) {
     for(uint8_t i = 0; i < cometLength; i++) {
-      leds_top[curPixel] = pm.palette[PALETTE_SIZE-1];
+      leds_top[curPixel] = pm->palette[PALETTE_SIZE-1];
       leds_top[curPixel++] = 255 - 255*i/cometLength;
-      if(curPixel == NUM_LEDS) { curPixel = 0; }
+      if(curPixel == numLEDs) { curPixel = 0; }
       if(curPixel == comet->startPos) { break; }
     }
   }
   else {
     for(uint8_t i = 0; i < cometLength; i++) {
-      leds_top[curPixel] = pm.palette[PALETTE_SIZE-1];
+      leds_top[curPixel] = pm->palette[PALETTE_SIZE-1];
       leds_top[curPixel--] = 255 - 255*i/cometLength;
-      if(curPixel == 0xFFFF) { curPixel = NUM_LEDS-1; }
+      if(curPixel == 0xFFFF) { curPixel = numLEDs-1; }
       if(curPixel == comet->startPos) { break; }
     }
   }

@@ -1,22 +1,32 @@
 #pragma once
 #include "LEDLoop/LEDLoop.h"
 
-
 // Globals
 extern uint8_t globalBrightness;
 extern LEDLoop interior;
 extern LEDLoop upper;
 
+void SkipTime(uint32_t amount);
+
 
 // IO
 void UpdateIO();
 void SkipTimeForIO(uint32_t amount);
-bool ProcessSerialInput(bool interiorStrip);
+bool ProcessSerialInput();
 void PrintParams();
-void PrintBaseTopAndPMParams(bool isInterior);
-void PrintBaseParams(bool isInterior);
-void PrintTopParams(bool isInterior);
-void PrintPaletteManagerParams(bool isInterior);
-void PrintLayerParams(bool isInterior);
-void PrintPatternControllerParams(bool isInterior);
+void PrintBaseTopAndPMParams(LEDLoop* loop);
+void PrintBaseParams(LEDLoop* loop);
+void PrintTopParams(LEDLoop* loop);
+void PrintPaletteManagerParams(LEDLoop* loop);
+void PrintLayerParams(LEDLoop* loop);
+void PrintPatternControllerParams(LEDLoop* loop);
+
+
+// Parameter Walking
+void UpdateAnimationParameters();
+void PulseBaseParams();
+void RandomizeBaseParams();
+void WalkTopParams();
+void WalkPaletteManagerParams();
+void WalkLayerParams();
 
