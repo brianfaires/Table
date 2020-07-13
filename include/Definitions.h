@@ -104,7 +104,7 @@ struct struct_stacker {
 struct struct_stack {
     uint8_t length;
     uint16_t pixel;
-    CRGB color;
+    uint8_t color;
 };
 
 struct struct_comet{
