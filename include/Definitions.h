@@ -111,4 +111,3 @@ struct struct_comet{
   uint16_t startPos;
   bool moveForward;
 };
-

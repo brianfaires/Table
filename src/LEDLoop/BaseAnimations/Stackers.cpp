@@ -3,7 +3,7 @@
 
 
 
-const uint32_t MAX_TRANS_TIME = 30*ONE_SEC;
+const uint32_t MAX_TRANS_TIME = 12*ONE_SEC;
 #define MAX_STACKS 40
 #define NUM_STACK_MODES 2
 enum class StackMode : uint8_t { None, Shutters, StutterStep, Stack4, Stack4Mirror };
@@ -37,20 +37,30 @@ void LEDLoop::Stacks() {
 
 }
 
-uint8_t LEDLoop::InitStacks() {
+uint8_t LEDLoop::InitStacks(uint8_t mode) {
   // Sets up a full collection of stacks with max length
   dimPeriod = allowedDimPeriods[scaleParam(baseParams.dimPeriod, 0, NUM_ALLOWED_DIM_PERIODS-1)];
   numStacks = numLEDs / dimPeriod;
   maxStackLength = scale16(dimPeriod, baseParams.brightLength);
   uint8_t numColors = scaleParam(baseParams.numColors, 1, PALETTE_SIZE-1);
 
-  // Initialize shutters animation
-  stackMode = StackMode::Stack4Mirror;
+  stackMode = StackMode(mode % NUM_STACK_MODES);
+  if(stackMode == StackMode::None) { stackMode = StackMode::Stack4Mirror; }
+  moveClockwise = true;//random8(1);
   lastModeTransition = timing.now;
-  moveClockwise = random8(1);
-  stackLength = 0;
-  numStacks = 0;
-  
+
+  if(stackMode == StackMode::Shutters) {
+    if(numStacks == 0) { stackLength = 0; }
+    numStacks = numLEDs / dimPeriod;
+  }
+  else if(stackMode == StackMode::Stack4 || stackMode == StackMode::Stack4Mirror) {
+    numStacks = 0;
+  }
+  else if(stackMode == StackMode::StutterStep) {
+    numStacks = numLEDs / dimPeriod;
+    stackLength = maxStackLength;
+  }
+
   for(uint16_t i = 0; i < numStacks; i++) {
     stacks[i].pixel = i * dimPeriod;
     stacks[i].color = i % numColors;
@@ -68,7 +78,6 @@ void LEDLoop::DrawStack(struct_stack& s) {
     if(++pix == numLEDs) { pix = 0; }
   }
 }
-
 void LEDLoop::DrawAllStacks() {
   for(int i = 0; i < numStacks; i++) {
     DrawStack(stacks[i]);
@@ -88,44 +97,6 @@ void LEDLoop::MoveAllStacks(bool clockwise) {
   for(int i = 0; i < numStacks; i++) {
     MoveStack(stacks[i], clockwise);
   }
-}
-
-// Assumes maxStacks are already defined
-bool LEDLoop::Shutters() {
-  // Wipe off, wipe on - Done by changing size and moving location until size is 0, then opening up again from new position
-  static bool fadeIn = true;
-
-  if(stackLength == 0) { fadeIn = true; }
-  else if(stackLength == maxStackLength) { fadeIn = false; }
-
-  if(fadeIn) {
-    stackLength++;
-    
-    for(int i = 0; i < numStacks; i++) { stacks[i].length = stackLength; }
-    if(moveClockwise) { MoveAllStacks(true); }
-    return true;//stackLength == maxStackLength; // Ready for transition at max length
-  }
-  else {
-    stackLength--;
-
-    for(int i = 0; i < numStacks; i++) { stacks[i].length = stackLength; }
-    if(!moveClockwise) { MoveAllStacks(false); }
-    DrawAllStacks();
-    return true; // Don't allow this transition point for now... return stackLength == 0; // Ready for transition on empty screen
-  }
-}
-
-bool LEDLoop::StutterStepBands() {
-  // Half the stacks move forward until they hit another (or overlap), then the other half moves
-  static bool moveOdd = false;
-  
-  if(     (stacks[0].pixel + stacks[0].length) % numLEDs == stacks[1].pixel) { moveOdd = true; }
-  else if((stacks[1].pixel + stacks[1].length) % numLEDs == stacks[2].pixel) { moveOdd = false; }
-
-  for(uint8_t i = moveOdd ? 1 : 0; i < numStacks; i+=2) { MoveStack(stacks[i], moveClockwise); }
-
-  DrawAllStacks();
-  return (stacks[0].pixel + dimPeriod) % numLEDs == stacks[1].pixel; // half way through movement; i.e. evenly spaced
 }
 
 // Todo: Change partial pixels into a stack that is growing; then it blends better with other Stack operations
@@ -224,7 +195,7 @@ bool LEDLoop::Stack4_Mirror() {
   if(curStep==0) { // Stacking up
 
     // Check for stack completion
-    if(progress == LEDsPerGroup - (numStacks/numSections) * dimPeriod) {
+    if(progress == LEDsPerGroup - (numStacks/numSections) * dimPeriod - (dimPeriod-maxStackLength)/2) {
       // Completed run; Create a stack if there is room
       if(progress >= maxStackLength) {
         for(int i = 0; i < numSections; i++) {
@@ -250,14 +221,14 @@ bool LEDLoop::Stack4_Mirror() {
     for(int i = 0; i < numPixels; i++) {
       for(int j = 0; j < numSections; j++) {
         if(j % 2 == 0) {
-          uint16_t offset = (progress + j*LEDsPerGroup) % numLEDs;
-          leds[offset - i - 1] = pm->palette[(numStacks/numSections) % numColors];
-          leds_b[offset - i - 1] = 255;
+          uint16_t idx = ((progress + j*LEDsPerGroup) % numLEDs) - i - 1;
+          leds[idx] = pm->palette[(numStacks/numSections) % numColors];
+          leds_b[idx] = 255;
         }
         else { // Mirror j-1
-          uint16_t offset = numLEDs - ((progress + (j-1)*LEDsPerGroup) % numLEDs);
-          leds[offset + i + 1] = pm->palette[(numStacks/numSections) % numColors];
-          leds_b[offset + i + 1] = 255;
+          uint16_t idx = numLEDs - ((progress + (j-1)*LEDsPerGroup) % numLEDs) + i + 1;
+          leds[idx] = pm->palette[(numStacks/numSections) % numColors];
+          leds_b[idx] = 255;
         }
       }
     }
@@ -277,8 +248,18 @@ bool LEDLoop::Stack4_Mirror() {
 
     // Draw partial pixels
     for(int i = 0; i < sparePixels && i < maxStackLength; i++) {
-      leds[sparePixels - i - 1] = pm->palette[(numStacks/numSections) % numColors];
-      leds_b[sparePixels - i - 1] = 255;
+      for(uint8_t j = 0; j < numSections; j++) {
+        if(j % 2 == 0) {
+          uint16_t idx = sparePixels - i - 1;
+          leds[idx] = pm->palette[(numStacks/numSections) % numColors];
+          leds_b[idx] = 255;
+        }
+        else {
+          uint16_t idx = numLEDs - sparePixels + i;
+          leds[idx] = pm->palette[(numStacks/numSections) % numColors];
+          leds_b[idx] = 255;
+        }
+      }
     }
 
     for(uint16_t i = 0; i <= progress; i++) {
@@ -299,6 +280,45 @@ bool LEDLoop::Stack4_Mirror() {
   }
   
   return false; // No transition conditions met
+}
+bool LEDLoop::Shutters() {
+  // Wipe off, wipe on - Done by changing size and moving location until size is 0, then opening up again from new position
+  static bool fadeIn = true;
+
+  if(numStacks == 0) {
+    InitStacks(uint8_t(StackMode::Shutters));
+  }
+
+  if(stackLength == 0) { fadeIn = true; }
+  else if(stackLength == maxStackLength) { fadeIn = false; }
+
+  if(fadeIn) {
+    stackLength++;
+    
+    for(int i = 0; i < numStacks; i++) { stacks[i].length = stackLength; }
+    if(moveClockwise) { MoveAllStacks(true); }
+    return stackLength == maxStackLength; // Ready for transition at max length
+  }
+  else {
+    stackLength--;
+
+    for(int i = 0; i < numStacks; i++) { stacks[i].length = stackLength; }
+    if(!moveClockwise) { MoveAllStacks(false); }
+    DrawAllStacks();
+    return true; // Don't allow this transition point for now... return stackLength == 0; // Ready for transition on empty screen
+  }
+}
+bool LEDLoop::StutterStepBands() {
+  // Half the stacks move forward until they hit another (or overlap), then the other half moves
+  static bool moveOdd = false;
+  
+  if(     (stacks[0].pixel + stacks[0].length) % numLEDs == stacks[1].pixel) { moveOdd = true; }
+  else if((stacks[1].pixel + stacks[1].length) % numLEDs == stacks[2].pixel) { moveOdd = false; }
+
+  for(uint8_t i = moveOdd ? 1 : 0; i < numStacks; i+=2) { MoveStack(stacks[i], moveClockwise); }
+
+  DrawAllStacks();
+  return (stacks[0].pixel + dimPeriod) % numLEDs == stacks[1].pixel; // half way through movement; i.e. evenly spaced
 }
 
 

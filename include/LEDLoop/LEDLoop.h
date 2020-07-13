@@ -70,7 +70,7 @@ class LEDLoop {
         
         
         void Stacks();
-        uint8_t InitStacks();
+        uint8_t InitStacks(uint8_t mode = 0);
         void DrawStack(struct_stack& s);
         void DrawAllStacks();
         void MoveStack(struct_stack& s, bool clockwise);
