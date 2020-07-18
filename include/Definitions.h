@@ -54,6 +54,11 @@ struct struct_scroller_params {
   uint8_t colorPeriod;
 };
 
+struct struct_stacker_params {
+  uint16_t dimPeriod;
+  uint8_t numColors;
+};
+
 #define NUM_TOP_PARAMS 3
 struct struct_top_show_params {
   TopAnimation animation = INIT_TOP_ANIMATION;
@@ -84,21 +89,6 @@ struct struct_timers {
 struct base_animation {
   String name;
   void Draw(struct_base_show_params* baseParams, CRGB* leds, uint8_t* leds_b);
-};
-
-struct struct_stacker {
-  uint16_t startPixel;
-  uint16_t endPixel;
-  bool moveForward;
-  uint8_t stackSize;
-  uint8_t spacing;
-  uint8_t numColors;
-  uint16_t moveSpeed;
-  
-  uint8_t numStacks;
-  uint16_t moveIndex;
-  
-  uint32_t lastMove = 0;
 };
 
 struct struct_stack {

@@ -36,7 +36,7 @@ void LEDLoop::DrawBaseLayer() {
       break;
 
     case BaseAnimation::Stacks:
-      Stacks();
+      stackers.Stacks();
       break;
 
     default:
@@ -57,7 +57,7 @@ void LEDLoop::InitBaseLayer() {
       break;
 
     case BaseAnimation::Stacks:
-      InitStacks();
+      stackers.CreateStacks();
       break;
       
     default:

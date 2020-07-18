@@ -5,6 +5,7 @@
 #include "Definitions.h"
 #include "Util.h"
 #include "PatternScrolling\PatternController.h"
+#include "Stackers.h"
 
 class LEDLoop {
     public:
@@ -47,6 +48,7 @@ class LEDLoop {
         PaletteManager* pm;
         GammaManager Gamma;
         PatternController pc;
+        Stackers stackers;
 
 
         // Layers.cpp
@@ -67,24 +69,6 @@ class LEDLoop {
         void Fire();
         void CreateFirePalette(CRGBPalette16 *firePalette);
         void DiscoFire();
-        
-        
-        void Stacks();
-        uint8_t InitStacks(uint8_t mode = 0);
-        void DrawStack(struct_stack& s);
-        void DrawAllStacks();
-        void MoveStack(struct_stack& s, bool clockwise);
-        void MoveAllStacks(bool clockwise);
-        bool Stack4();
-        bool Stack4_Mirror();
-        bool Shutters();
-        bool StutterStepBands();
-        
-        
-        void Stackers();
-        uint8_t InitStackers(uint16_t rotationIndex);
-        bool DrawStacker(struct_stacker* s);
-        bool ClearStackers(uint8_t clearMode);
         
         
         void ScrollingSaturation(uint8_t nWhite, uint8_t nTrans, uint8_t nPure);
