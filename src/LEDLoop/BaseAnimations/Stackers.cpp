@@ -21,7 +21,7 @@ void Stackers::Init(uint16_t _numLEDs, PaletteManager* _pm, CRGB* _leds, uint8_t
 
 uint8_t Stackers::CreateStacks(uint8_t mode) {
   // Sets up a full collection of stacks with max length
-  stackMode = StackMode(mode % NUM_STACK_MODES);
+  stackMode = StackMode(mode % int(StackMode::Length));
   if(stackMode == StackMode::None) { stackMode = DEFAULT_STACK_MODE; }
 
   moveClockwise = DEFAULT_MOVE_CLOCKWISE;
@@ -32,10 +32,10 @@ uint8_t Stackers::CreateStacks(uint8_t mode) {
     if(numStacks == 0) { stackLength = 0; }
     numStacks = numLEDs / dimPeriod;
   }
-  else if(stackMode == StackMode::Stack4 || stackMode == StackMode::Stack4Mirror) {
+  else if(stackMode == StackMode::Stack5 || stackMode == StackMode::Stack4Mirror) {
     numStacks = 0;
   }
-  else if(stackMode == StackMode::StutterStep) {
+  else if(stackMode == StackMode::StutterStepMinSmooth || stackMode == StackMode::StutterStepMaxSmooth || stackMode == StackMode::StutterStepColors) {
     numStacks = numLEDs / dimPeriod;
     stackLength = maxStackLength;
   }
@@ -49,28 +49,47 @@ uint8_t Stackers::CreateStacks(uint8_t mode) {
 }
 
 void Stackers::Stacks() {
+  static int displayMode = 0;
+
   for(uint16_t i = 0; i < numLEDs; i++) { leds_b[i] = 0; } // Clear LEDs
 
   if(transitionState != TransitionState::None) { // Quick check
     uint32_t transTime = MAX_TRANS_TIME;// MAX_TRANS_TIME / 0xFFFF * baseParams.transLength;
     if(*curTime - lastModeTransition >= transTime) { // Min time enforced
-      uint8_t nextStackMode = random8(1, NUM_STACK_MODES);
+      uint8_t nextStackMode = random8(1, int(StackMode::Length));
       if(allowedModes[int(transitionState)][nextStackMode]) {
-        DUMP(nextStackMode)
         moveClockwise = random8(1);
         stackMode = StackMode(nextStackMode);
         lastModeTransition = *curTime;
         isFirstCycleOfNewMode = true;
+
+        // Set displayMode for new modes
+        if(stackMode == StackMode::StutterStepMinSmooth) {
+          displayMode = 0;
+          for(int i = numStacks/2; i > 1; i--) {
+            if(numStacks % i == 0) { displayMode = i; }
+          }
+        }
+        else if(stackMode == StackMode::StutterStepMaxSmooth) {
+          displayMode = 0;
+          for(int i = 2; i <= numStacks/2; i++) {
+            if(numStacks % i == 0) { displayMode = i; }
+          }
+        }
       }
     }
   }
 
   // Draw current stackMode
   if(stackMode == StackMode::Shutters) { transitionState = TransitionState(Shutters()); }
+  else if(stackMode == StackMode::Stack3) { transitionState = TransitionState(StackSections(3)); }
   else if(stackMode == StackMode::Stack4) { transitionState = TransitionState(StackSections(4)); }
+  else if(stackMode == StackMode::Stack5) { transitionState = TransitionState(StackSections(5)); }
   else if(stackMode == StackMode::Stack4Mirror) { transitionState = TransitionState(StackSections_Mirror(4)); }
-  else if(stackMode == StackMode::StutterStep) { transitionState = TransitionState(StutterStepBands()); }
-
+  else if(stackMode == StackMode::StutterStepMinSmooth) { transitionState = TransitionState(StutterStepBands(displayMode)); }
+  else if(stackMode == StackMode::StutterStepMaxSmooth) { transitionState = TransitionState(StutterStepBands(displayMode)); }
+  else if(stackMode == StackMode::StutterStepColors) { transitionState = TransitionState(StutterStepBands(numColors)); }
+  else THROW("Unrecognized stackMode!")
   isFirstCycleOfNewMode = false;
 }
 
@@ -191,16 +210,26 @@ uint8_t Stackers::StackSectionsDown(uint8_t numSections, uint16_t& progress, uin
 
   uint16_t LEDsPerGroup = numLEDs / numSections;
   uint16_t sparePixels = LEDsPerGroup % dimPeriod;
-  if(dimPeriod * (numStacks/numSections) > LEDsPerGroup) { sparePixels = 0; } // For cases where there's enough room for the stack but not the spacing 
-
-  // Draw partial pixels
-  for(int i = 0; i < sparePixels && i < maxStackLength; i++) {
-    for(int j = 0; j < numSections; j++) {
-      int idx = sparePixels - i - 1 + j*LEDsPerGroup;
-      leds[idx] = pm->palette[(numStacks/numSections) % numColors];
-      leds_b[idx] = PIXEL_BRIGHTNESS;
+  
+  if(dimPeriod * (numStacks/numSections) > LEDsPerGroup) { // If stacks have been created but dimPeriod not filled yet
+    if(sparePixels > stackLength + progress) { progress = sparePixels - stackLength; } // Skip over the opening blanks
+    //sparePixels = 0; // For cases where there's enough room for the stack but not the spacing
+  }
+  else {  
+    // Draw partial pixels
+    for(int i = 0; i < sparePixels && i < maxStackLength; i++) {
+      for(int j = 0; j < numSections; j++) {
+        int idx = sparePixels - i - 1 + j*LEDsPerGroup;
+        leds[idx] = pm->palette[(numStacks/numSections) % numColors];
+        leds_b[idx] = PIXEL_BRIGHTNESS;
+      }
     }
   }
+
+  // Start the Wipe at the start of the stack; don't waste time wiping the first set of blank pixels
+  //int min = LEDsPerGroup - dimPeriod * numStacks/numSections;
+  //if(min < 0) { min = sparePixels - stackLength; DUMP(min) }
+  //if(progress < min) { progress = min; }
 
   uint8_t retVal = WipeClean(numSections, progress);
   if(TransitionState(retVal) == TransitionState::Empty) {
@@ -282,8 +311,8 @@ uint8_t Stackers::StackSectionsUp_Mirror(uint8_t numSections, uint16_t& progress
     // Create a real stack from the 2 halves
     int insertI = numStacks/2;
     int i = numStacks;
-    while(i > insertI) {
-      stacks[i+1] = stacks[i-1];
+    while(i >= insertI) {
+      stacks[i] = stacks[i-1];
       i--;
     }
 
@@ -293,14 +322,10 @@ uint8_t Stackers::StackSectionsUp_Mirror(uint8_t numSections, uint16_t& progress
     DrawStack(stacks[i+1]);
     numStacks++;
 
-    while(i > 0) {
-      stacks[i] = stacks[i-1];
-      i--;
-    }
-    stacks[0].pixel = numLEDs - progress;
-    stacks[0].length = maxStackLength;
-    stacks[0].color = (numStacks/numSections) % numColors;
-    DrawStack(stacks[0]);
+    stacks[numStacks].pixel = numLEDs - progress;
+    stacks[numStacks].length = maxStackLength;
+    stacks[numStacks].color = (numStacks/numSections) % numColors;
+    DrawStack(stacks[numStacks]);
     numStacks++;
 
     curStep = 1;
@@ -437,33 +462,50 @@ uint8_t Stackers::Shutters() {
   }
 }
 
-uint8_t Stackers::StutterStepBands() {
+uint8_t Stackers::StutterStepBands(int numGroups) {
   // Half the stacks move forward until they hit another (or overlap), then the other half moves
-  static bool moveOdd = false;
+  static int moveMod = 0;
 
-  uint16_t endOfStack0 = (stacks[0].pixel + stacks[0].length) % numLEDs;
-  uint16_t endOfStack1 = (stacks[1].pixel + stacks[1].length) % numLEDs;
-
-  for(uint8_t i = 0; i < numStacks; i++) {
-    if(endOfStack0 == stacks[i].pixel) { moveOdd = !moveClockwise; }
-    else if(endOfStack1 == stacks[i].pixel) { moveOdd = moveClockwise; }
+  if(isFirstCycleOfNewMode) { moveMod = 0; }
+  if(stackLength == 0) {
+    stackLength = maxStackLength;
+    for(int i = 0; i < numStacks; i++) {
+      if(stacks[i].length == 0) {
+        stacks[i].length = maxStackLength;
+        stacks[i].pixel = dimPeriod * i;
+      }
+    }
   }
 
-  for(uint8_t i = moveOdd ? 1 : 0; i < numStacks; i+=2) { MoveStack(stacks[i], moveClockwise); }
 
-  DrawAllStacks();
-
-  // return true when half way through movement; i.e. evenly spaced
-  
   if(moveClockwise) {
-    for(int i = 0; i < numStacks-1; i++) {
-      if((stacks[i].pixel + dimPeriod) % numLEDs != stacks[i+1].pixel) { return uint8_t(TransitionState::Messy); }
+    for(int i = 0; i < numStacks; i++) {
+      uint16_t endOfStack = (stacks[i].pixel + stacks[i].length) % numLEDs;
+      for(int j = moveMod; j < numStacks; j+=numGroups) {
+        if(endOfStack == stacks[j].pixel) {
+          moveMod = (numGroups + moveMod - 1) % numGroups;
+          return StutterStepBands(numGroups);
+        }
+      }
     }
   }
   else {
-    for(int i = 1; i < numStacks; i++) {
-      if((numLEDs + stacks[i].pixel - dimPeriod) % numLEDs != stacks[i-1].pixel) { return uint8_t(TransitionState::Messy); }
+    for(int j = moveMod; j < numStacks; j+=numGroups) {
+      uint16_t endOfStack = (stacks[j].pixel + stacks[j].length) % numLEDs;
+      for(int i = 0; i < numStacks; i++) {
+        if(endOfStack == stacks[i].pixel) {
+          moveMod = (moveMod+1) % numGroups;
+          return StutterStepBands(numGroups);
+        }
+      }
     }
   }
+
+  for(uint8_t i = moveMod; i < numStacks; i+=numGroups) { MoveStack(stacks[i], moveClockwise); }
+  DrawAllStacks();
+
+  // return Messy when half way through movement, else Full (when evenly spaced)
+  if(moveClockwise) { for(int i = 0; i < numStacks-1; i++) { if((stacks[i].pixel + dimPeriod) % numLEDs != stacks[i+1].pixel)           { return uint8_t(TransitionState::Messy); } } }
+  else {              for(int i = 1; i < numStacks; i++)   { if((numLEDs + stacks[i].pixel - dimPeriod) % numLEDs != stacks[i-1].pixel) { return uint8_t(TransitionState::Messy); } } }
   return uint8_t(TransitionState::Full);
 }

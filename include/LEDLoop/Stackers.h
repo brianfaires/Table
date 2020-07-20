@@ -4,23 +4,19 @@
 
 class Stackers {
   private:
-    #define MAX_TRANS_TIME (6*ONE_SEC)
+    #define MAX_TRANS_TIME (7*ONE_SEC)
     #define MAX_STACKS 40
     #define DEFAULT_STACK_MODE StackMode::Shutters
     #define DEFAULT_MOVE_CLOCKWISE true
     #define PIXEL_BRIGHTNESS 100
     #define MIN_STACK_LENGTH 5
     
-    #define NUM_TRANSITION_STATES 3
-    enum class TransitionState : uint8_t { None, Empty, Full, Messy };
-    
-    #define NUM_STACK_MODES 4
-    enum class StackMode : uint8_t { None, Shutters, StutterStep, Stack4, Stack4Mirror };
-
-    const bool allowedModes[NUM_TRANSITION_STATES+1][NUM_STACK_MODES+1] = { { 0, 0, 0, 0, 0 },
-                                                                            { 0, 1, 0, 1, 1 },   // Empty
-                                                                            { 0, 1, 1, 1, 1 },   // Full
-                                                                            { 0, 0, 0, 0, 0 } }; // Messy
+    enum class TransitionState : int { None, Empty, Full, Messy, Length };
+    enum class StackMode : int { None, Shutters, StutterStepMinSmooth, StutterStepMaxSmooth, StutterStepColors, Stack3, Stack4, Stack5, Stack4Mirror, Length };
+    const bool allowedModes[int(TransitionState::Length)][int(StackMode::Length)] = { { 0, 0, 0, 0, 0, 0, 0 },
+                                                                                      { 0, 1, 0, 0, 0, 0, 1, 1, 1 },   // Empty
+                                                                                      { 0, 1, 1, 1, 1, 1, 1, 1, 1 },   // Full
+                                                                                      { 0, 0, 0, 0, 0, 0, 0, 0, 0 } }; // Messy
     
     // Initialized values
     uint16_t numLEDs;
@@ -58,7 +54,7 @@ class Stackers {
     void MoveAllStacks(bool clockwise);
 
     uint8_t Shutters();
-    uint8_t StutterStepBands();
+    uint8_t StutterStepBands(int numGroups);
     uint8_t StackSections(uint8_t numSections);
     uint8_t StackSectionsUp(uint8_t numSections, uint16_t& progress, uint8_t &curStep);
     uint8_t StackSectionsDown(uint8_t numSections, uint16_t& progress, uint8_t &curStep);
