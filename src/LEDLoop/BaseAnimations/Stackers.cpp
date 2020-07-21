@@ -88,8 +88,9 @@ void Stackers::Stacks() {
   else if(stackMode == StackMode::Stack4Mirror) { transitionState = TransitionState(StackSections_Mirror(4)); }
   else if(stackMode == StackMode::StutterStepMinSmooth) { transitionState = TransitionState(StutterStepBands(displayMode)); }
   else if(stackMode == StackMode::StutterStepMaxSmooth) { transitionState = TransitionState(StutterStepBands(displayMode)); }
-  else if(stackMode == StackMode::StutterStepColors) { transitionState = TransitionState(StutterStepBands(numColors)); }
+  else if(stackMode == StackMode::StutterStepColors) { transitionState = TransitionState(StutterStepBands()); }
   else THROW("Unrecognized stackMode!")
+  
   isFirstCycleOfNewMode = false;
 }
 
@@ -466,9 +467,11 @@ uint8_t Stackers::StutterStepBands(int numGroups) {
   // Half the stacks move forward until they hit another (or overlap), then the other half moves
   static int moveMod = 0;
 
-  if(isFirstCycleOfNewMode) { moveMod = 0; }
-  if(stackLength == 0) {
-    stackLength = maxStackLength;
+  if(stackLength == 0) { stackLength = maxStackLength; }
+  
+  if(isFirstCycleOfNewMode) {
+    moveMod = 0;
+  
     for(int i = 0; i < numStacks; i++) {
       if(stacks[i].length == 0) {
         stacks[i].length = maxStackLength;
@@ -477,31 +480,55 @@ uint8_t Stackers::StutterStepBands(int numGroups) {
     }
   }
 
-
-  if(moveClockwise) {
-    for(int i = 0; i < numStacks; i++) {
-      uint16_t endOfStack = (stacks[i].pixel + stacks[i].length) % numLEDs;
-      for(int j = moveMod; j < numStacks; j+=numGroups) {
-        if(endOfStack == stacks[j].pixel) {
-          moveMod = (numGroups + moveMod - 1) % numGroups;
-          return StutterStepBands(numGroups);
+  if(numGroups == -1) {
+    // No param given; make changes based on stackMode
+    if(stackMode == StackMode::StutterStepColors) {
+      bool moveCompleted = false;
+      for(int i = 0; i < numStacks; i++) {
+        if(stacks[i].color == moveMod) {
+          MoveStack(stacks[i], moveClockwise);
+          // Look for collision with any other stack
+          for(int j = 0; j < numStacks; j++) {
+            if(moveClockwise) { if((stacks[j].pixel + stacks[j].length) % numLEDs == stacks[i].pixel) { moveCompleted = true; break; } }
+            else              { if((stacks[i].pixel + stacks[i].length) % numLEDs == stacks[j].pixel) { moveCompleted = true; break; } }
+          }
         }
+      }
+
+      if(moveCompleted == true) {
+        if(moveClockwise) { moveMod = (numColors + moveMod-1) % numColors; }
+        else              { moveMod =  (moveMod+1) % numColors; }
       }
     }
   }
   else {
-    for(int j = moveMod; j < numStacks; j+=numGroups) {
-      uint16_t endOfStack = (stacks[j].pixel + stacks[j].length) % numLEDs;
+    // Standard use
+    if(moveClockwise) {
       for(int i = 0; i < numStacks; i++) {
-        if(endOfStack == stacks[i].pixel) {
-          moveMod = (moveMod+1) % numGroups;
-          return StutterStepBands(numGroups);
+        uint16_t endOfStack = (stacks[i].pixel + stacks[i].length) % numLEDs;
+        for(int j = moveMod; j < numStacks; j+=numGroups) {
+          if(endOfStack == stacks[j].pixel) {
+            moveMod = (numGroups + moveMod - 1) % numGroups;
+            return StutterStepBands(numGroups);
+          }
         }
       }
     }
+    else {
+      for(int j = moveMod; j < numStacks; j+=numGroups) {
+        uint16_t endOfStack = (stacks[j].pixel + stacks[j].length) % numLEDs;
+        for(int i = 0; i < numStacks; i++) {
+          if(endOfStack == stacks[i].pixel) {
+            moveMod = (moveMod+1) % numGroups;
+            return StutterStepBands(numGroups);
+          }
+        }
+      }
+    }
+    
+    for(uint8_t i = moveMod; i < numStacks; i+=numGroups) { MoveStack(stacks[i], moveClockwise); }
   }
 
-  for(uint8_t i = moveMod; i < numStacks; i+=numGroups) { MoveStack(stacks[i], moveClockwise); }
   DrawAllStacks();
 
   // return Messy when half way through movement, else Full (when evenly spaced)
