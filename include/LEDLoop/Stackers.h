@@ -6,8 +6,8 @@ class Stackers {
   private:
     #define MAX_TRANS_TIME (20*ONE_SEC)
     #define MAX_STACKS 40
-    #define DEFAULT_STACK_MODE StackMode::StutterStepColors
-    #define DEFAULT_MOVE_CLOCKWISE true
+    #define DEFAULT_STACK_MODE StackMode::Stack3
+    #define DEFAULT_MOVE_CLOCKWISE false
     #define PIXEL_BRIGHTNESS 100
     #define MIN_STACK_LENGTH 5
     
@@ -52,6 +52,7 @@ class Stackers {
     void DrawAllStacks();
     void MoveStack(struct_stack& s, bool clockwise);
     void MoveAllStacks(bool clockwise);
+    uint8_t GetDisplayMode();
 
     uint8_t Shutters();
     uint8_t StutterStepBands(int numGroups = -1);

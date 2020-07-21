@@ -19,6 +19,22 @@ void Stackers::Init(uint16_t _numLEDs, PaletteManager* _pm, CRGB* _leds, uint8_t
   CreateStacks(); // Probably unnecessary now that isFirstCycleOfNewMode causes this anyway
 }
 
+uint8_t Stackers::GetDisplayMode() {
+  uint8_t displayMode = 0;
+  if(stackMode == StackMode::StutterStepMinSmooth) {
+    for(int i = numStacks/2; i > 1; i--) {
+      if(numStacks % i == 0) { displayMode = i; }
+    }
+  }
+  else if(stackMode == StackMode::StutterStepMaxSmooth) {
+    for(int i = 2; i <= numStacks/2; i++) {
+      if(numStacks % i == 0) { displayMode = i; }
+    }
+  }
+
+  return displayMode;
+}
+
 uint8_t Stackers::CreateStacks(uint8_t mode) {
   // Sets up a full collection of stacks with max length
   stackMode = StackMode(mode % int(StackMode::Length));
@@ -53,6 +69,8 @@ void Stackers::Stacks() {
 
   for(uint16_t i = 0; i < numLEDs; i++) { leds_b[i] = 0; } // Clear LEDs
 
+  if(displayMode == 0) { displayMode = GetDisplayMode(); }
+
   if(transitionState != TransitionState::None) { // Quick check
     uint32_t transTime = MAX_TRANS_TIME;// MAX_TRANS_TIME / 0xFFFF * baseParams.transLength;
     if(*curTime - lastModeTransition >= transTime) { // Min time enforced
@@ -64,31 +82,20 @@ void Stackers::Stacks() {
         isFirstCycleOfNewMode = true;
 
         // Set displayMode for new modes
-        if(stackMode == StackMode::StutterStepMinSmooth) {
-          displayMode = 0;
-          for(int i = numStacks/2; i > 1; i--) {
-            if(numStacks % i == 0) { displayMode = i; }
-          }
-        }
-        else if(stackMode == StackMode::StutterStepMaxSmooth) {
-          displayMode = 0;
-          for(int i = 2; i <= numStacks/2; i++) {
-            if(numStacks % i == 0) { displayMode = i; }
-          }
-        }
+        displayMode = GetDisplayMode();
       }
     }
   }
 
   // Draw current stackMode
-  if(stackMode == StackMode::Shutters) { transitionState = TransitionState(Shutters()); }
+  if(stackMode == StackMode::Shutters)    { transitionState = TransitionState(Shutters()); }
   else if(stackMode == StackMode::Stack3) { transitionState = TransitionState(StackSections(3)); }
   else if(stackMode == StackMode::Stack4) { transitionState = TransitionState(StackSections(4)); }
   else if(stackMode == StackMode::Stack5) { transitionState = TransitionState(StackSections(5)); }
-  else if(stackMode == StackMode::Stack4Mirror) { transitionState = TransitionState(StackSections_Mirror(4)); }
+  else if(stackMode == StackMode::Stack4Mirror)         { transitionState = TransitionState(StackSections_Mirror(4)); }
   else if(stackMode == StackMode::StutterStepMinSmooth) { transitionState = TransitionState(StutterStepBands(displayMode)); }
   else if(stackMode == StackMode::StutterStepMaxSmooth) { transitionState = TransitionState(StutterStepBands(displayMode)); }
-  else if(stackMode == StackMode::StutterStepColors) { transitionState = TransitionState(StutterStepBands()); }
+  else if(stackMode == StackMode::StutterStepColors)    { transitionState = TransitionState(StutterStepBands()); }
   else THROW("Unrecognized stackMode!")
   
   isFirstCycleOfNewMode = false;
@@ -468,7 +475,7 @@ uint8_t Stackers::StutterStepBands(int numGroups) {
   static int moveMod = 0;
 
   if(stackLength == 0) { stackLength = maxStackLength; }
-  
+    
   if(isFirstCycleOfNewMode) {
     moveMod = 0;
   
