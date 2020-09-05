@@ -188,9 +188,6 @@ uint8_t Stackers::WipeClean(uint8_t numSections, uint16_t progress) {
 
 
 ////////// Private animations //////////////
-// Todo: Change partial pixels into a stack that is growing; then it blends better with other Stack operations
-// Todo: Change final stacks to be just 1 growing from center.  Then it will complete a full stacks.
-
 uint8_t Stackers::StackSectionsUp(uint8_t numSections, uint16_t& progress, uint8_t &curStep) {
   uint16_t LEDsPerGroup = numLEDs / numSections;
 
@@ -236,22 +233,27 @@ uint8_t Stackers::StackSectionsUp(uint8_t numSections, uint16_t& progress, uint8
   return uint8_t(TransitionState::None);
 }
 uint8_t Stackers::StackSectionsDown(uint8_t numSections, uint16_t& progress, uint8_t &curStep) {
+  static bool doPartials = true;
+  if(isFirstCycleOfNewMode) { doPartials = false; }
+  
   DrawAllStacks();
 
   uint16_t LEDsPerGroup = numLEDs / numSections;
-  uint16_t sparePixels = LEDsPerGroup % dimPeriod;
-  
-  if(dimPeriod * (numStacks/numSections) > LEDsPerGroup) { // If stacks have been created but dimPeriod not filled yet
-    if(sparePixels > stackLength + progress) { progress = sparePixels - stackLength; } // Skip over the opening blanks
-    //sparePixels = 0; // For cases where there's enough room for the stack but not the spacing
-  }
-  else {
-    // Draw partial pixels
-    for(int i = 0; i < sparePixels && i < maxStackLength; i++) {
-      for(int j = 0; j < numSections; j++) {
-        int idx = sparePixels - i - 1 + j*LEDsPerGroup;
-        leds[idx] = pm->palette[(numStacks/numSections) % numColors];
-        leds_b[idx] = PIXEL_BRIGHTNESS;
+
+  if(doPartials) {
+    uint16_t sparePixels = LEDsPerGroup % dimPeriod;
+    if(dimPeriod * (numStacks/numSections) > LEDsPerGroup) { // If stacks have been created but dimPeriod not filled yet
+      if(sparePixels > stackLength + progress) { progress = sparePixels - stackLength; } // Skip over the opening blanks
+      //sparePixels = 0; // For cases where there's enough room for the stack but not the spacing
+    }
+    else {
+      // Draw partial pixels
+      for(int i = 0; i < sparePixels && i < maxStackLength; i++) {
+        for(int j = 0; j < numSections; j++) {
+          int idx = sparePixels - i - 1 + j*LEDsPerGroup;
+          leds[idx] = pm->palette[(numStacks/numSections) % numColors];
+          leds_b[idx] = PIXEL_BRIGHTNESS;
+        }
       }
     }
   }
@@ -266,6 +268,7 @@ uint8_t Stackers::StackSectionsDown(uint8_t numSections, uint16_t& progress, uin
     progress = 0;
     numStacks = 0;
     curStep = 0;
+    doPartials = true;
   }
 
   return retVal;
@@ -414,24 +417,30 @@ uint8_t Stackers::StackSectionsUp_Mirror(uint8_t numSections, uint16_t& progress
   return uint8_t(TransitionState::None);
 }
 uint8_t Stackers::StackSectionsDown_Mirror(uint8_t numSections, uint16_t& progress, uint8_t &curStep) {
+  static bool doPartials = true;
+  if(isFirstCycleOfNewMode) { doPartials = false; }
+  
   DrawAllStacks();
 
   uint16_t LEDsPerGroup = numLEDs / numSections;
-  uint16_t sparePixels = (numLEDs - numStacks*dimPeriod) / numSections;
-  if(dimPeriod * (numStacks/numSections) > LEDsPerGroup) { sparePixels = 0; } // For cases where there's enough room for the stack but not the spacing 
+  
+  if(doPartials) {
+    uint16_t sparePixels = (numLEDs - numStacks*dimPeriod) / numSections;
+    if(dimPeriod * (numStacks/numSections) > LEDsPerGroup) { sparePixels = 0; } // For cases where there's enough room for the stack but not the spacing 
 
-  // Draw partial pixels
-  for(int i = 0; i < sparePixels && i < maxStackLength; i++) {
-    for(uint8_t j = 0; j < numSections; j++) {
-      if(j % 2 == 0) {
-        uint16_t idx = (numLEDs - i - 1) % numLEDs;
-        leds[idx] = pm->palette[(numStacks/numSections) % numColors];
-        leds_b[idx] = PIXEL_BRIGHTNESS;
-      }
-      else {
-        uint16_t idx = (numLEDs - i) % numLEDs;
-        leds[idx] = pm->palette[(numStacks/numSections) % numColors];
-        leds_b[idx] = PIXEL_BRIGHTNESS;
+    // Draw partial pixels
+    for(int i = 0; i < sparePixels && i < maxStackLength; i++) {
+      for(uint8_t j = 0; j < numSections; j++) {
+        if(j % 2 == 0) {
+          uint16_t idx = (numLEDs - i - 1) % numLEDs;
+          leds[idx] = pm->palette[(numStacks/numSections) % numColors];
+          leds_b[idx] = PIXEL_BRIGHTNESS;
+        }
+        else {
+          uint16_t idx = (numLEDs - i) % numLEDs;
+          leds[idx] = pm->palette[(numStacks/numSections) % numColors];
+          leds_b[idx] = PIXEL_BRIGHTNESS;
+        }
       }
     }
   }
@@ -448,6 +457,7 @@ uint8_t Stackers::StackSectionsDown_Mirror(uint8_t numSections, uint16_t& progre
     progress = 0;
     numStacks = 0;
     curStep = 0;
+    doPartials = true;
     
     return uint8_t(TransitionState::Empty);
   }
@@ -482,6 +492,8 @@ uint8_t Stackers::StackSections_Mirror(uint8_t numSections) {
 }
 
 uint8_t Stackers::Shutters() {
+  const uint8_t minStackLength = 2; // Locally; diff than the globale MIN_STACK_LENGTH
+
   // Wipe off, wipe on - Done by changing size and moving location until size is 0, then opening up again from new position
   static bool fadeIn = true;
 
@@ -490,7 +502,7 @@ uint8_t Stackers::Shutters() {
     stackLength = 0;
   }
 
-  if(stackLength == 0) { fadeIn = true; }
+  if(stackLength <= minStackLength) { fadeIn = true; }
   else if(stackLength == maxStackLength) { fadeIn = false; }
 
   if(fadeIn) {

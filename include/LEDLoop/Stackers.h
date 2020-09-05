@@ -13,10 +13,10 @@ class Stackers {
     
     enum class TransitionState : int { None, Empty, Full, Messy, Length };
     enum class StackMode : int { None, Shutters, StutterStepMinSmooth, StutterStepMaxSmooth, StutterStepColors, Stack3, Stack4, Stack5, Stack2Mirror, Stack4Mirror, Length };
-    const bool allowedModes[int(TransitionState::Length)][int(StackMode::Length)] = { { 0, 0, 0, 0, 0, 0, 0 },
-                                                                                      { 0, 1, 0, 0, 0, 0, 1, 1, 1 },   // Empty
-                                                                                      { 0, 1, 1, 1, 1, 1, 1, 1, 1 },   // Full
-                                                                                      { 0, 0, 0, 0, 0, 0, 0, 0, 0 } }; // Messy
+    const bool allowedModes[int(TransitionState::Length)][int(StackMode::Length)] = { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                                                                                      { 0, 1, 0, 0, 0, 1, 1, 1, 1, 1 },   // Empty
+                                                                                      { 0, 1, 1, 1, 1, 0, 1, 0, 1, 1 },   // Full
+                                                                                      { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } }; // Messy
     
     // Initialized values
     uint16_t numLEDs;
