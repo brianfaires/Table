@@ -43,8 +43,8 @@
 /////////////////////////////////////////////
 //////// Init PaletteManager Settings ///////
 #define INIT_PALETTE PaletteIndex(8)
-#define INIT_PM_WALK_LENGTH   3 * ONE_SEC
-#define INIT_PM_PAUSE_LENGTH  30 * ONE_MIN
+#define INIT_PM_WALK_LENGTH   2 * ONE_SEC
+#define INIT_PM_PAUSE_LENGTH  5 * ONE_SEC
 #define INIT_FADE_IN_FROM_BLACK false
 /////////////////////////////////////////////
 
@@ -81,7 +81,7 @@
 
 /////////////////////////////////////////
 //////////// Hardware config ////////////
-#define REFRESH_RATE 45
+#define REFRESH_RATE 40
 #define STARTUP_DELAY_MS 1000
 #define LED_DATA_RATE_MHZ 18
 #define SERIAL_DATA_RATE_HZ 115200

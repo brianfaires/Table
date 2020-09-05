@@ -4,15 +4,15 @@
 
 class Stackers {
   private:
-    #define MAX_TRANS_TIME (20*ONE_SEC)
+    #define MAX_TRANS_TIME (10*ONE_SEC)
     #define MAX_STACKS 40
-    #define DEFAULT_STACK_MODE StackMode::Stack3
+    #define DEFAULT_STACK_MODE StackMode::StutterStepMinSmooth
     #define DEFAULT_MOVE_CLOCKWISE false
     #define PIXEL_BRIGHTNESS 100
     #define MIN_STACK_LENGTH 5
     
     enum class TransitionState : int { None, Empty, Full, Messy, Length };
-    enum class StackMode : int { None, Shutters, StutterStepMinSmooth, StutterStepMaxSmooth, StutterStepColors, Stack3, Stack4, Stack5, Stack4Mirror, Length };
+    enum class StackMode : int { None, Shutters, StutterStepMinSmooth, StutterStepMaxSmooth, StutterStepColors, Stack3, Stack4, Stack5, Stack2Mirror, Stack4Mirror, Length };
     const bool allowedModes[int(TransitionState::Length)][int(StackMode::Length)] = { { 0, 0, 0, 0, 0, 0, 0 },
                                                                                       { 0, 1, 0, 0, 0, 0, 1, 1, 1 },   // Empty
                                                                                       { 0, 1, 1, 1, 1, 1, 1, 1, 1 },   // Full
