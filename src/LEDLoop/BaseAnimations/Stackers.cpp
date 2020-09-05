@@ -83,7 +83,6 @@ void Stackers::Stacks() {
   uint8_t absSpeed = 2 * abs(speed);
   uint8_t moveSpeed = scale8(MAX_MOVE_SPEED, absSpeed);
 
-
   moveThisCycle = false;
   if(moveSpeed > 0 && (*curTime - lastMoveTime) >= FPS_TO_TIME(moveSpeed)) {
     lastMoveTime = *curTime;
@@ -523,6 +522,7 @@ uint8_t Stackers::Shutters() {
   if(numStacks == 0) {
     CreateStacks(uint8_t(StackMode::Shutters));
     stackLength = 0;
+    for(int i = 0; i < numStacks; i++) { stacks[i].length = 0; }
   }
 
   if(stackLength <= minStackLength) { fadeIn = true; }

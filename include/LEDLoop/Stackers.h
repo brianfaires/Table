@@ -15,7 +15,7 @@ class Stackers {
     enum class StackMode : int { None, Shutters, StutterStepMinSmooth, StutterStepMaxSmooth, StutterStepColors, Stack3, Stack4, Stack5, Stack2Mirror, Stack4Mirror, Length };
     const bool allowedModes[int(TransitionState::Length)][int(StackMode::Length)] = { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
                                                                                       { 0, 1, 0, 0, 0, 1, 1, 1, 1, 1 },   // Empty
-                                                                                      { 0, 1, 1, 1, 1, 0, 1, 0, 1, 1 },   // Full
+                                                                                      { 0, 1, 1, 1, 1, 0, 0, 0, 1, 1 },   // Full -- Stacks look weird clearing.  Stack4 clear from shutters is maybe bugged? pixels deleting immediately
                                                                                       { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } }; // Messy
     
     // Initialized values
