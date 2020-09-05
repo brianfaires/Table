@@ -3,7 +3,7 @@
 #include "ArduinoTrace.h"
 
 ////////////// Public interface //////////////
-void Stackers::Init(uint16_t _numLEDs, PaletteManager* _pm, CRGB* _leds, uint8_t* _leds_b, struct_base_show_params& _params, std::vector<uint16_t> _allowedDimPeriods, uint8_t _numAllowedDimPeriods, uint32_t* pCurTime) {
+void Stackers::Init(uint16_t _numLEDs, PaletteManager* _pm, CRGB* _leds, uint8_t* _leds_b, struct_base_show_params* _params, std::vector<uint16_t> _allowedDimPeriods, uint8_t _numAllowedDimPeriods, uint32_t* pCurTime) {
   numLEDs = _numLEDs;
   pm = _pm;
   leds = _leds;
@@ -11,12 +11,14 @@ void Stackers::Init(uint16_t _numLEDs, PaletteManager* _pm, CRGB* _leds, uint8_t
   allowedDimPeriods = _allowedDimPeriods;
   numAllowedDimPeriods = _numAllowedDimPeriods;
   curTime = pCurTime;
-
-  numColors = scaleParam(_params.numColors, 1, PALETTE_SIZE-1);
-  dimPeriod = allowedDimPeriods[scaleParam(_params.dimPeriod, 0, numAllowedDimPeriods-1)];
-  maxStackLength = scale16(dimPeriod, _params.brightLength);
+  params = _params;
 
   CreateStacks(); // Probably unnecessary now that isFirstCycleOfNewMode causes this anyway
+}
+
+void Stackers::SkipTime(uint32_t amount) {
+  lastModeTransition += amount;
+  lastMoveTime += amount;
 }
 
 uint8_t Stackers::GetDisplayMode() {
@@ -36,12 +38,19 @@ uint8_t Stackers::GetDisplayMode() {
 }
 
 uint8_t Stackers::CreateStacks(uint8_t mode) {
+  // Read in params and lock them in for duration of this instance
+  numColors = scaleParam(params->numColors, 1, PALETTE_SIZE-1);
+  dimPeriod = allowedDimPeriods[scaleParam(params->dimPeriod, 0, numAllowedDimPeriods-1)];
+  maxStackLength = scale16(dimPeriod, params->brightLength);
+  
+
   // Sets up a full collection of stacks with max length
   stackMode = StackMode(mode % int(StackMode::Length));
   if(stackMode == StackMode::None) { stackMode = DEFAULT_STACK_MODE; }
 
   moveClockwise = DEFAULT_MOVE_CLOCKWISE;
   lastModeTransition = *curTime;
+  lastMoveTime = *curTime;
 
   // Handle initialization specifics
   if(stackMode == StackMode::Shutters) {
@@ -66,6 +75,20 @@ uint8_t Stackers::CreateStacks(uint8_t mode) {
 
 void Stackers::Stacks() {
   static int displayMode = 0;
+
+  // Update speed each cycle
+  const uint8_t MAX_MOVE_SPEED = 80;
+  int8_t speed = params->dimSpeed;
+  if(speed == -128) { speed = -127; } 
+  uint8_t absSpeed = 2 * abs(speed);
+  uint8_t moveSpeed = scale8(MAX_MOVE_SPEED, absSpeed);
+
+
+  moveThisCycle = false;
+  if(moveSpeed > 0 && (*curTime - lastMoveTime) >= FPS_TO_TIME(moveSpeed)) {
+    lastMoveTime = *curTime;
+    moveThisCycle = true;
+  }
 
   for(uint16_t i = 0; i < numLEDs; i++) { leds_b[i] = 0; } // Clear LEDs
 
@@ -295,7 +318,7 @@ uint8_t Stackers::StackSections(uint8_t numSections) {
 
     isFirstCycleOfNewMode = false;
   }
-  else {
+  else if(moveThisCycle) {
     progress++;
   }
 
@@ -481,7 +504,7 @@ uint8_t Stackers::StackSections_Mirror(uint8_t numSections) {
     progress = 0;
     isFirstCycleOfNewMode = false;
   }
-  else {
+  else if(moveThisCycle) {
     progress++;
   }
 
@@ -506,20 +529,22 @@ uint8_t Stackers::Shutters() {
   else if(stackLength == maxStackLength) { fadeIn = false; }
 
   if(fadeIn) {
-    stackLength++;
-
-    for(int i = 0; i < numStacks; i++) { stacks[i].length = stackLength; }
-    if(moveClockwise) { MoveAllStacks(true); }
+    if(moveThisCycle) {
+      stackLength++;
+      for(int i = 0; i < numStacks; i++) { stacks[i].length = stackLength; }
+      if(moveClockwise) { MoveAllStacks(true); }
+    }
 
     DrawAllStacks();
     return uint8_t(stackLength < MIN_STACK_LENGTH ? TransitionState::None : TransitionState::Full);
   }
   else {
-    stackLength--;
+    if(moveThisCycle) {
+      stackLength--;
+      for(int i = 0; i < numStacks; i++) { stacks[i].length = stackLength; }
+      if(!moveClockwise) { MoveAllStacks(false); }
+    }
 
-    for(int i = 0; i < numStacks; i++) { stacks[i].length = stackLength; }
-    if(!moveClockwise) { MoveAllStacks(false); }
-    
     DrawAllStacks();
     return uint8_t(stackLength < MIN_STACK_LENGTH ? TransitionState::None : TransitionState::Full);
   }
@@ -542,65 +567,67 @@ uint8_t Stackers::StutterStepBands(int numGroups) {
     }
   }
 
-const bool fullyMoveAllStacks = false;
-  if(numGroups == -1) {
-    // No param given; make changes based on stackMode
-    if(stackMode == StackMode::StutterStepColors) {
-      bool moveCompleted = fullyMoveAllStacks; // Initialize differently for diff modes; booleans mean diff things
-      for(int i = 0; i < numStacks; i++) {
-        if(stacks[i].color == moveMod) {
-          if(!fullyMoveAllStacks) {
-            MoveStack(stacks[i], moveClockwise);
-            // Look for collision with any other stack
-            for(int j = 0; j < numStacks; j++) {
-              if(moveClockwise) { if((stacks[j].pixel + stacks[j].length) % numLEDs == stacks[i].pixel) { moveCompleted = true; break; } }
-              else              { if((stacks[i].pixel + stacks[i].length) % numLEDs == stacks[j].pixel) { moveCompleted = true; break; } }
+  const bool fullyMoveAllStacks = false;
+  if(moveThisCycle) {
+    if(numGroups == -1) {
+      // No param given; make changes based on stackMode
+      if(stackMode == StackMode::StutterStepColors) {
+        bool moveCompleted = fullyMoveAllStacks; // Initialize differently for diff modes; booleans mean diff things
+        for(int i = 0; i < numStacks; i++) {
+          if(stacks[i].color == moveMod) {
+            if(!fullyMoveAllStacks) {
+              MoveStack(stacks[i], moveClockwise);
+              // Look for collision with any other stack
+              for(int j = 0; j < numStacks; j++) {
+                if(moveClockwise) { if((stacks[j].pixel + stacks[j].length) % numLEDs == stacks[i].pixel) { moveCompleted = true; break; } }
+                else              { if((stacks[i].pixel + stacks[i].length) % numLEDs == stacks[j].pixel) { moveCompleted = true; break; } }
+              }
+            }
+            else {
+              // moveCompleted starts as true and toggles off if anything moves
+              bool stopped = false;
+              for(int j = 0; j < numStacks; j++) {
+                if(moveClockwise) { if((stacks[j].pixel + stacks[j].length) % numLEDs == stacks[i].pixel) { stopped = true; break; } }
+                else              { if((stacks[i].pixel + stacks[i].length) % numLEDs == stacks[j].pixel) { stopped = true; break; } }
+              }
+              if(!stopped) { MoveStack(stacks[i], moveClockwise); moveCompleted = false; }
             }
           }
-          else {
-            // moveCompleted starts as true and toggles off if anything moves
-            bool stopped = false;
-            for(int j = 0; j < numStacks; j++) {
-              if(moveClockwise) { if((stacks[j].pixel + stacks[j].length) % numLEDs == stacks[i].pixel) { stopped = true; break; } }
-              else              { if((stacks[i].pixel + stacks[i].length) % numLEDs == stacks[j].pixel) { stopped = true; break; } }
-            }
-            if(!stopped) { MoveStack(stacks[i], moveClockwise); moveCompleted = false; }
+        }
+
+        if(moveCompleted) {
+          if(moveClockwise) { moveMod = (numColors + moveMod-1) % numColors; }
+          else              { moveMod =  (moveMod+1) % numColors; }
+        }
+      }
+    }
+    else {
+      // Standard use - based on numGroups instead of numColors
+      bool moveCompleted = fullyMoveAllStacks;
+      for(int i = moveMod; i < numStacks; i+=numGroups) {
+        if(!fullyMoveAllStacks) {
+          MoveStack(stacks[i], moveClockwise);
+          for(int j = 0; j < numStacks; j++) {
+            if(moveClockwise) { if((stacks[j].pixel + stacks[j].length) % numLEDs == stacks[i].pixel) { moveCompleted = true; break; } }
+            else              { if((stacks[i].pixel + stacks[i].length) % numLEDs == stacks[j].pixel) { moveCompleted = true; break; } }
           }
+        }
+        else {
+          // moveCompleted starts as true and toggles off if anything moves
+          bool stopped = false;
+          for(int j = 0; j < numStacks; j++) {
+            if(moveClockwise) { if((stacks[j].pixel + stacks[j].length) % numLEDs == stacks[i].pixel) { stopped = true; break; } }
+            else              { if((stacks[i].pixel + stacks[i].length) % numLEDs == stacks[j].pixel) { stopped = true; break; } }
+          }
+          if(!stopped) { MoveStack(stacks[i], moveClockwise); moveCompleted = false; }
         }
       }
 
       if(moveCompleted) {
-        if(moveClockwise) { moveMod = (numColors + moveMod-1) % numColors; }
-        else              { moveMod =  (moveMod+1) % numColors; }
+        if(moveClockwise) { moveMod = (numGroups + moveMod - 1) % numGroups; }
+        else { moveMod = (moveMod+1) % numGroups; }
+        return StutterStepBands(numGroups);
       }
-    }
-  }
-  else {
-    // Standard use - based on numGroups instead of numColors
-    bool moveCompleted = fullyMoveAllStacks;
-    for(int i = moveMod; i < numStacks; i+=numGroups) {
-      if(!fullyMoveAllStacks) {
-        MoveStack(stacks[i], moveClockwise);
-        for(int j = 0; j < numStacks; j++) {
-          if(moveClockwise) { if((stacks[j].pixel + stacks[j].length) % numLEDs == stacks[i].pixel) { moveCompleted = true; break; } }
-          else              { if((stacks[i].pixel + stacks[i].length) % numLEDs == stacks[j].pixel) { moveCompleted = true; break; } }
-        }
-      }
-      else {
-        // moveCompleted starts as true and toggles off if anything moves
-        bool stopped = false;
-        for(int j = 0; j < numStacks; j++) {
-          if(moveClockwise) { if((stacks[j].pixel + stacks[j].length) % numLEDs == stacks[i].pixel) { stopped = true; break; } }
-          else              { if((stacks[i].pixel + stacks[i].length) % numLEDs == stacks[j].pixel) { stopped = true; break; } }
-        }
-        if(!stopped) { MoveStack(stacks[i], moveClockwise); moveCompleted = false; }
-      }
-    }
-
-    if(moveCompleted) {
-      if(moveClockwise) { moveMod = (numGroups + moveMod - 1) % numGroups; }
-      else { moveMod = (moveMod+1) % numGroups; }
-      return StutterStepBands(numGroups);
     }
   }
 

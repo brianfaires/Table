@@ -43,11 +43,16 @@ class Stackers {
     TransitionState transitionState = TransitionState::None;
     StackMode stackMode = StackMode::None;
 
-    void Init(uint16_t _numLEDs, PaletteManager* _pm, CRGB* _leds, uint8_t* _leds_b, struct_base_show_params& _params, std::vector<uint16_t> _allowedDimPeriods, uint8_t _numAllowedDimPeriods, uint32_t* curTime);
+    void Init(uint16_t _numLEDs, PaletteManager* _pm, CRGB* _leds, uint8_t* _leds_b, struct_base_show_params* _params, std::vector<uint16_t> _allowedDimPeriods, uint8_t _numAllowedDimPeriods, uint32_t* curTime);
     void Stacks();
     uint8_t CreateStacks(uint8_t mode = 0);
+    void SkipTime(uint32_t amount);
 
   private:
+    struct_base_show_params* params;
+    bool moveThisCycle;
+    uint32_t lastMoveTime = 0;
+
     void DrawStack(struct_stack& s);
     void DrawAllStacks();
     void MoveStack(struct_stack& s, bool clockwise);

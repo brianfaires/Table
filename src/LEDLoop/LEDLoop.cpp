@@ -8,6 +8,7 @@ void LEDLoop::SkipTime(uint32_t amount) {
   timing.lastBaseTransition += amount;
   timing.lastTopTransition += amount;
   pc.SkipTime(amount);
+  stackers.SkipTime(amount);
   #if DEBUG_CLIPPING
     lastClippedTime += amount;
   #endif
@@ -52,7 +53,7 @@ void LEDLoop::Setup(uint8_t* pGlobalBrightness, PaletteManager* pPaletteManager)
   Gamma.Init(leds, leds_b, leds_5bit_brightness, numLEDs, pGlobalBrightness);
   DEBUG("Gamma init complete.");
 
-  stackers.Init(numLEDs, pm, leds, leds_b, baseParams, allowedDimPeriods, NUM_ALLOWED_DIM_PERIODS, &(timing.now));
+  stackers.Init(numLEDs, pm, leds, leds_b, &baseParams, allowedDimPeriods, NUM_ALLOWED_DIM_PERIODS, &(timing.now));
 
   InitBaseLayer();
   DEBUG("Base layer init complete.");
