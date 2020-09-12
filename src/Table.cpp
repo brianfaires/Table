@@ -466,7 +466,7 @@ void PrintBaseTopAndPMParams(LEDLoop* loop) {
   output += String(parameterCounter++) + ".BrightLength:\t  " + loop->baseParams.brightLength + "\n";
   output += String(parameterCounter++) + ".TransLength:\t  " + loop->baseParams.transLength + "\t\tPaletteManager Parameters:\n";
   output += String(parameterCounter++) + ".NumColors:\t  " + loop->baseParams.numColors + "\t\t" + (pmParameterCounter++) + ".PauseLength:\t  " + (loop->pm->getPauseLength()/IO_TIME_FACTOR) + "\n";
-  output += String(parameterCounter++) + ".DisplayMode:    " + loop->baseParams.displayMode + "\t\t\t" + (pmParameterCounter++) + ".WalkLength:\t  " + (loop->pm->getWalkLength()/IO_TIME_FACTOR) + "\n";
+  output += String(parameterCounter++) + ".DisplayMode:    " + loop->baseParams.displayMode + "\t\t" + (pmParameterCounter++) + ".WalkLength:\t  " + (loop->pm->getWalkLength()/IO_TIME_FACTOR) + "\n";
   output += String(parameterCounter++) + ".DimPeriod:\t  " + loop->baseParams.dimPeriod + "\n";
   output += String(parameterCounter++) + ".ColorPeriod:\t  " + loop->baseParams.colorPeriod + "\n";
 
