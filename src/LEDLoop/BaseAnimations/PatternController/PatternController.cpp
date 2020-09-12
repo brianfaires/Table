@@ -26,6 +26,18 @@ void PatternController::setDimPatternChangeType(DimPatternChangeType value, bool
   ps2.changeDimParamsWithMovement = changeDimParamsWithMovement;
 }
 
+void PatternController::setDimIndexOffset(uint16_t value) { ps1.setDimIndexOffset(value); ps2.setDimIndexOffset(value); }
+void PatternController::setColorIndexOffset(uint16_t value) { ps1.setColorIndexOffset(value); ps2.setColorIndexOffset(value); }
+
+void PatternController::SetManualBlocks(uint8_t* _colorIndexes, uint8_t _numColorIndexes, uint16_t _dimPeriod) {
+  ps1.SetManualBlocks(_colorIndexes, _numColorIndexes, _dimPeriod);
+  ps2.SetManualBlocks(_colorIndexes, _numColorIndexes, _dimPeriod);
+}
+
+void PatternController::BeginDimBlend() { ps1.BeginDimBlend(); ps2.BeginDimBlend(); }
+void PatternController::BeginColorBlend() { ps1.BeginColorBlend(); ps2.BeginColorBlend(); }
+
+
 void PatternController::Init(uint16_t _numLEDs, uint32_t* curTime, struct_base_show_params& params, PaletteManager* pm, GammaManager* gm, std::vector<uint16_t> _allowedDimPeriods, std::vector<uint16_t> _allowedColorPeriods, uint8_t numAllowedDimPeriods, uint8_t numAllowedColorPeriods) {
   numLEDs = _numLEDs;
   allowedDimPeriods = _allowedDimPeriods;
@@ -66,7 +78,6 @@ void PatternController::SkipTime(uint32_t amount) {
 void PatternController::Update(struct_base_show_params& params, CRGB* target, uint8_t* target_b) {
   struct_scroller_params scaledParams;
   ScaleParams(params, scaledParams);
-  
   dimSpeed = scaledParams.dimSpeed;
   colorSpeed = scaledParams.colorSpeed;
   WalkSpeeds();
@@ -86,7 +97,9 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
   ps->numColors = scaledParams.numColors;
   ps->brightLength = scaledParams.brightLength;
   ps->transLength = scaledParams.transLength;
+
   ps->setDisplayMode(scaledParams.displayMode);
+
   int8_t dummy = 0;
   bool psMoved = ps->Update(dummy);
 
@@ -161,7 +174,7 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_scro
   else {
     output.colorPeriod = color_period;
   }
-  
+
   #ifdef EXPLICIT_PARAMETERS
     output.displayMode = params.displayMode;
     output.numColors = params.numColors;
@@ -171,11 +184,12 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_scro
     output.colorSpeed = params.colorSpeed;
   #else
     #ifdef ALLOW_ZERO_SPEED
-      uint8_t abs_dimSpeed = scaleParam((uint8_t)abs(params.dimSpeed), 0, 127);
+      //uint8_t abs_dimSpeed = scaleParam((uint8_t)abs(params.dimSpeed), 0, 127);
+      output.dimSpeed = params.dimSpeed;
     #else
       uint8_t abs_dimSpeed = scaleParam((uint8_t)abs(params.dimSpeed), 20, 127);
+      output.dimSpeed = abs_dimSpeed * (params.dimSpeed >= 0 ? 1 : -1);
     #endif
-    output.dimSpeed = abs_dimSpeed * (params.dimSpeed >= 0 ? 1 : -1);
 
     #if 0
     // Bound colorSpeed based on dimSpeed
@@ -190,7 +204,8 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_scro
     }
     #endif
     
-    output.colorSpeed = output.dimSpeed/2;//scaleParam(params.colorSpeed, colorSpeed_lower, colorSpeed_upper);
+
+    output.colorSpeed = syncScrollingSpeeds ? output.dimSpeed : output.dimSpeed/2;//scaleParam(params.colorSpeed, colorSpeed_lower, colorSpeed_upper);
     output.displayMode = scaleParam(params.displayMode, 0, NUM_DIM_PATTERNS * NUM_COLOR_PATTERNS - 1);
     output.numColors = scaleParam(params.numColors, 2, PALETTE_SIZE-1);
 
@@ -280,4 +295,10 @@ void PatternController::WalkSpeeds() {
   // Always match speeds
   ps2.setDimSpeed(ps1.getDimSpeed());
   ps2.setColorSpeed(ps1.getColorSpeed());
+}
+
+uint8_t PatternController::GenerateDisplayModeValue(DimPatternName dimPatt, ColorPatternName colPatt) {
+  uint8_t denominator = NUM_DIM_PATTERNS * NUM_COLOR_PATTERNS;
+  uint16_t numerator = (uint16_t(dimPatt) + NUM_DIM_PATTERNS * uint16_t(colPatt)) * 256 + (denominator-1);
+  return numerator / denominator;
 }

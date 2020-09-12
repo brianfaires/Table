@@ -4,8 +4,8 @@
 
 //////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Animation Indexes //////////////////////////////////
-#define NUM_BASE_ANIMATIONS 1
-enum class BaseAnimation : uint8_t { None, Scroller, Fire, DiscoFire, Stacks, ColorExplosion, Orbs, GlimmerBands, CenterSpawn, Count };
+#define NUM_BASE_ANIMATIONS 2
+enum class BaseAnimation : uint8_t { None, Scroller, Stacks, Fire, DiscoFire, ColorExplosion, Orbs, GlimmerBands, CenterSpawn, Count };
 
 #define NUM_TOP_ANIMATIONS 2
 enum class TopAnimation : uint8_t { None, Glitter, Rain, Twinkle, Bounce, Comets, Collision, Count };
@@ -50,8 +50,8 @@ struct struct_scroller_params {
   int8_t transLength;
   uint8_t numColors;
   uint8_t displayMode;
-  uint8_t dimPeriod;
-  uint8_t colorPeriod;
+  uint16_t dimPeriod;
+  uint16_t colorPeriod;
 };
 
 struct struct_stacker_params {

@@ -25,7 +25,7 @@
 /////////////////////////////////////////////
 ////////// Init Animation Settings //////////
 #define INIT_BASE_ANIMATION BaseAnimation::Stacks
-#define INIT_BASE_DIM_SPEED 64
+#define INIT_BASE_DIM_SPEED -52
 #define INIT_BASE_COLOR_SPEED 0
 #define INIT_BASE_BRIGHT_LENGTH 0x8000
 #define INIT_BASE_TRANS_LENGTH 1.0F
@@ -44,14 +44,14 @@
 //////// Init PaletteManager Settings ///////
 #define INIT_PALETTE PaletteIndex(8)
 #define INIT_PM_WALK_LENGTH   2 * ONE_SEC
-#define INIT_PM_PAUSE_LENGTH  5 * ONE_SEC
+#define INIT_PM_PAUSE_LENGTH  315 * ONE_SEC
 #define INIT_FADE_IN_FROM_BLACK false
 /////////////////////////////////////////////
 
 
 //////////////////////////////////////////////////
 ////////////// Init Layer Settings ///////////////
-#define INIT_BASE_PAUSE_LENGTH      30 * ONE_MIN
+#define INIT_BASE_PAUSE_LENGTH      10 * ONE_SEC
 #define INIT_BASE_TRANS_OUT_LENGTH  3 * ONE_SEC
 #define INIT_BASE_TRANS_IN_LENGTH   3 * ONE_SEC
 #define INIT_BASE_PARAM_WALK        30 * ONE_MIN
@@ -67,8 +67,8 @@
 #define INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH    2 * ONE_SEC
 #define INIT_PATTERN_CONTROLLER_DIM_BLEND_LENGTH    1.5 * ONE_SEC
 #define INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH  2 * ONE_SEC
-#define INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH  1 * ONE_SEC
-#define INIT_PATTERN_SCROLLER_BRIGHTNESS 255
+#define INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH  3 * ONE_SEC
+#define INIT_PATTERN_SCROLLER_BRIGHTNESS 100
 #define INIT_DIM_PARAM_CHANGE_TYPE DimPatternChangeType::Preferred
 #define INIT_BASE_DIM_PARAM_CHANGE_TYPE BaseDimParamChangeType::Opposite
 #define INIT_CHANGE_DIM_PARAMS_WITH_MOVEMENT true

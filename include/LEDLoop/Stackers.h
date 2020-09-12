@@ -47,6 +47,7 @@ class Stackers {
     void Stacks();
     uint8_t CreateStacks(uint8_t mode = 0);
     void SkipTime(uint32_t amount);
+    uint8_t GetScaledDimSpeed();
 
   private:
     struct_base_show_params* params;

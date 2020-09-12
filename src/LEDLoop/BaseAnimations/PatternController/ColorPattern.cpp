@@ -44,7 +44,7 @@ void ColorPattern::Draw(ColorPatternName pattern, CRGB* outputArray) {
       for(uint8_t i = 0; i < numColors; i++) { colorLengths[i] = minLength; }
       
       // Assign extra pixels, inside first
-      uint8_t extra = colorPeriod - minLength * numColors;
+      uint16_t extra = colorPeriod - minLength * numColors;
       if(extra % 2 == 1 && numColors % 2 == 1) {
         colorLengths[numColors/2]++;
         extra--;
@@ -71,7 +71,41 @@ void ColorPattern::Draw(ColorPatternName pattern, CRGB* outputArray) {
       }
       break;
     }
+
+    case ColorPatternName::ManualBlocks:
+    {
+      if(numColorIndexes == 0) {
+        THROW("ManualBlocks mode used but not initialized")
+        return;
+      }
+      
+      uint16_t numDimPeriods = colorPeriod / dimPeriod;
+      if(numDimPeriods * dimPeriod != colorPeriod) { THROW_DUMP("colorPeriod must be a multiple of dimPeriod for ManualBlocks", colorPeriod) }
+      
+      // Write pattern
+      uint16_t pixel = 0;
+      for(uint16_t i = 0; i < numDimPeriods; i++) {
+        uint8_t colIndex = colorIndexes[i];
+        for(uint16_t j = 0; j < dimPeriod; j++) {
+          outputArray[pixel++] = pm->palette[colIndex];
+        }
+      }
+
+      break;
+    }
+
     default:
       THROW_DUMP("Unrecognized colorPattern", int(pattern))
+  }
+}
+
+void ColorPattern::SetManualBlocks(uint8_t* _colorIndexes, uint8_t _numColorIndexes, uint16_t _dimPeriod) {
+  dimPeriod = _dimPeriod;
+  numColorIndexes = _numColorIndexes;
+  colorPeriod = numColorIndexes * dimPeriod;
+
+  for(int i = 0; i < numColorIndexes; i++)
+  {
+    colorIndexes[i] = _colorIndexes[i];
   }
 }

@@ -57,6 +57,7 @@ class LEDLoop {
         void CleanupBaseLayer(BaseAnimation lastAnimation);
         void TransitionBaseAnimation();
         void NextBaseAnimation();
+        BaseAnimation PeekNextBaseAnimation();
         void DrawTopLayer();
         void InitTopLayer();
         void CleanupTopLayer(TopAnimation lastAnimation);

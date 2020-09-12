@@ -37,8 +37,8 @@ PatternScroller::PatternScroller() {
 //*****************************************************************
 //*************************** Accessors ***************************
 //*****************************************************************
-uint8_t PatternScroller::getDimPeriod() { return dimPeriod; }
-uint8_t PatternScroller::getColorPeriod() { return colorPeriod; }
+uint16_t PatternScroller::getDimPeriod() { return dimPeriod; }
+uint16_t PatternScroller::getColorPeriod() { return colorPeriod; }
 
 uint32_t PatternScroller::getDimBlendLength() { return dimBlendLength; }
 void PatternScroller::setDimBlendLength(uint32_t value) {
@@ -130,7 +130,12 @@ void PatternScroller::setDisplayMode(uint8_t displayMode) {
     }
   }
 }
+void PatternScroller::setDimIndexOffset(uint16_t value) { dimIndexFirst = value; }
+void PatternScroller::setColorIndexOffset(uint16_t value) { colorIndexFirst = value; }
 
+void PatternScroller::SetManualBlocks(uint8_t* _colorIndexes, uint8_t _numColorIndexes, uint16_t _dimPeriod) {
+  colorPattern.SetManualBlocks(_colorIndexes, _numColorIndexes, _dimPeriod);
+}
 
 //*****************************************************************
 //******************* Simple boolean functions ********************
@@ -255,7 +260,6 @@ bool PatternScroller::Update(int8_t& shiftAmount) { // Returns true if dim patte
     WriteColorPattern(targetColorPatternIndex, curColorPattern);
   }
 
-
   // Dim changing - Always walk params, because they are being slow-walked to their true targets. Pattern changing respects pauseLength.
   // While randomDimPattern, dimBlendOn is always on; even during pauseLength period
   if(WalkDimParams(shiftAmount)) {
@@ -298,7 +302,7 @@ bool PatternScroller::WalkColorParams() {
     colorPattern.numColors = numColors;
   }
 
-  if(colorPattern.colorPeriod != colorPeriod) { THROW("colorPeriod mismatch!") }
+  if(colorPattern.colorPeriod != colorPeriod) { THROW_DUMP("colorPeriod mismatch!", colorPattern.colorPeriod) }
 
   return updateMade;
 }
@@ -568,7 +572,7 @@ bool PatternScroller::ScrollPatterns() {
     dimMoved = true;
     // Scroll dim pattern
     if(isMovingForward()) {
-      if(--dimIndexFirst == 0xFF) { dimIndexFirst = dimPeriod - 1; }
+      if(--dimIndexFirst == 0xFFFF) { dimIndexFirst = dimPeriod - 1; }
     }
     else {
       if(++dimIndexFirst == dimPeriod) { dimIndexFirst = 0; }
@@ -586,7 +590,7 @@ bool PatternScroller::ScrollPatterns() {
   }
   else if(*curTime - lastColorMove >= FPS_TO_TIME(abs(colorSpeed))) {
     if(colorSpeed > 0) {
-      if(--colorIndexFirst == 0xFF) { colorIndexFirst = colorPeriod - 1; }
+      if(--colorIndexFirst == 0xFFFF) { colorIndexFirst = colorPeriod - 1; }
     }
     else {
       if(++colorIndexFirst == colorPeriod) { colorIndexFirst = 0; }
@@ -600,7 +604,7 @@ bool PatternScroller::ScrollPatterns() {
 void PatternScroller::ScrollPatternsWithoutTimer(int8_t moveAmount) {
   if(moveAmount > 0) {
     for(int i = 0; i < moveAmount; i++) {
-      if(--dimIndexFirst == 0xFF) { dimIndexFirst = dimPeriod - 1; }
+      if(--dimIndexFirst == 0xFFFF) { dimIndexFirst = dimPeriod - 1; }
     }
   }
   else {
@@ -610,6 +614,13 @@ void PatternScroller::ScrollPatternsWithoutTimer(int8_t moveAmount) {
   }
 }
 
+void PatternScroller::BeginDimBlend() {
+  lastDimPatternChange = *curTime - dimPauseLength;
+}
+
+void PatternScroller::BeginColorBlend() {
+  lastColorPatternChange = *curTime - colorPauseLength;
+}
 
 //*****************************************************************
 //************************ Display/Blending ***********************
@@ -640,7 +651,7 @@ void PatternScroller::BlendColorPattern() {
   if(transitionTime < colorBlendLength) {
     float blendAmount = 255.0 * float(transitionTime) / colorBlendLength;
 
-    for(uint8_t i = 0; i < colorPeriod; i++) {
+    for(uint16_t i = 0; i < colorPeriod; i++) {
       curColorPattern[i] = Gamma->Blend(oldColorPattern[i], targetColorPattern[i], blendAmount);
     }
   }
@@ -657,7 +668,7 @@ void PatternScroller::BlendDimPattern() {
   uint32_t transitionTime = *curTime - lastDimPatternChange - dimPauseLength;
   if(transitionTime < dimBlendLength) {
     float blendAmount = float(transitionTime) / dimBlendLength;
-    for(uint8_t i = 0; i < dimPeriod; i++) {
+    for(uint16_t i = 0; i < dimPeriod; i++) {
       curDimPattern[i] = (1 - blendAmount) * oldDimPattern[i] + blendAmount * targetDimPattern[i];
     }
   }

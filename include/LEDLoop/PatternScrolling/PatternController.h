@@ -28,6 +28,16 @@ class PatternController {
     void setBaseDimParamChangeType(BaseDimParamChangeType value);
     uint8_t getBrightness();
     void setBrightness(uint8_t brightness);
+    void setDimIndexOffset(uint16_t value);
+    void setColorIndexOffset(uint16_t value);
+
+    void BeginDimBlend();
+    void BeginColorBlend();
+    
+    uint8_t GenerateDisplayModeValue(DimPatternName dimPatt, ColorPatternName colPatt);
+    void SetManualBlocks(uint8_t* _colorIndexes, uint8_t _numColorIndexes, uint16_t _dimPeriod);
+
+    bool syncScrollingSpeeds = false;
     
   private:
     uint8_t NUM_ALLOWED_DIM_PERIODS;
@@ -45,7 +55,9 @@ class PatternController {
     int16_t splitIndex = 0;
     uint16_t numLEDs;
     int8_t colorSpeed, dimSpeed;
-    
+
+    bool manualControl = false;
+
     std::vector<uint16_t> allowedDimPeriods;
     std::vector<uint16_t> allowedColorPeriods;
 };

@@ -73,15 +73,20 @@ uint8_t Stackers::CreateStacks(uint8_t mode) {
   return numStacks;
 }
 
+uint8_t Stackers::GetScaledDimSpeed() {
+  const uint8_t MAX_MOVE_SPEED = 80;
+
+  int8_t speed = params->dimSpeed;
+  moveClockwise = speed < 0;
+  if(speed == -128) { speed = -127; } 
+  uint8_t absSpeed = 2 * abs(speed);
+  return scale8(MAX_MOVE_SPEED, absSpeed);
+}
+
 void Stackers::Stacks() {
   static int displayMode = 0;
 
-  // Update speed each cycle
-  const uint8_t MAX_MOVE_SPEED = 80;
-  int8_t speed = params->dimSpeed;
-  if(speed == -128) { speed = -127; } 
-  uint8_t absSpeed = 2 * abs(speed);
-  uint8_t moveSpeed = scale8(MAX_MOVE_SPEED, absSpeed);
+  uint8_t moveSpeed = GetScaledDimSpeed();
 
   moveThisCycle = false;
   if(moveSpeed > 0 && (*curTime - lastMoveTime) >= FPS_TO_TIME(moveSpeed)) {
@@ -561,7 +566,7 @@ uint8_t Stackers::StutterStepBands(int numGroups) {
   
     for(int i = 0; i < numStacks; i++) {
       if(stacks[i].length == 0) {
-        stacks[i].length = maxStackLength;
+        stacks[i].length = stackLength;
         stacks[i].pixel = dimPeriod * i;
       }
     }

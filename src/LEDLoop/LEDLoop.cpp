@@ -20,24 +20,24 @@ void LEDLoop::Setup(uint8_t* pGlobalBrightness, PaletteManager* pPaletteManager)
   {
     // 2*2*3*5*6*7
     NUM_ALLOWED_DIM_PERIODS = 10;
-    NUM_ALLOWED_COLOR_PERIODS = 11;
+    NUM_ALLOWED_COLOR_PERIODS = 12;
     allowedDimPeriods  =  {     21, 28, 30, 35, 42, 60, 70, 84, 105, 210 };
-    allowedColorPeriods = { 20, 21, 28, 30, 35, 42, 60, 70, 84, 105, 210 };
+    allowedColorPeriods = { 20, 21, 28, 30, 35, 42, 60, 70, 84, 105, 210, 420 };
   }
   else if(numLEDs == NUM_LEDS_INTERIOR)
   {
     // 2*2*2*3*17
     NUM_ALLOWED_DIM_PERIODS = 7;
-    NUM_ALLOWED_COLOR_PERIODS = 7;
+    NUM_ALLOWED_COLOR_PERIODS = 8;
     allowedDimPeriods   = { 17, 24, 34, 51, 68, 102, 204 };
-    allowedColorPeriods = { 17, 24, 34, 51, 68, 102, 204 };
+    allowedColorPeriods = { 17, 24, 34, 51, 68, 102, 204, 408 };
   }
   else if(numLEDs == MAX_LEDS) {
     // 2*2*2*5*13
     NUM_ALLOWED_DIM_PERIODS = 7;
-    NUM_ALLOWED_COLOR_PERIODS = 7;
+    NUM_ALLOWED_COLOR_PERIODS = 9;
     allowedDimPeriods   = { 20, 26, 40, 52, 65, 104, 130 };
-    allowedColorPeriods = { 20, 26, 40, 52, 65, 104, 130 };
+    allowedColorPeriods = { 20, 26, 40, 52, 65, 104, 130, 260, 520 };
   }
 
   
