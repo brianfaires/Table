@@ -1,5 +1,4 @@
 #include "LEDLoop/LEDLoop.h"
-#pragma GCC diagnostic ignored "-Wunknown-pragmas"
 
 // Counters for transitions
 uint8_t baseTransitionProgress;
