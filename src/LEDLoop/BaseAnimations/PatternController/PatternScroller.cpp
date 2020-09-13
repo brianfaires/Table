@@ -124,7 +124,7 @@ void PatternScroller::setDisplayMode(uint8_t displayMode) {
       oldDimPatternIndex = targetDimPatternIndex;
       memcpy(oldDimPattern, targetDimPattern, dimPeriod);
       targetDimPatternIndex = dimPatternIndex;
-      if(isRandomDimPattern()) { do { randomDimPatternIndex = random8(1, NUM_DIM_PATTERNS-1); } while (randomDimPatternIndex == oldDimPatternIndex); }
+      if(isRandomDimPattern()) { do { randomDimPatternIndex = random8(1, NUM_DIM_PATTERNS); } while (randomDimPatternIndex == oldDimPatternIndex); }
       WriteDimPattern(getTargetDimPatternIndex(), targetDimPattern);
       lastDimPatternChange = *curTime - dimPauseLength;
     }
@@ -679,7 +679,7 @@ void PatternScroller::BlendDimPattern() {
     // Blending just finished
     if(isRandomDimPattern()) {
       oldDimPatternIndex = randomDimPatternIndex;
-      do { randomDimPatternIndex = random8(1, NUM_DIM_PATTERNS-1); } while (randomDimPatternIndex == oldDimPatternIndex);
+      do { randomDimPatternIndex = random8(1, NUM_DIM_PATTERNS); } while (randomDimPatternIndex == oldDimPatternIndex);
       WriteDimPattern(randomDimPatternIndex, targetDimPattern);
     }
     else {

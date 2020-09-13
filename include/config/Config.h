@@ -44,14 +44,14 @@
 //////// Init PaletteManager Settings ///////
 #define INIT_PALETTE PaletteIndex(8)
 #define INIT_PM_WALK_LENGTH   2 * ONE_SEC
-#define INIT_PM_PAUSE_LENGTH  315 * ONE_SEC
+#define INIT_PM_PAUSE_LENGTH  22 * ONE_SEC
 #define INIT_FADE_IN_FROM_BLACK false
 /////////////////////////////////////////////
 
 
 //////////////////////////////////////////////////
 ////////////// Init Layer Settings ///////////////
-#define INIT_BASE_PAUSE_LENGTH      10 * ONE_SEC
+#define INIT_BASE_PAUSE_LENGTH      35 * ONE_SEC
 #define INIT_BASE_TRANS_OUT_LENGTH  3 * ONE_SEC
 #define INIT_BASE_TRANS_IN_LENGTH   3 * ONE_SEC
 #define INIT_BASE_PARAM_WALK        30 * ONE_MIN

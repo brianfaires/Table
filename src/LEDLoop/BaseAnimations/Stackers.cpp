@@ -116,7 +116,7 @@ void Stackers::Stacks() {
         } while(!isValidMode);
 
         if(allowedModes[int(transitionState)][nextStackMode]) {
-          moveClockwise = random8(1);
+          moveClockwise = random8(2);
           stackMode = StackMode(nextStackMode);
           lastModeTransition = *curTime;
           isFirstCycleOfNewMode = true;
