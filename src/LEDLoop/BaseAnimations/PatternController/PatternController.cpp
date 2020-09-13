@@ -37,6 +37,15 @@ void PatternController::setManualBlocks(uint8_t* _colorIndexes, uint8_t _numColo
 }
 uint8_t* PatternController::getManualBlocks() { return ps->getManualBlocks(); }
 
+Updatedvoid PatternController::setSyncScrollingSpeeds(bool value) {
+  syncScrollingSpeeds = value;
+  if(syncScrollingSpeeds) {
+    ps1.setColorSpeed(ps1.getDimSpeed());
+    ps1.SyncLastMovedTimes();
+    ps2.SyncLastMovedTimes();
+  }
+}
+
 void PatternController::BeginDimBlend() { ps1.BeginDimBlend(); ps2.BeginDimBlend(); }
 void PatternController::BeginColorBlend() { ps1.BeginColorBlend(); ps2.BeginColorBlend(); }
 

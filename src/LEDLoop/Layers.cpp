@@ -123,7 +123,7 @@ void LEDLoop::TransitionBaseAnimation() {
       }
       
       pc.setManualBlocks(colorIndexes, stackers.numStacks, dimPeriod);
-      pc.syncScrollingSpeeds = true;
+      pc.setSyncScrollingSpeeds(true);
 
       // Set displayMode to snake and manualBlocks
       baseParams.displayMode = pc.GenerateDisplayModeValue(DimPatternName::Snake, ColorPatternName::ManualBlocks);
@@ -156,7 +156,7 @@ void LEDLoop::TransitionBaseAnimation() {
     }
     else if(transitionPhase == 2) {
       // Begin pattern blending
-      pc.syncScrollingSpeeds = false;
+      pc.setSyncScrollingSpeeds(false);
       baseParams.displayMode = pc.GenerateDisplayModeValue(DimPatternName::Random, ColorPatternName::Gradient); // Todo: what to default to?
       //pc.BeginDimBlend();
 
@@ -182,7 +182,7 @@ void LEDLoop::TransitionBaseAnimation() {
     uint16_t dimPeriod = allowedDimPeriods[scaleParam(baseParams.dimPeriod, 0, NUM_ALLOWED_DIM_PERIODS-1)];
     int16_t diff = pc.getDimIndexOffset() - (pc.getColorIndexOffset() % dimPeriod);
     if(diff != 0) { return; }
-    pc.syncScrollingSpeeds = true;
+    pc.setSyncScrollingSpeeds(true);
     
     //if(baseParams.colorSpeed < baseParams.dimSpeed) { baseParams.colorSpeed++; DUMP(baseParams.colorSpeed) }
     //else if(baseParams.colorSpeed > baseParams.dimSpeed) { baseParams.colorSpeed--; DUMP(baseParams.colorSpeed) }
@@ -235,7 +235,7 @@ void LEDLoop::TransitionBaseAnimation() {
       activeTransition = 0;
       transitionPhase = 0;
       timing.lastBaseTransition = timing.now;
-      
+
     }
     #pragma endregion
   }
