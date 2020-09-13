@@ -39,7 +39,7 @@ uint8_t Stackers::GetDisplayMode() {
 
 uint8_t Stackers::CreateStacks(uint8_t mode) {
   // Read in params and lock them in for duration of this instance
-  numColors = scaleParam(params->numColors, 1, PALETTE_SIZE-1);
+  numColors = scaleParam(params->numColors, 2, PALETTE_SIZE-1);
   dimPeriod = allowedDimPeriods[scaleParam(params->dimPeriod, 0, numAllowedDimPeriods-1)];
   maxStackLength = scale16(dimPeriod, params->brightLength);
   
@@ -74,8 +74,6 @@ uint8_t Stackers::CreateStacks(uint8_t mode) {
 }
 
 uint8_t Stackers::GetScaledDimSpeed() {
-  const uint8_t MAX_MOVE_SPEED = 80;
-
   int8_t speed = params->dimSpeed;
   moveClockwise = speed < 0;
   if(speed == -128) { speed = -127; } 
@@ -89,7 +87,9 @@ void Stackers::Stacks() {
   uint8_t moveSpeed = GetScaledDimSpeed();
 
   moveThisCycle = false;
-  if(moveSpeed > 0 && (*curTime - lastMoveTime) >= FPS_TO_TIME(moveSpeed)) {
+  uint16_t adjMoveSpeed = moveSpeed;
+  if(stackMode == StackMode::Stack2Mirror) { adjMoveSpeed *= 2; }
+  if(adjMoveSpeed > 0 && (*curTime - lastMoveTime) >= FPS_TO_TIME(adjMoveSpeed)) {
     lastMoveTime = *curTime;
     moveThisCycle = true;
   }
@@ -139,7 +139,7 @@ void Stackers::Stacks() {
   else if(stackMode == StackMode::StutterStepMaxSmooth) { transitionState = TransitionState(StutterStepBands(displayMode)); }
   else if(stackMode == StackMode::StutterStepColors)    { transitionState = TransitionState(StutterStepBands()); }
   else THROW("Unrecognized stackMode!")
-  
+
   isFirstCycleOfNewMode = false;
 }
 

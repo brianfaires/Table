@@ -99,7 +99,7 @@ void ColorPattern::Draw(ColorPatternName pattern, CRGB* outputArray) {
   }
 }
 
-void ColorPattern::SetManualBlocks(uint8_t* _colorIndexes, uint8_t _numColorIndexes, uint16_t _dimPeriod) {
+void ColorPattern::setManualBlocks(uint8_t* _colorIndexes, uint8_t _numColorIndexes, uint16_t _dimPeriod) {
   dimPeriod = _dimPeriod;
   numColorIndexes = _numColorIndexes;
   colorPeriod = numColorIndexes * dimPeriod;
@@ -108,4 +108,12 @@ void ColorPattern::SetManualBlocks(uint8_t* _colorIndexes, uint8_t _numColorInde
   {
     colorIndexes[i] = _colorIndexes[i];
   }
+}
+
+uint8_t* ColorPattern::getManualBlocks() {
+  //uint8_t retVal[numColorIndexes];
+  //memcpy(retVal, colorIndexes, numColorIndexes);
+  //return retVal;
+
+  return colorIndexes;
 }

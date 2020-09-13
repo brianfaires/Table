@@ -27,12 +27,15 @@ void PatternController::setDimPatternChangeType(DimPatternChangeType value, bool
 }
 
 void PatternController::setDimIndexOffset(uint16_t value) { ps1.setDimIndexOffset(value); ps2.setDimIndexOffset(value); }
+uint16_t PatternController::getDimIndexOffset() { return ps->getDimIndexOffset(); }
 void PatternController::setColorIndexOffset(uint16_t value) { ps1.setColorIndexOffset(value); ps2.setColorIndexOffset(value); }
+uint16_t PatternController::getColorIndexOffset() { return ps->getColorIndexOffset(); }
 
-void PatternController::SetManualBlocks(uint8_t* _colorIndexes, uint8_t _numColorIndexes, uint16_t _dimPeriod) {
-  ps1.SetManualBlocks(_colorIndexes, _numColorIndexes, _dimPeriod);
-  ps2.SetManualBlocks(_colorIndexes, _numColorIndexes, _dimPeriod);
+void PatternController::setManualBlocks(uint8_t* _colorIndexes, uint8_t _numColorIndexes, uint16_t _dimPeriod) {
+  ps1.setManualBlocks(_colorIndexes, _numColorIndexes, _dimPeriod);
+  ps2.setManualBlocks(_colorIndexes, _numColorIndexes, _dimPeriod);
 }
+uint8_t* PatternController::getManualBlocks() { return ps->getManualBlocks(); }
 
 void PatternController::BeginDimBlend() { ps1.BeginDimBlend(); ps2.BeginDimBlend(); }
 void PatternController::BeginColorBlend() { ps1.BeginColorBlend(); ps2.BeginColorBlend(); }
@@ -272,21 +275,24 @@ void PatternController::WalkSpeeds() {
       }
     }
 
-    initSpeed = ps1.getColorSpeed();
-    if(initSpeed != colorSpeed) {
-      uint8_t absSpeed = abs(initSpeed);
-      if(absSpeed < 5) {
-        // From 10% chance to 4%
-        if(random8(50) <= absSpeed+2) {
-          if(initSpeed < colorSpeed) { ps1.setColorSpeed(initSpeed+1); }
-          else { ps1.setColorSpeed(initSpeed-1); }
+    if(syncScrollingSpeeds) { ps1.setColorSpeed(ps1.getDimSpeed()); ps1.SyncLastMovedTimes(); ps2.SyncLastMovedTimes(); }
+    else {
+      initSpeed = ps1.getColorSpeed();
+      if(initSpeed != colorSpeed) {
+        uint8_t absSpeed = abs(initSpeed);
+        if(absSpeed < 5) {
+          // From 10% chance to 4%
+          if(random8(50) <= absSpeed+2) {
+            if(initSpeed < colorSpeed) { ps1.setColorSpeed(initSpeed+1); }
+            else { ps1.setColorSpeed(initSpeed-1); }
+          }
         }
-      }
-      else {
-        // From 33% chance to 10%
-        if(random16(530) < absSpeed+48) {
-          if(initSpeed < colorSpeed) { ps1.setColorSpeed(initSpeed+1); }
-          else { ps1.setColorSpeed(initSpeed-1); }
+        else {
+          // From 33% chance to 10%
+          if(random16(530) < absSpeed+48) {
+            if(initSpeed < colorSpeed) { ps1.setColorSpeed(initSpeed+1); }
+            else { ps1.setColorSpeed(initSpeed-1); }
+          }
         }
       }
     }

@@ -40,11 +40,15 @@ class PatternScroller {
     void setColorSpeed(int8_t value);
     uint8_t getNumBlanks();
     void setDimIndexOffset(uint16_t value);
+    uint16_t getDimIndexOffset();
     void setColorIndexOffset(uint16_t value);
-    void SetManualBlocks(uint8_t* _colorIndexes, uint8_t _numColorIndexes, uint16_t _dimPeriod);
+    uint16_t getColorIndexOffset();
+    void setManualBlocks(uint8_t* _colorIndexes, uint8_t _numColorIndexes, uint16_t _dimPeriod);
+    uint8_t* getManualBlocks();
 
     void BeginDimBlend();
     void BeginColorBlend();
+    void SyncLastMovedTimes();
 
     // Params
     BaseDimParamChangeType baseDimParamChangeType;

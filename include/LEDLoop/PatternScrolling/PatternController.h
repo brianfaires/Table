@@ -29,21 +29,25 @@ class PatternController {
     uint8_t getBrightness();
     void setBrightness(uint8_t brightness);
     void setDimIndexOffset(uint16_t value);
+    uint16_t getDimIndexOffset();
     void setColorIndexOffset(uint16_t value);
+    uint16_t getColorIndexOffset();
 
     void BeginDimBlend();
     void BeginColorBlend();
     
     uint8_t GenerateDisplayModeValue(DimPatternName dimPatt, ColorPatternName colPatt);
-    void SetManualBlocks(uint8_t* _colorIndexes, uint8_t _numColorIndexes, uint16_t _dimPeriod);
+    void setManualBlocks(uint8_t* _colorIndexes, uint8_t _numColorIndexes, uint16_t _dimPeriod);
+    uint8_t* getManualBlocks();
 
     bool syncScrollingSpeeds = false;
     
+    PatternScroller *ps;
+
   private:
     uint8_t NUM_ALLOWED_DIM_PERIODS;
     uint8_t NUM_ALLOWED_COLOR_PERIODS;
     PatternScroller ps1, ps2;
-    PatternScroller *ps;
     PatternScroller *secondary;
     void ScaleParams(struct_base_show_params& params, struct_scroller_params& output, uint8_t dimPeriod = 0, uint8_t colorPeriod = 0);
     void WalkSpeeds();

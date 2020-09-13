@@ -33,6 +33,8 @@ class Stackers {
     uint8_t maxStackLength = 0;
     
   public:
+    const uint8_t MAX_MOVE_SPEED = 80;
+
     struct_stack stacks[MAX_STACKS];
     uint8_t numStacks = 0;
     uint32_t lastModeTransition;

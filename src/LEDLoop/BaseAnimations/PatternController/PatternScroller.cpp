@@ -131,11 +131,14 @@ void PatternScroller::setDisplayMode(uint8_t displayMode) {
   }
 }
 void PatternScroller::setDimIndexOffset(uint16_t value) { dimIndexFirst = value; }
+uint16_t PatternScroller::getDimIndexOffset() { return dimIndexFirst; }
 void PatternScroller::setColorIndexOffset(uint16_t value) { colorIndexFirst = value; }
+uint16_t PatternScroller::getColorIndexOffset() { return colorIndexFirst; }
 
-void PatternScroller::SetManualBlocks(uint8_t* _colorIndexes, uint8_t _numColorIndexes, uint16_t _dimPeriod) {
-  colorPattern.SetManualBlocks(_colorIndexes, _numColorIndexes, _dimPeriod);
+void PatternScroller::setManualBlocks(uint8_t* _colorIndexes, uint8_t _numColorIndexes, uint16_t _dimPeriod) {
+  colorPattern.setManualBlocks(_colorIndexes, _numColorIndexes, _dimPeriod);
 }
+uint8_t* PatternScroller::getManualBlocks() { return colorPattern.getManualBlocks(); }
 
 //*****************************************************************
 //******************* Simple boolean functions ********************
@@ -729,3 +732,5 @@ void PatternScroller::WriteColorPattern(uint8_t patternIndex, CRGB* outputArray)
   colorPattern.Draw(ColorPatternName(patternIndex), outputArray);
   //for(uint8_t i =0; i < colorPeriod; i++) { Serial.println(String(i) + ": (" + outputArray[i].r + ", " + outputArray[i].g + ", " + outputArray[i].b + ")"); }
 }
+
+void PatternScroller::SyncLastMovedTimes() { lastColorMove = lastDimMove; }

@@ -15,7 +15,8 @@ class ColorPattern {
     uint16_t colorPeriod;
     void Draw(ColorPatternName pattern, CRGB* outputArray);
     
-    void SetManualBlocks(uint8_t* _colorIndexes, uint8_t _numColorIndexes, uint16_t _dimPeriod);
+    void setManualBlocks(uint8_t* _colorIndexes, uint8_t _numColorIndexes, uint16_t _dimPeriod);
+    uint8_t* getManualBlocks();
 
   private:
     PaletteManager* pm;

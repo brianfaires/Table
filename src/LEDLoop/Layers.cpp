@@ -1,4 +1,5 @@
 #include "LEDLoop/LEDLoop.h"
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
 
 // Counters for transitions
 uint8_t baseTransitionProgress;
@@ -73,18 +74,19 @@ void LEDLoop::CleanupBaseLayer(BaseAnimation lastAnimation) {
   }
 }
 void LEDLoop::TransitionBaseAnimation() {
-  static int activeTransition = 0;
+  static int activeTransition = 0; // Used to stay in one block even if starting conditions are no longer met
+  static int transitionPhase = 0;  // Tracks progress within a transition
+  static uint32_t transStartTime = 0; // Useful for timed actions within a phase
 
   // First, identify transition type.  Default is currently a slow fade out and in.
   BaseAnimation nextBase = PeekNextBaseAnimation();
-  if(activeTransition == 1 || (baseParams.animation == BaseAnimation::Stacks && nextBase == BaseAnimation::Scroller)) {
+  if(activeTransition == 1 || (activeTransition == 0 && baseParams.animation == BaseAnimation::Stacks && nextBase == BaseAnimation::Scroller)) {
+    #pragma region Stacks->Scroller    
     if(timing.now - timing.lastBaseTransition < layerConfig.basePauseLength) { return; }
     if(uint8_t(stackers.transitionState) != 2) { return; }
     if(stackers.stackLength < 9) { return; } // Below min size for dimPatterns
     uint16_t dimPeriod = numLEDs / stackers.numStacks; //allowedDimPeriods[scaleParam(baseParams.dimPeriod, 0, NUM_ALLOWED_DIM_PERIODS-1)];
     if(stackers.stackLength > dimPeriod-3) { return; } // Above max size for dimPatterns (and a little extra to avoid overflowing scaled params)
-
-    static int transitionPhase = 0;
 
     if(transitionPhase == 0) {
       activeTransition = 1;
@@ -97,10 +99,6 @@ void LEDLoop::TransitionBaseAnimation() {
       uint8_t moarPix = stackers.stackLength - (9 + 3*scaledDown);
       if(moarPix == 1) { baseParams.brightLength += (3 * 65536L / maxExtraPixels); }
       else if(moarPix == 2) { baseParams.transLength += (3 * 65536L / maxExtraPixels); }
-
-      //baseParams.brightLength = 0xFFFF / periodLength * stackers.stackLength;
-      //uint8_t denom = (1 + (periodLength - 10 + 2) / 3); // +2 is to force a round up
-      //baseParams.brightLength = (65536L * stackers.stackLength / 2) / denom; // Reversed equation for setting brightLength
 
       // Find the stack/dimPeriod that contains pixel 0; ie its location is 0, or the highest value
       uint16_t maxStackStart = stackers.stacks[0].pixel;
@@ -117,18 +115,15 @@ void LEDLoop::TransitionBaseAnimation() {
         }
       }
 
-  //DUMP(minStack)
       // Initialize colorPattern to match the existing colors
       uint8_t colorIndexes[stackers.numStacks];
       for(int i = 0; i < stackers.numStacks; i++) {
         uint8_t colorIndex = stackers.stacks[(maxStack + i) % stackers.numStacks].color;
         colorIndexes[i] = colorIndex;
-        //DUMP(stackers.stacks[(minStack + i) % stackers.numStacks].pixel)
       }
       
-      pc.SetManualBlocks(colorIndexes, stackers.numStacks, dimPeriod);
+      pc.setManualBlocks(colorIndexes, stackers.numStacks, dimPeriod);
       pc.syncScrollingSpeeds = true;
-      //pc.SetManualControl(true);
 
       // Set displayMode to snake and manualBlocks
       baseParams.displayMode = pc.GenerateDisplayModeValue(DimPatternName::Snake, ColorPatternName::ManualBlocks);
@@ -143,16 +138,15 @@ void LEDLoop::TransitionBaseAnimation() {
       pc.setDimIndexOffset((dimPeriod + numLEDs - stackers.stacks[0].pixel) % dimPeriod); // Not covered in Init()
       pc.setColorIndexOffset((dimPeriod + numLEDs - stackers.stacks[0].pixel) % dimPeriod); // Not covered in Init()
 
-      pc.SetManualBlocks(colorIndexes, stackers.numStacks, dimPeriod); // Called twice to override what was done in Init()
+      pc.setManualBlocks(colorIndexes, stackers.numStacks, dimPeriod); // Called twice to override what was done in Init() - Maybe not necessary?
 
       transitionPhase = 1;
     }
     else if(transitionPhase == 1) {
       // Blend into desired color pattern
-      static uint32_t transStartTime = 0;
       if(transStartTime == 0) {
         baseParams.displayMode = pc.GenerateDisplayModeValue(DimPatternName::Snake, ColorPatternName::Gradient); // Todo: what to default to?
-        pc.BeginColorBlend();
+        //pc.BeginColorBlend();
         transStartTime = timing.now;
       }
       else if(timing.now - transStartTime >= pc.getColorBlendLength()) {
@@ -164,44 +158,109 @@ void LEDLoop::TransitionBaseAnimation() {
       // Begin pattern blending
       pc.syncScrollingSpeeds = false;
       baseParams.displayMode = pc.GenerateDisplayModeValue(DimPatternName::Random, ColorPatternName::Gradient); // Todo: what to default to?
-      pc.BeginDimBlend();
+      //pc.BeginDimBlend();
 
       timing.lastBaseTransition = timing.now;
       transitionPhase = 0;
       activeTransition = 0;
     }
+    #pragma endregion
+  }
+  else if(activeTransition == 2 || (activeTransition == 0 && baseParams.animation == BaseAnimation::Scroller && nextBase == BaseAnimation::Stacks)) {
+    #pragma region Scroller->Stacks
     
-    return;
-  }
-  else if(baseParams.animation == BaseAnimation::Scroller && nextBase == BaseAnimation::Stacks) {
-    // Blend to fixed colors per dimPeriod
-    // Switch to blocks
-    // Create stacks to match and hard swap
-
-    return;
-  }
-
-
-  // ------------ Default - Fade transition --------------------
-  // Currently, not possible to draw 2 animations at once.  One fades out, then one fades in.
-  static bool alreadySwitched = false;
-  
-  if(timing.now - timing.lastBaseTransition >= layerConfig.basePauseLength) {
-    uint32_t transitionTime = timing.now - timing.lastBaseTransition - layerConfig.basePauseLength;
-    if(transitionTime < layerConfig.baseTransOutLength) {
-      baseTransitionProgress = 256 * transitionTime / layerConfig.baseTransOutLength;
+    // Bring speed within allowable range
+    if(timing.now - timing.lastBaseTransition < layerConfig.basePauseLength) { return; }
+    if(abs(baseParams.dimSpeed) > stackers.MAX_MOVE_SPEED) {
+      if(baseParams.dimSpeed < 0) { baseParams.dimSpeed = -1 * stackers.MAX_MOVE_SPEED; }
+      else { baseParams.dimSpeed = stackers.MAX_MOVE_SPEED; }
     }
-    else if(transitionTime < layerConfig.baseTransOutLength + layerConfig.baseTransInLength) {
-      baseTransitionProgress = 255 * (layerConfig.baseTransOutLength + layerConfig.baseTransInLength - transitionTime) / layerConfig.baseTransInLength;
-      if(!alreadySwitched) {
-        NextBaseAnimation();
-        alreadySwitched = true;
+    if(abs(pc.ps->getDimSpeed()) > stackers.MAX_MOVE_SPEED) { return; }
+    
+    // Bring colorSpeed to match dimSpeed, then enable syncScrollingSpeeds
+    // Also need to make sure that dimPatternOffset == colorPatternOffset before sync'ing speed
+    uint16_t dimPeriod = allowedDimPeriods[scaleParam(baseParams.dimPeriod, 0, NUM_ALLOWED_DIM_PERIODS-1)];
+    int16_t diff = pc.getDimIndexOffset() - (pc.getColorIndexOffset() % dimPeriod);
+    if(diff != 0) { return; }
+    pc.syncScrollingSpeeds = true;
+    
+    //if(baseParams.colorSpeed < baseParams.dimSpeed) { baseParams.colorSpeed++; DUMP(baseParams.colorSpeed) }
+    //else if(baseParams.colorSpeed > baseParams.dimSpeed) { baseParams.colorSpeed--; DUMP(baseParams.colorSpeed) }
+    //if(baseParams.colorSpeed == baseParams.dimSpeed) { pc.syncScrollingSpeeds = true; DUMP(baseParams.colorSpeed) }
+
+    if(transitionPhase == 0) {
+      activeTransition = 2;
+      if(transStartTime == 0) {
+        // Switch to snake and fixed colors
+        baseParams.displayMode = pc.GenerateDisplayModeValue(DimPatternName::Snake, ColorPatternName::ManualBlocks);
+        //pc.BeginDimBlend();
+        //pc.BeginColorBlend();
+        transStartTime = timing.now;
+        
+        // Define manual block colors
+        uint8_t numPeriods = numLEDs / dimPeriod;
+        uint8_t colIndexes[numPeriods];
+        uint8_t numColors = scaleParam(baseParams.numColors, 2, PALETTE_SIZE-1);
+        for(int i = 0; i < numPeriods; i++) {
+          colIndexes[i] = i % numColors;
+        }
+        pc.setManualBlocks(colIndexes, numPeriods, dimPeriod);
+      }
+      else {
+        uint32_t timeElapsed = timing.now - transStartTime;
+        if(timeElapsed >= pc.getColorBlendLength() && timeElapsed >= pc.getDimBlendLength()) {
+          transitionPhase = 1;
+          transStartTime = 0;
+        }
       }
     }
-    else {
-      alreadySwitched = false;
-      baseTransitionProgress = 0;
+    else if(transitionPhase == 1) {
+      // Create stacks to match current pattern, then hard swap
+      stackers.stackLength = 9 + 2*pc.ps->transLength + pc.ps->brightLength;
+      stackers.numStacks = numLEDs / dimPeriod;
+      stackers.moveClockwise = baseParams.dimSpeed < 0;
+      uint8_t targetSpeed = abs(baseParams.dimSpeed);
+      if(baseParams.dimSpeed >= 0) { while(stackers.GetScaledDimSpeed() < targetSpeed) { baseParams.dimSpeed++; } }
+      if(baseParams.dimSpeed <= 0) { while(stackers.GetScaledDimSpeed() > targetSpeed) { baseParams.dimSpeed--; } }
+
+      uint8_t* colIndexes = pc.getManualBlocks();
+      for(int i = 0; i < stackers.numStacks; i++)
+      {
+        stackers.stacks[i].color = colIndexes[i];
+        stackers.stacks[i].pixel = (dimPeriod*i + numLEDs - pc.getColorIndexOffset()) % numLEDs;
+        stackers.stacks[i].length = stackers.stackLength;
+      }
+      
+      baseParams.animation = BaseAnimation::Stacks;
+      activeTransition = 0;
+      transitionPhase = 0;
       timing.lastBaseTransition = timing.now;
+      
+    }
+    #pragma endregion
+  }
+  else {
+    // ------------ Default - Fade transition --------------------
+    // Currently, not possible to draw 2 animations at once.  One fades out, then one fades in.
+    static bool alreadySwitched = false;
+    
+    if(timing.now - timing.lastBaseTransition >= layerConfig.basePauseLength) {
+      uint32_t transitionTime = timing.now - timing.lastBaseTransition - layerConfig.basePauseLength;
+      if(transitionTime < layerConfig.baseTransOutLength) {
+        baseTransitionProgress = 256 * transitionTime / layerConfig.baseTransOutLength;
+      }
+      else if(transitionTime < layerConfig.baseTransOutLength + layerConfig.baseTransInLength) {
+        baseTransitionProgress = 255 * (layerConfig.baseTransOutLength + layerConfig.baseTransInLength - transitionTime) / layerConfig.baseTransInLength;
+        if(!alreadySwitched) {
+          NextBaseAnimation();
+          alreadySwitched = true;
+        }
+      }
+      else {
+        alreadySwitched = false;
+        baseTransitionProgress = 0;
+        timing.lastBaseTransition = timing.now;
+      }
     }
   }
 }
