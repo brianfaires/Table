@@ -3,7 +3,7 @@
 #include "LEDLoop/GammaManager.h"
 #include "LEDLoop/PaletteManager.h"
 
-enum class ColorPatternName : uint8_t { Gradient, Blocks, ManualBlocks, Count };
+enum class ColorPatternName : uint8_t { Random, Gradient, Blocks, Count, ManualBlocks };
 #define NUM_COLOR_PATTERNS uint8_t(ColorPatternName::Count)
 
 const uint8_t MAX_NUM_DIM_PERIODS = 84;

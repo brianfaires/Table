@@ -82,7 +82,9 @@ class PatternScroller {
     // Utility
     bool isHalfwayToDimMove();
     uint8_t getTargetDimPatternIndex();
+    uint8_t getTargetColorPatternIndex();
     bool isRandomDimPattern();
+    bool isRandomColorPattern();
     bool isMovingForward();
     void WriteDimPattern(uint8_t patternIndex, uint8_t* outputArray);
     void WriteColorPattern(uint8_t patternIndex, CRGB* outputArray);

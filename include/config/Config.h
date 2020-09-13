@@ -24,7 +24,7 @@
 
 /////////////////////////////////////////////
 ////////// Init Animation Settings //////////
-#define INIT_BASE_ANIMATION BaseAnimation::Stacks
+#define INIT_BASE_ANIMATION BaseAnimation::Scroller
 #define INIT_BASE_DIM_SPEED 52
 #define INIT_BASE_COLOR_SPEED 0
 #define INIT_BASE_BRIGHT_LENGTH 0x8000

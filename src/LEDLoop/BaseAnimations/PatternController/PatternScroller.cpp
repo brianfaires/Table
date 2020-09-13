@@ -22,8 +22,8 @@ PatternScroller::PatternScroller() {
   targetDimPatternIndex = int(DimPatternName::Comet_R);
   randomDimPatternIndex = int(DimPatternName::Slide_L); // Should never be 0
   
-  targetColorPatternIndex = 0;
-  randomColorPatternIndex = 0;
+  targetColorPatternIndex = int(ColorPatternName::Gradient);
+  randomColorPatternIndex = int(ColorPatternName::Blocks);
 
   colorPeriod = 1;
   curColorPattern[0] = CRGB(0, 0, 100);
@@ -87,6 +87,7 @@ void PatternScroller::setColorSpeed(int8_t value) {
   colorSpeed = value;
 }
 uint8_t PatternScroller::getTargetDimPatternIndex() { return isRandomDimPattern() ? randomDimPatternIndex : targetDimPatternIndex; }
+uint8_t PatternScroller::getTargetColorPatternIndex() { return isRandomColorPattern() ? randomColorPatternIndex : targetColorPatternIndex; }
 uint8_t PatternScroller::getNumBlanks() { return dimPeriod - 9 - 2*dimPattern.transLength - dimPattern.brightLength; }
 void PatternScroller::setDisplayMode(uint8_t displayMode) {
   if(displayMode >= NUM_DIM_PATTERNS * NUM_COLOR_PATTERNS) { THROW_DUMP("Invalid display mode", displayMode) }
@@ -94,12 +95,28 @@ void PatternScroller::setDisplayMode(uint8_t displayMode) {
   uint8_t colorPatternIndex = displayMode / NUM_DIM_PATTERNS;
 
   if(targetColorPatternIndex != colorPatternIndex) {
-    if(*curTime - lastColorPatternChange >= colorPauseLength) {
+    bool isTimeForChange = *curTime - lastColorPatternChange >= colorPauseLength;
+    if(isRandomColorPattern()) {
+      if(isTimeForChange) {
+        // Currently on or blending toward randomColorPatternIndex
+        targetColorPatternIndex = randomColorPatternIndex;
+      }
+      else {
+        // Have not started blending yet
+        targetColorPatternIndex = colorPatternIndex;
+        memcpy(targetColorPattern, oldColorPattern, colorPeriod);
+        colorBlendOn = false;
+      }
+    }
+    else if(!colorBlendOn && isTimeForChange) {
       // Begin blending into new colorPattern; even if in the middle of a blend
+      colorBlendOn = true;
       memcpy(oldColorPattern, curColorPattern, sizeof(CRGB)*colorPeriod);
       targetColorPatternIndex = colorPatternIndex;
-      WriteColorPattern(targetColorPatternIndex, targetColorPattern);
-      colorBlendOn = true;
+      uint8_t prevPattern = randomColorPatternIndex;
+      if(isRandomColorPattern()) { do { randomColorPatternIndex = random8(1, NUM_COLOR_PATTERNS); } while (randomColorPatternIndex == prevPattern); }
+      DUMP(getTargetColorPatternIndex())
+      WriteColorPattern(getTargetColorPatternIndex(), targetColorPattern);
       lastColorPatternChange = *curTime - colorPauseLength; // Might already be blending
     }
   }
@@ -175,6 +192,9 @@ bool PatternScroller::isRandomDimPattern() {
   #endif
   return targetDimPatternIndex == uint8_t(DimPatternName::Random);
 }
+bool PatternScroller::isRandomColorPattern() {
+  return targetColorPatternIndex == uint8_t(ColorPatternName::Random);
+}
 bool PatternScroller::isMovingForward() {
   return dimSpeed > 0;
 }
@@ -213,7 +233,7 @@ void PatternScroller::Init(struct_scroller_params& params, uint32_t* _curTime, P
   WriteDimPattern(getTargetDimPatternIndex(), targetDimPattern);
   memcpy(curDimPattern, targetDimPattern, dimPeriod);
   memcpy(oldDimPattern, targetDimPattern, dimPeriod);
-  WriteColorPattern(targetColorPatternIndex, targetColorPattern);
+  WriteColorPattern(getTargetColorPatternIndex(), targetColorPattern);
   memcpy(curColorPattern, targetColorPattern, sizeof(CRGB)*colorPeriod);
   memcpy(oldColorPattern, targetColorPattern, sizeof(CRGB)*colorPeriod);
   oldDimPatternIndex = getTargetDimPatternIndex();
@@ -256,11 +276,11 @@ bool PatternScroller::Update(int8_t& shiftAmount) { // Returns true if dim patte
   }
 
   if(colorBlendOn) {
-    WriteColorPattern(targetColorPatternIndex, targetColorPattern);
+    WriteColorPattern(getTargetColorPatternIndex(), targetColorPattern);
     BlendColorPattern();
   }
   else {
-    WriteColorPattern(targetColorPatternIndex, curColorPattern);
+    WriteColorPattern(getTargetColorPatternIndex(), curColorPattern);
   }
 
   // Dim changing - Always walk params, because they are being slow-walked to their true targets. Pattern changing respects pauseLength.
@@ -650,9 +670,10 @@ void PatternScroller::SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs
   }
 }
 void PatternScroller::BlendColorPattern() {
-  uint32_t transitionTime = *curTime - lastColorPatternChange - colorPauseLength;
-  if(transitionTime < colorBlendLength) {
-    float blendAmount = 255.0 * float(transitionTime) / colorBlendLength;
+  uint32_t transitionTime = *curTime - lastColorPatternChange;
+  if(transitionTime < colorPauseLength) { return; }
+  if(transitionTime < colorPauseLength + colorBlendLength) {
+    float blendAmount = 255.0 * float(transitionTime - colorPauseLength) / colorBlendLength;
 
     for(uint16_t i = 0; i < colorPeriod; i++) {
       curColorPattern[i] = Gamma->Blend(oldColorPattern[i], targetColorPattern[i], blendAmount);
@@ -660,11 +681,20 @@ void PatternScroller::BlendColorPattern() {
   }
   else {
     // Blending just finished
-    memcpy(oldColorPattern, targetColorPattern, sizeof(CRGB)*colorPeriod);
-    memcpy(curColorPattern, targetColorPattern, sizeof(CRGB)*colorPeriod);
+    if(isRandomColorPattern()) {
+      memcpy(oldColorPattern, curColorPattern, sizeof(CRGB)*colorPeriod);
+      uint8_t previousPattern = randomColorPatternIndex;
+      do { randomColorPatternIndex = random8(1, NUM_COLOR_PATTERNS); } while (randomColorPatternIndex == previousPattern);
+      WriteColorPattern(randomColorPatternIndex, targetColorPattern);
+    }
+    else {
+      memcpy(oldColorPattern, targetColorPattern, sizeof(CRGB)*colorPeriod);
+      memcpy(curColorPattern, targetColorPattern, sizeof(CRGB)*colorPeriod);
+      colorBlendOn = false;
+      WriteColorPattern(getTargetColorPatternIndex(), targetColorPattern); // It's possible that this isn't needed
+    }
+
     lastColorPatternChange = *curTime;
-    colorBlendOn = false;
-    WriteColorPattern(targetColorPatternIndex, targetColorPattern); // It's possible that this isn't needed
   }
 }
 void PatternScroller::BlendDimPattern() {
