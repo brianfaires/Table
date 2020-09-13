@@ -15,7 +15,7 @@ class Stackers {
     enum class StackMode : int { None, Shutters, StutterStepMinSmooth, StutterStepMaxSmooth, StutterStepColors, Stack3, Stack4, Stack5, Stack2Mirror, Stack4Mirror, Length };
     const bool allowedModes[int(TransitionState::Length)][int(StackMode::Length)] = { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
                                                                                       { 0, 1, 0, 0, 0, 1, 1, 1, 1, 1 },   // Empty
-                                                                                      { 0, 1, 1, 1, 1, 0, 0, 0, 1, 1 },   // Full -- Stacks look weird clearing.  Stack4 clear from shutters is maybe bugged? pixels deleting immediately
+                                                                                      { 0, 1, 1, 1, 1, 1, 1, 1, 1, 1 },   // Full -- Stacks look weird clearing.  Stack4 clear from shutters is maybe bugged? pixels deleting immediately
                                                                                       { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } }; // Messy
     
     // Initialized values
@@ -64,14 +64,14 @@ class Stackers {
 
     uint8_t Shutters();
     uint8_t StutterStepBands(int numGroups = -1);
-    uint8_t StackSections(uint8_t numSections);
-    uint8_t StackSectionsUp(uint8_t numSections, uint16_t& progress, uint8_t &curStep);
-    uint8_t StackSectionsDown(uint8_t numSections, uint16_t& progress, uint8_t &curStep);
-    uint8_t StackSections_Mirror(uint8_t numSections);
-    uint8_t StackSectionsUp_Mirror(uint8_t numSections, uint16_t& progress, uint8_t &curStep);
-    uint8_t StackSectionsDown_Mirror(uint8_t numSections, uint16_t& progress, uint8_t &curStep);
+    uint8_t StackSections(uint8_t numSections, uint16_t offset);
+    uint8_t StackSectionsUp(uint8_t numSections, uint16_t offset, uint16_t& progress, uint8_t &curStep);
+    uint8_t StackSectionsDown(uint8_t numSections, uint16_t offset, uint16_t& progress, uint8_t &curStep);
+    uint8_t StackSections_Mirror(uint8_t numSections, uint16_t offset);
+    uint8_t StackSectionsUp_Mirror(uint8_t numSections, uint16_t offset, uint16_t& progress, uint8_t &curStep);
+    uint8_t StackSectionsDown_Mirror(uint8_t numSections, uint16_t offset, uint16_t& progress, uint8_t &curStep);
     
     void PrepForInsert(uint8_t numSections);
     void PrepForInsert_Mirror(uint8_t numSections);
-    uint8_t WipeClean(uint8_t numSections, uint16_t progress);
+    uint8_t WipeClean(uint8_t numSections, uint16_t offset, uint16_t progress);
 };

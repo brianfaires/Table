@@ -130,15 +130,15 @@ void Stackers::Stacks() {
 
   // Draw current stackMode
   if(stackMode == StackMode::Shutters)    { transitionState = TransitionState(Shutters()); }
-  else if(stackMode == StackMode::Stack3) { transitionState = TransitionState(StackSections(3)); }
-  else if(stackMode == StackMode::Stack4) { transitionState = TransitionState(StackSections(4)); }
-  else if(stackMode == StackMode::Stack5) { transitionState = TransitionState(StackSections(5)); }
-  else if(stackMode == StackMode::Stack2Mirror)         { transitionState = TransitionState(StackSections_Mirror(2)); }
-  else if(stackMode == StackMode::Stack4Mirror)         { transitionState = TransitionState(StackSections_Mirror(4)); }
+  else if(stackMode == StackMode::Stack3) { transitionState = TransitionState(StackSections(3, 0)); }
+  else if(stackMode == StackMode::Stack4) { transitionState = TransitionState(StackSections(4, 0)); }
+  else if(stackMode == StackMode::Stack5) { transitionState = TransitionState(StackSections(5, 0)); }
+  else if(stackMode == StackMode::Stack2Mirror)         { transitionState = TransitionState(StackSections_Mirror(2, 87)); }
+  else if(stackMode == StackMode::Stack4Mirror)         { transitionState = TransitionState(StackSections_Mirror(4, 87)); }
   else if(stackMode == StackMode::StutterStepMinSmooth) { transitionState = TransitionState(StutterStepBands(displayMode)); }
   else if(stackMode == StackMode::StutterStepMaxSmooth) { transitionState = TransitionState(StutterStepBands(displayMode)); }
   else if(stackMode == StackMode::StutterStepColors)    { transitionState = TransitionState(StutterStepBands()); }
-  else THROW_DUMP(F("Unrecognized stackMode!"), int(stackMode))
+  else { THROW_DUMP(F("Unrecognized stackMode!"), int(stackMode)) }
 
   isFirstCycleOfNewMode = false;
 }
@@ -201,12 +201,12 @@ void Stackers::PrepForInsert_Mirror(uint8_t numSections) {
     }
   }
 }
-uint8_t Stackers::WipeClean(uint8_t numSections, uint16_t progress) {
+uint8_t Stackers::WipeClean(uint8_t numSections, uint16_t offset, uint16_t progress) {
   uint16_t LEDsPerGroup = numLEDs / numSections;
 
   for(uint16_t i = 0; i <= progress; i++) {
     for(uint8_t j = 0; j < numSections; j++) {
-      leds_b[(i + j*LEDsPerGroup) % numLEDs] = 0;
+      leds_b[(offset + i + j*LEDsPerGroup) % numLEDs] = 0;
     }
   }
 
@@ -215,7 +215,7 @@ uint8_t Stackers::WipeClean(uint8_t numSections, uint16_t progress) {
 
 
 ////////// Private animations //////////////
-uint8_t Stackers::StackSectionsUp(uint8_t numSections, uint16_t& progress, uint8_t &curStep) {
+uint8_t Stackers::StackSectionsUp(uint8_t numSections, uint16_t offset, uint16_t& progress, uint8_t &curStep) {
   uint16_t LEDsPerGroup = numLEDs / numSections;
 
   // Check for stack completion
@@ -226,7 +226,7 @@ uint8_t Stackers::StackSectionsUp(uint8_t numSections, uint16_t& progress, uint8
       int n = numStacks/numSections;
       for(int i = 0; i < numSections; i++) {
         int idx = (i+1)*(n+1) - 1;
-        stacks[idx].pixel = (progress-maxStackLength + i*LEDsPerGroup) % numLEDs;
+        stacks[idx].pixel = (offset + progress-maxStackLength + i*LEDsPerGroup) % numLEDs;
         stacks[idx].length = maxStackLength;
         stacks[idx].color = (numStacks/numSections) % numColors;
       }
@@ -243,7 +243,7 @@ uint8_t Stackers::StackSectionsUp(uint8_t numSections, uint16_t& progress, uint8
   uint8_t numPixels = progress < maxStackLength ? progress : maxStackLength;
   for(int i = 0; i < numPixels; i++) {
     for(int j = 0; j < numSections; j++) {
-      uint16_t idx = (progress + j*LEDsPerGroup - i - 1) % numLEDs;
+      uint16_t idx = (offset + progress + j*LEDsPerGroup - i - 1) % numLEDs;
       leds[idx] = pm->palette[(numStacks/numSections) % numColors];
       leds_b[idx] = PIXEL_BRIGHTNESS;
     }
@@ -259,7 +259,7 @@ uint8_t Stackers::StackSectionsUp(uint8_t numSections, uint16_t& progress, uint8
 
   return uint8_t(TransitionState::None);
 }
-uint8_t Stackers::StackSectionsDown(uint8_t numSections, uint16_t& progress, uint8_t &curStep) {
+uint8_t Stackers::StackSectionsDown(uint8_t numSections, uint16_t offset, uint16_t& progress, uint8_t &curStep) {
   static bool doPartials = true;
   if(isFirstCycleOfNewMode) { doPartials = false; }
   
@@ -277,7 +277,7 @@ uint8_t Stackers::StackSectionsDown(uint8_t numSections, uint16_t& progress, uin
       // Draw partial pixels
       for(int i = 0; i < sparePixels && i < maxStackLength; i++) {
         for(int j = 0; j < numSections; j++) {
-          int idx = sparePixels - i - 1 + j*LEDsPerGroup;
+          int idx = (offset + sparePixels - i - 1 + j*LEDsPerGroup) % numLEDs;
           leds[idx] = pm->palette[(numStacks/numSections) % numColors];
           leds_b[idx] = PIXEL_BRIGHTNESS;
         }
@@ -290,7 +290,7 @@ uint8_t Stackers::StackSectionsDown(uint8_t numSections, uint16_t& progress, uin
   //if(min < 0) { min = sparePixels - stackLength; DUMP(min) }
   //if(progress < min) { progress = min; }
 
-  uint8_t retVal = WipeClean(numSections, progress);
+  uint8_t retVal = WipeClean(numSections, offset, progress);
   if(TransitionState(retVal) == TransitionState::Empty) {
     progress = 0;
     numStacks = 0;
@@ -300,7 +300,7 @@ uint8_t Stackers::StackSectionsDown(uint8_t numSections, uint16_t& progress, uin
 
   return retVal;
 }
-uint8_t Stackers::StackSections(uint8_t numSections) {
+uint8_t Stackers::StackSections(uint8_t numSections, uint16_t offset) {
   static uint16_t progress = 0;
   static uint8_t curStep = 0;
 
@@ -326,18 +326,17 @@ uint8_t Stackers::StackSections(uint8_t numSections) {
     progress++;
   }
 
-  if(curStep==0) { return StackSectionsUp(numSections, progress, curStep); }
-  else if(curStep==1) { return StackSectionsDown(numSections, progress, curStep); }
+  if(curStep==0) { return StackSectionsUp(numSections, offset, progress, curStep); }
+  else if(curStep==1) { return StackSectionsDown(numSections, offset, progress, curStep); }
 
   return uint8_t(TransitionState::None);
 }
 
-uint8_t Stackers::StackSectionsUp_Mirror(uint8_t numSections, uint16_t& progress, uint8_t &curStep) {
+uint8_t Stackers::StackSectionsUp_Mirror(uint8_t numSections, uint16_t offset, uint16_t& progress, uint8_t &curStep) {
   uint16_t LEDsPerGroup = numLEDs / numSections;
 
   // Check for stack completion
   if(progress == LEDsPerGroup - (numStacks/numSections) * dimPeriod - (dimPeriod-maxStackLength)/2) {
-
     // Completed run; Create a stack if there is room
     if(progress >= maxStackLength) {
       PrepForInsert_Mirror(numSections);
@@ -350,20 +349,20 @@ uint8_t Stackers::StackSectionsUp_Mirror(uint8_t numSections, uint16_t& progress
           stacks[idx].length = maxStackLength;
           stacks[idx].color = n % numColors;
           if(i % 2 == 0) { // Run evens forward
-            stacks[idx].pixel = (progress-maxStackLength + i*LEDsPerGroup-1) % numLEDs;
+            stacks[idx].pixel = (offset + progress-maxStackLength + i*LEDsPerGroup-1) % numLEDs;
           }
           else { // Run odds as a mirror of idx-n-1
             //int iLast = i-1;
             //int lastIDX = iLast == 0 ? 0 : (iLast == numSections-1) ? 4*(n+1)-1 : 2*n+iLast;
             //stacks[idx].pixel = (numLEDs + numLEDs - stacks[lastIDX].pixel - maxStackLength) % numLEDs;
-            stacks[idx].pixel = (i+1)*LEDsPerGroup - progress;
+            stacks[idx].pixel = (offset + (i+1)*LEDsPerGroup - progress) % numLEDs;
           }
         }
       }
       else if(numSections == 2) {
         stacks[0].length = maxStackLength;
         stacks[0].color = n % numColors;
-        stacks[0].pixel = (progress-maxStackLength + numLEDs) % numLEDs;
+        stacks[0].pixel = (offset + progress-maxStackLength + numLEDs) % numLEDs;
 
         int idx = numStacks+1;
         stacks[idx].length = maxStackLength;
@@ -388,13 +387,13 @@ uint8_t Stackers::StackSectionsUp_Mirror(uint8_t numSections, uint16_t& progress
         stacks[i] = stacks[i-1];
       }
 
-      stacks[i+1].pixel = (numLEDs * 3/2 - progress) % numLEDs;
+      stacks[i+1].pixel = (offset + numLEDs * 3/2 - progress) % numLEDs;
       stacks[i+1].length = maxStackLength;
       stacks[i+1].color = (numStacks/numSections) % numColors;
       DrawStack(stacks[i+1]);
       numStacks++;
 
-      stacks[numStacks].pixel = numLEDs - progress;
+      stacks[numStacks].pixel = (offset + numLEDs - progress) % numLEDs;
       stacks[numStacks].length = maxStackLength;
       stacks[numStacks].color = (numStacks/numSections) % numColors;
       DrawStack(stacks[numStacks]);
@@ -402,7 +401,7 @@ uint8_t Stackers::StackSectionsUp_Mirror(uint8_t numSections, uint16_t& progress
     }
     else if(numSections == 2) {
       PrepForInsert_Mirror(numSections);
-      stacks[0].pixel = numLEDs - progress;
+      stacks[0].pixel = (offset + numLEDs - progress) % numLEDs;
       stacks[0].color = (numStacks/numSections) % numColors;
       stacks[0].length = maxStackLength;
       DrawStack(stacks[0]); // Todo: Why drawstack before drawAllSTacks?
@@ -421,12 +420,12 @@ uint8_t Stackers::StackSectionsUp_Mirror(uint8_t numSections, uint16_t& progress
     for(int i = 0; i < numPixels; i++) {
       for(int j = 0; j < numSections; j++) {
         if(j % 2 == 0) {
-          uint16_t idx = ((progress + j*LEDsPerGroup) % numLEDs) - i - 1;
+          uint16_t idx = (offset + numLEDs + progress + j*LEDsPerGroup - i - 1) % numLEDs;
           leds[idx] = pm->palette[(numStacks/numSections) % numColors];
           leds_b[idx] = PIXEL_BRIGHTNESS;
         }
         else { // Mirror j-1
-          uint16_t idx = numLEDs - ((progress + (j-1)*LEDsPerGroup) % numLEDs) + i + 1;
+          uint16_t idx = (offset + numLEDs - progress + (j-1)*LEDsPerGroup + i + 1) % numLEDs;
           leds[idx] = pm->palette[(numStacks/numSections) % numColors];
           leds_b[idx] = PIXEL_BRIGHTNESS;
         }
@@ -443,7 +442,7 @@ uint8_t Stackers::StackSectionsUp_Mirror(uint8_t numSections, uint16_t& progress
 
   return uint8_t(TransitionState::None);
 }
-uint8_t Stackers::StackSectionsDown_Mirror(uint8_t numSections, uint16_t& progress, uint8_t &curStep) {
+uint8_t Stackers::StackSectionsDown_Mirror(uint8_t numSections, uint16_t offset, uint16_t& progress, uint8_t &curStep) {
   static bool doPartials = true;
   if(isFirstCycleOfNewMode) { doPartials = false; }
   
@@ -459,12 +458,12 @@ uint8_t Stackers::StackSectionsDown_Mirror(uint8_t numSections, uint16_t& progre
     for(int i = 0; i < sparePixels && i < maxStackLength; i++) {
       for(uint8_t j = 0; j < numSections; j++) {
         if(j % 2 == 0) {
-          uint16_t idx = (numLEDs - i - 1) % numLEDs;
+          uint16_t idx = (offset + numLEDs - i - 1) % numLEDs;
           leds[idx] = pm->palette[(numStacks/numSections) % numColors];
           leds_b[idx] = PIXEL_BRIGHTNESS;
         }
         else {
-          uint16_t idx = (numLEDs - i) % numLEDs;
+          uint16_t idx = (offset + numLEDs - i) % numLEDs;
           leds[idx] = pm->palette[(numStacks/numSections) % numColors];
           leds_b[idx] = PIXEL_BRIGHTNESS;
         }
@@ -474,8 +473,8 @@ uint8_t Stackers::StackSectionsDown_Mirror(uint8_t numSections, uint16_t& progre
 
   for(uint16_t i = 0; i <= progress; i++) {
     for(uint8_t j = 0; j < numSections; j++) {
-      if(j % 2 == 0) { leds_b[ (i + j  *  LEDsPerGroup) % numLEDs ] = 0; } 
-      else { leds_b[numLEDs - ((i + (j-1)*LEDsPerGroup) % numLEDs)] = 0; }
+      if(j % 2 == 0) { leds_b[ (offset + i + j  *  LEDsPerGroup) % numLEDs ] = 0; } 
+      else { leds_b[(offset + numLEDs - i + (j-1)*LEDsPerGroup) % numLEDs] = 0; }
     }
   }
 
@@ -491,7 +490,7 @@ uint8_t Stackers::StackSectionsDown_Mirror(uint8_t numSections, uint16_t& progre
 
   return uint8_t(TransitionState::None);
 }
-uint8_t Stackers::StackSections_Mirror(uint8_t numSections) {
+uint8_t Stackers::StackSections_Mirror(uint8_t numSections, uint16_t offset) {
   static uint16_t progress = 0;
   static uint8_t curStep = 0;
   
@@ -512,8 +511,8 @@ uint8_t Stackers::StackSections_Mirror(uint8_t numSections) {
     progress++;
   }
 
-  if(curStep==0) { return StackSectionsUp_Mirror(numSections, progress, curStep); }
-  else if(curStep==1) { return StackSectionsDown_Mirror(numSections, progress, curStep); }
+  if(curStep==0) { return StackSectionsUp_Mirror(numSections, offset, progress, curStep); }
+  else if(curStep==1) { return StackSectionsDown_Mirror(numSections, offset, progress, curStep); }
   
   return uint8_t(TransitionState::None);
 }

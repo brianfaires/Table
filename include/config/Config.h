@@ -24,7 +24,7 @@
 
 /////////////////////////////////////////////
 ////////// Init Animation Settings //////////
-#define INIT_BASE_ANIMATION BaseAnimation::Scroller
+#define INIT_BASE_ANIMATION BaseAnimation::Stacks
 #define INIT_BASE_DIM_SPEED 52
 #define INIT_BASE_COLOR_SPEED 0
 #define INIT_BASE_BRIGHT_LENGTH 0x8000
@@ -51,7 +51,7 @@
 
 //////////////////////////////////////////////////
 ////////////// Init Layer Settings ///////////////
-#define INIT_BASE_PAUSE_LENGTH      35 * ONE_SEC
+#define INIT_BASE_PAUSE_LENGTH      350 * ONE_SEC
 #define INIT_BASE_TRANS_OUT_LENGTH  3 * ONE_SEC
 #define INIT_BASE_TRANS_IN_LENGTH   3 * ONE_SEC
 #define INIT_BASE_PARAM_WALK        30 * ONE_MIN

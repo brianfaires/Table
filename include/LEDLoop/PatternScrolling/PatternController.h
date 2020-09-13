@@ -35,6 +35,7 @@ class PatternController {
     void setManualBlocks(uint8_t* _colorIndexes, uint8_t _numColorIndexes, uint16_t _dimPeriod);
     uint8_t* getManualBlocks();
     void setSyncScrollingSpeeds(bool value);
+    bool getSyncScrollingSpeeds();
 
     void BeginDimBlend();
     void BeginColorBlend();

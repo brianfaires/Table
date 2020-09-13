@@ -41,10 +41,12 @@ void PatternController::setSyncScrollingSpeeds(bool value) {
   syncScrollingSpeeds = value;
   if(syncScrollingSpeeds) {
     ps1.setColorSpeed(ps1.getDimSpeed());
+    ps2.setColorSpeed(ps2.getDimSpeed());
     ps1.SyncLastMovedTimes();
     ps2.SyncLastMovedTimes();
   }
 }
+bool PatternController::getSyncScrollingSpeeds() { return syncScrollingSpeeds; }
 
 void PatternController::BeginDimBlend() { ps1.BeginDimBlend(); ps2.BeginDimBlend(); }
 void PatternController::BeginColorBlend() { ps1.BeginColorBlend(); ps2.BeginColorBlend(); }
@@ -283,7 +285,11 @@ void PatternController::WalkSpeeds() {
       }
     }
 
-    if(syncScrollingSpeeds) { ps1.setColorSpeed(ps1.getDimSpeed()); ps1.SyncLastMovedTimes(); ps2.SyncLastMovedTimes(); }
+    if(syncScrollingSpeeds) {
+      ps1.setColorSpeed(ps1.getDimSpeed());
+      ps1.SyncLastMovedTimes();
+      ps2.SyncLastMovedTimes();
+    }
     else {
       initSpeed = ps1.getColorSpeed();
       if(initSpeed != colorSpeed) {
