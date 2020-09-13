@@ -433,7 +433,7 @@ bool ProcessSerialInput() {
     else if(paramNum == next++) { loop->pc.setDimPauseLength(IO_TIME_FACTOR * value); }
     else if(paramNum == next++) { loop->pc.setDimBlendLength(IO_TIME_FACTOR * value); }
     else if(paramNum == next++) { loop->pc.setDimPatternChangeType(DimPatternChangeType(value % NUM_DIM_PARAM_CHANGE_TYPES), value >= NUM_DIM_PARAM_CHANGE_TYPES); }
-    else { THROW("Invalid paramNum") return false; }
+    else { THROW(F("Invalid paramNum")) return false; }
 
     return true;
   #endif

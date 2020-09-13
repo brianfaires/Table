@@ -175,6 +175,7 @@ void LEDLoop::TransitionBaseAnimation() {
       if(baseParams.dimSpeed < 0) { baseParams.dimSpeed = -1 * stackers.MAX_MOVE_SPEED; }
       else { baseParams.dimSpeed = stackers.MAX_MOVE_SPEED; }
     }
+    
     if(abs(pc.ps->getDimSpeed()) > stackers.MAX_MOVE_SPEED) { return; }
     
     // Bring colorSpeed to match dimSpeed, then enable syncScrollingSpeeds

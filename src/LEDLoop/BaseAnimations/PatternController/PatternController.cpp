@@ -102,8 +102,7 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
     }
     ScaleParams(params, scaledParams, ps->getDimPeriod(), ps->getColorPeriod()); // Re-scale params with old periods
   }
-
-  if(ps->getDimSpeed() != secondary->getDimSpeed()) { THROW(ps->getDimSpeed() + " DOES NOT EQUAL " + secondary->getDimSpeed()); }
+  ASSERT_EQUAL(ps->getDimSpeed(), secondary->getDimSpeed())
 
   // Update primary PatternScroller
   ps->numColors = scaledParams.numColors;
@@ -132,12 +131,12 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
     // splitIndex is part of the higher pattern
     // Always move the split point with the dim pattern, even if a change in colorPeriod is being applied
     if(psMoved) {
-      if(!secMoved) { THROW(F("ps moved and secondary didn't")) }
+      ASSERT(secMoved)
       if(ps->getDimSpeed() > 0) { splitIndex++; }
       else if(ps->getDimSpeed() < 0) { splitIndex--; }
       else { THROW(F("Error: dimMovedLastUpdate==true while dimSpeed == 0")) }
     }
-    else if(secMoved) { THROW(F("Error: secondary moved and ps didn't")) }
+    else { ASSERT(!secMoved) }
 
     // Handle splitPoint movement from paramChanges; determined by the amount it shifted in secondary pattern
     splitIndex += shiftAmount;

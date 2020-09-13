@@ -138,7 +138,7 @@ void Stackers::Stacks() {
   else if(stackMode == StackMode::StutterStepMinSmooth) { transitionState = TransitionState(StutterStepBands(displayMode)); }
   else if(stackMode == StackMode::StutterStepMaxSmooth) { transitionState = TransitionState(StutterStepBands(displayMode)); }
   else if(stackMode == StackMode::StutterStepColors)    { transitionState = TransitionState(StutterStepBands()); }
-  else THROW("Unrecognized stackMode!")
+  else THROW_DUMP(F("Unrecognized stackMode!"), int(stackMode))
 
   isFirstCycleOfNewMode = false;
 }

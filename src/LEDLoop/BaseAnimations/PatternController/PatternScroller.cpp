@@ -576,12 +576,11 @@ bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
         }
         break;
       default:
-        THROW("unknown DimPatternChangeType!")
-        DUMP(int(dimPatternChangeType))
+        THROW_DUMP("unknown DimPatternChangeType!", int(dimPatternChangeType))
     }
   }
 
-  if(dimPattern.dimPeriod != dimPeriod) { THROW("dimPeriod mismatch without a split!") }
+  ASSERT_EQUAL(dimPattern.dimPeriod, dimPeriod)
   return delta != 0;
 }
 
@@ -662,8 +661,8 @@ void PatternScroller::SetCRGBs(CRGB* target, uint8_t* target_b, uint16_t numLEDs
       }
     }
   
-    if(curDimIndex >= dimPeriod) { THROW("ERROR: SetCRGBs(): curDimIndex out of bounds: " + curDimIndex + " / " + dimPeriod) }
-    if(curColorIndex >= colorPeriod) { THROW("ERROR: SetCRGBs(): curColorIndex out of bounds: " + curColorIndex + " / " + colorPeriod) }
+    ASSERT_LESSTHAN(curDimIndex, dimPeriod)
+    ASSERT_LESSTHAN(curColorIndex, colorPeriod)
 
     if(++curColorIndex == colorPeriod) { curColorIndex = 0; }
     if(++curDimIndex == dimPeriod) { curDimIndex = 0; }
