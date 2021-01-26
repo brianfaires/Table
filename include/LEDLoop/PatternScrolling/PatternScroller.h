@@ -94,6 +94,8 @@ class PatternScroller {
     bool dimBlendOn = false;
     bool colorBlendOn = false;
     bool dimParamWalkedThisCycle = false;
+    bool beginDimBlend = false;
+    bool beginColorBlend = false;
 
     // Params
     uint16_t colorPeriod, dimPeriod;

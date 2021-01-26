@@ -2,7 +2,7 @@
 #include "FastLED.h"
 #include "LEDLoop/GammaManager.h"
 
-#define FPS_TO_TIME(x) (ONE_SEC / x)
+#define FPS_TO_TIME(x) uint32_t(ONE_SEC / x)
 
 inline uint8_t scaleParam(uint8_t param, uint8_t minVal, uint8_t maxVal) {
   return minVal + param * (maxVal - minVal + 1) / 256;

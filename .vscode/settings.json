@@ -45,5 +45,6 @@
         "cinttypes": "cpp",
         "utility": "cpp",
         "string": "cpp"
-    }
+    },
+    "cmake.configureOnOpen": true
 }

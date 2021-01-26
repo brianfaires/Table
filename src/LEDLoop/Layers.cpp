@@ -73,7 +73,7 @@ void LEDLoop::CleanupBaseLayer(BaseAnimation lastAnimation) {
   }
 }
 void LEDLoop::TransitionBaseAnimation() {
-  static int activeTransition = 0; // Used to stay in one block even if starting conditions are no longer met
+  static int activeTransition = 0; // Used to stay in the transition code block, even if starting conditions are no longer met
   static int transitionPhase = 0;  // Tracks progress within a transition
   static uint32_t transStartTime = 0; // Useful for timed actions within a phase
 
@@ -82,13 +82,15 @@ void LEDLoop::TransitionBaseAnimation() {
   if(activeTransition == 1 || (activeTransition == 0 && baseParams.animation == BaseAnimation::Stacks && nextBase == BaseAnimation::Scroller)) {
     #pragma region Stacks->Scroller    
     if(timing.now - timing.lastBaseTransition < layerConfig.basePauseLength) { return; }
-    if(uint8_t(stackers.transitionState) != 2) { return; }
+    if(stackers.transitionState != Stackers::TransitionState::Full) { stackers.wrapItUp = true; return; }
     if(stackers.stackLength < 9) { return; } // Below min size for dimPatterns
     uint16_t dimPeriod = numLEDs / stackers.numStacks; //allowedDimPeriods[scaleParam(baseParams.dimPeriod, 0, NUM_ALLOWED_DIM_PERIODS-1)];
     if(stackers.stackLength > dimPeriod-3) { return; } // Above max size for dimPatterns (and a little extra to avoid overflowing scaled params)
 
     if(transitionPhase == 0) {
+      DEBUG_TRANSITIONS("Stacks->Scroller: Begin Phase 0")
       activeTransition = 1;
+      stackers.wrapItUp = false;
       // Assume a consistent dimPattern coming from stackers;  Initialize dimPattern to match period, length, and offset
       uint16_t maxExtraPixels = dimPeriod - 10; // 10 for the min dimPattern and spacing
       baseParams.brightLength = (stackers.stackLength - 9) * 65536L / maxExtraPixels; // Scaled based on the number of extra pixels needed
@@ -144,32 +146,28 @@ void LEDLoop::TransitionBaseAnimation() {
     else if(transitionPhase == 1) {
       // Blend into desired color pattern
       if(transStartTime == 0) {
-        baseParams.displayMode = pc.GenerateDisplayModeValue(DimPatternName::Snake, ColorPatternName::Gradient); // Todo: what to default to?
-        //pc.BeginColorBlend();
+        DEBUG_TRANSITIONS("Stacks->Scroller: End Phase 0/Begin Phase 1")
+        baseParams.displayMode = pc.GenerateDisplayModeValue(DimPatternName::Random, ColorPatternName::Gradient); // Todo: what to default to?
+        pc.BeginColorBlend();
+        pc.BeginDimBlend();
         transStartTime = timing.now;
       }
       else if(timing.now - transStartTime >= pc.getColorBlendLength()) {
+        DEBUG_TRANSITIONS("Stacks->Scroller: Swapping to Scroller")
+        timing.lastBaseTransition = timing.now;
+        transitionPhase = 0;
+        activeTransition = 0;
         transStartTime = 0;
-        transitionPhase = 2;
+        pc.setSyncScrollingSpeeds(false);
       }
-    }
-    else if(transitionPhase == 2) {
-      // Begin pattern blending
-      pc.setSyncScrollingSpeeds(false);
-      baseParams.displayMode = pc.GenerateDisplayModeValue(DimPatternName::Random, ColorPatternName::Gradient); // Todo: what to default to?
-      //pc.BeginDimBlend();
-
-      timing.lastBaseTransition = timing.now;
-      transitionPhase = 0;
-      activeTransition = 0;
     }
     #pragma endregion
   }
   else if(activeTransition == 2 || (activeTransition == 0 && baseParams.animation == BaseAnimation::Scroller && nextBase == BaseAnimation::Stacks)) {
     #pragma region Scroller->Stacks
-    
+
     // Bring speed within allowable range
-    if(timing.now - timing.lastBaseTransition < layerConfig.basePauseLength) { return; }
+    if(timing.now - timing.lastBaseTransition < layerConfig.basePauseLength) { return; } // Wait for pauseLength before starting transition
     if(abs(baseParams.dimSpeed) > stackers.MAX_MOVE_SPEED) {
       if(baseParams.dimSpeed < 0) { baseParams.dimSpeed = -1 * stackers.MAX_MOVE_SPEED; }
       else { baseParams.dimSpeed = stackers.MAX_MOVE_SPEED; }
@@ -182,8 +180,7 @@ void LEDLoop::TransitionBaseAnimation() {
     uint16_t dimPeriod = allowedDimPeriods[scaleParam(baseParams.dimPeriod, 0, NUM_ALLOWED_DIM_PERIODS-1)];
     int16_t diff = pc.getDimIndexOffset() - (pc.getColorIndexOffset() % dimPeriod);
     if(diff != 0) { return; }
-    pc.setSyncScrollingSpeeds(true);
-    
+
     //if(baseParams.colorSpeed < baseParams.dimSpeed) { baseParams.colorSpeed++; DUMP(baseParams.colorSpeed) }
     //else if(baseParams.colorSpeed > baseParams.dimSpeed) { baseParams.colorSpeed--; DUMP(baseParams.colorSpeed) }
     //if(baseParams.colorSpeed == baseParams.dimSpeed) { pc.syncScrollingSpeeds = true; DUMP(baseParams.colorSpeed) }
@@ -191,10 +188,12 @@ void LEDLoop::TransitionBaseAnimation() {
     if(transitionPhase == 0) {
       activeTransition = 2;
       if(transStartTime == 0) {
+        DEBUG_TRANSITIONS("Scroller->Stacks: Begin Phase 0")
         // Switch to snake and fixed colors
         baseParams.displayMode = pc.GenerateDisplayModeValue(DimPatternName::Snake, ColorPatternName::ManualBlocks);
-        //pc.BeginDimBlend();
-        //pc.BeginColorBlend();
+        pc.setSyncScrollingSpeeds(true);
+        //pc.BeginDimBlend(); // Too jumpy with low blend speed
+        pc.BeginColorBlend();
         transStartTime = timing.now;
         
         // Define manual block colors
@@ -208,13 +207,15 @@ void LEDLoop::TransitionBaseAnimation() {
       }
       else {
         uint32_t timeElapsed = timing.now - transStartTime;
-        if(timeElapsed >= pc.getColorBlendLength() && timeElapsed >= pc.getDimBlendLength()) {
+        if((timeElapsed >= pc.getDimPauseLength() + pc.getDimBlendLength()) && (timeElapsed >= pc.getColorBlendLength())) {
+          DEBUG_TRANSITIONS("Scroller->Stacks: End Phase 0")
           transitionPhase = 1;
           transStartTime = 0;
         }
       }
     }
     else if(transitionPhase == 1) {
+      if(transStartTime == 0) { DEBUG_TRANSITIONS("Scroller->Stacks: Swapping to Stacks") }
       // Create stacks to match current pattern, then hard swap
       stackers.stackLength = 9 + 2*pc.ps->transLength + pc.ps->brightLength;
       stackers.numStacks = numLEDs / dimPeriod;

@@ -96,7 +96,7 @@ void PatternScroller::setDisplayMode(uint8_t displayMode) {
 
   if(targetColorPatternIndex != colorPatternIndex) {
     bool isTimeForChange = *curTime - lastColorPatternChange >= colorPauseLength;
-    if(isRandomColorPattern()) {
+    if(isRandomColorPattern() && !beginColorBlend) {
       if(isTimeForChange) {
         // Currently on or blending toward randomColorPatternIndex
         targetColorPatternIndex = randomColorPatternIndex;
@@ -104,26 +104,26 @@ void PatternScroller::setDisplayMode(uint8_t displayMode) {
       else {
         // Have not started blending yet
         targetColorPatternIndex = colorPatternIndex;
-        memcpy(targetColorPattern, oldColorPattern, colorPeriod);
+        memcpy(targetColorPattern, oldColorPattern, sizeof(CRGB)*colorPeriod);
         colorBlendOn = false;
       }
     }
-    else if(!colorBlendOn && isTimeForChange) {
+    else if(beginColorBlend || (!colorBlendOn && isTimeForChange)) { //TODO: Change this to actually switch in the middle of a blend
       // Begin blending into new colorPattern; even if in the middle of a blend
       colorBlendOn = true;
       memcpy(oldColorPattern, curColorPattern, sizeof(CRGB)*colorPeriod);
       targetColorPatternIndex = colorPatternIndex;
       uint8_t prevPattern = randomColorPatternIndex;
       if(isRandomColorPattern()) { do { randomColorPatternIndex = random8(1, NUM_COLOR_PATTERNS); } while (randomColorPatternIndex == prevPattern); }
-      DUMP(getTargetColorPatternIndex())
       WriteColorPattern(getTargetColorPatternIndex(), targetColorPattern);
       lastColorPatternChange = *curTime - colorPauseLength; // Might already be blending
     }
   }
+  beginColorBlend = false;
 
   if(targetDimPatternIndex != dimPatternIndex) {
     bool isTimeForChange = *curTime - lastDimPatternChange >= dimPauseLength;
-    if(isRandomDimPattern()) {
+    if(isRandomDimPattern() && !beginDimBlend) {
       if(isTimeForChange) {
         // Currently on or blending toward randomDimPatternIndex
         targetDimPatternIndex = randomDimPatternIndex;
@@ -135,7 +135,7 @@ void PatternScroller::setDisplayMode(uint8_t displayMode) {
         dimBlendOn = false;
       }
     }    
-    else if(!dimBlendOn && isTimeForChange) {
+    else if(beginDimBlend || (!dimBlendOn && isTimeForChange)) {
       // Don't accept new targets while blending
       dimBlendOn = true;
       oldDimPatternIndex = targetDimPatternIndex;
@@ -146,6 +146,7 @@ void PatternScroller::setDisplayMode(uint8_t displayMode) {
       lastDimPatternChange = *curTime - dimPauseLength;
     }
   }
+  beginDimBlend = false;
 }
 void PatternScroller::setDimIndexOffset(uint16_t value) { dimIndexFirst = value; }
 uint16_t PatternScroller::getDimIndexOffset() { return dimIndexFirst; }
@@ -585,6 +586,8 @@ bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
 }
 
 bool PatternScroller::ScrollPatterns() {
+  //uint32_t initCurTime = *curTime;
+
   bool dimMoved = false;
   // Move dim pattern
   if(dimSpeed == 0) {
@@ -592,6 +595,7 @@ bool PatternScroller::ScrollPatterns() {
   }
   else if(isReadyForDimMove()) {
     dimMoved = true;
+
     // Scroll dim pattern
     if(isMovingForward()) {
       if(--dimIndexFirst == 0xFFFF) { dimIndexFirst = dimPeriod - 1; }
@@ -637,10 +641,12 @@ void PatternScroller::ScrollPatternsWithoutTimer(int8_t moveAmount) {
 }
 
 void PatternScroller::BeginDimBlend() {
+  beginDimBlend = true;
   lastDimPatternChange = *curTime - dimPauseLength;
 }
 
 void PatternScroller::BeginColorBlend() {
+  beginColorBlend = true;
   lastColorPatternChange = *curTime - colorPauseLength;
 }
 
