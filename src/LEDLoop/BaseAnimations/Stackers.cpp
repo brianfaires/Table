@@ -208,19 +208,13 @@ uint8_t Stackers::WipeClean(uint8_t numSections, uint16_t offset, uint16_t progr
   uint16_t prevOffset;
   uint16_t adjOffset = offset;
 
-  static int forTest = 0;
-
-  if(forTest==1) { delay(2000); forTest = 2;}
-  else if(forTest==2) { delay(2000); }
-
-  // Aim for clean transitions that don't begin inthe middle of stacks
+  // Aim for clean transitions that don't begin in the middle of stacks
   if(transitionState == TransitionState::Full && numSections > 2) {
     do {
       prevOffset = adjOffset;
       for(uint16_t i = 0; i <= numSections; i++) {
         if(leds_b[(adjOffset + LEDsPerGroup*i + numLEDs) % numLEDs] != 0) {
           adjOffset++;
-          if(forTest==0) { forTest=1; delay(2000);}
           break;
         }
       }
@@ -231,7 +225,7 @@ uint8_t Stackers::WipeClean(uint8_t numSections, uint16_t offset, uint16_t progr
       }
     } while(prevOffset != adjOffset);
   }
-
+  
   for(uint16_t i = 0; i <= progress; i++) {
     for(uint8_t j = 0; j < numSections; j++) {
       leds_b[(adjOffset + i + j*LEDsPerGroup) % numLEDs] = 0;
@@ -289,8 +283,9 @@ uint8_t Stackers::StackSectionsUp(uint8_t numSections, uint16_t offset, uint16_t
 }
 uint8_t Stackers::StackSectionsDown(uint8_t numSections, uint16_t offset, uint16_t& progress, uint8_t &curStep) {
   static bool doPartials = true;
+
   if(isFirstCycleOfNewMode) { doPartials = false; }
-  
+
   DrawAllStacks();
 
   uint16_t LEDsPerGroup = numLEDs / numSections;
@@ -341,23 +336,22 @@ uint8_t Stackers::StackSections(uint8_t numSections, uint16_t offset) {
 
     if(numStacks*dimPeriod == numLEDs) {
       curStep = 1; // Transitioned in from full stacks
-      int extraStacks = numStacks % numSections;
-      progress =  dimPeriod * extraStacks / numSections;
+      progress =  0;//dimPeriod * extraStacks / numSections;
     }
     else {
       progress = 0;
     }
-
-    isFirstCycleOfNewMode = false;
   }
   else if(moveThisCycle) {
     progress++;
   }
 
-  if(curStep==0) { return StackSectionsUp(numSections, offset, progress, curStep); }
-  else if(curStep==1) { return StackSectionsDown(numSections, offset, progress, curStep); }
+  uint8_t retVal = uint8_t(TransitionState::None);
+  if(curStep==0) { retVal = StackSectionsUp(numSections, offset, progress, curStep); }
+  else if(curStep==1) { retVal = StackSectionsDown(numSections, offset, progress, curStep); }
 
-  return uint8_t(TransitionState::None);
+  isFirstCycleOfNewMode = false;
+  return retVal;
 }
 
 uint8_t Stackers::StackSectionsUp_Mirror(uint8_t numSections, uint16_t offset, uint16_t& progress, uint8_t &curStep) {
