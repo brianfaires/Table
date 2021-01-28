@@ -43,7 +43,6 @@ uint8_t Stackers::CreateStacks(uint8_t mode) {
   dimPeriod = allowedDimPeriods[scaleParam(params->dimPeriod, 0, numAllowedDimPeriods-1)];
   maxStackLength = scale16(dimPeriod, params->brightLength);
   
-
   // Sets up a full collection of stacks with max length
   stackMode = StackMode(mode % int(StackMode::Length));
   if(stackMode == StackMode::None) { stackMode = DEFAULT_STACK_MODE; }
@@ -56,6 +55,12 @@ uint8_t Stackers::CreateStacks(uint8_t mode) {
   if(stackMode == StackMode::Shutters) {
     if(numStacks == 0) { stackLength = 0; }
     numStacks = numLEDs / dimPeriod;
+
+    for(uint8_t i = 0; i < numStacks; i++) {
+      stacks[i].length = 0;
+      stacks[i].pixel = i * dimPeriod;
+      stacks[i].color = i % numColors;
+    }
   }
   else if(stackMode == StackMode::Stack5 || stackMode == StackMode::Stack4Mirror) {
     numStacks = 0;
@@ -103,6 +108,8 @@ void Stackers::Stacks() {
     if(*curTime - lastModeTransition >= transTime) { // Min time enforced
       while(!isFirstCycleOfNewMode) { // Keep rerolling until mode is found
         uint8_t nextStackMode;
+        
+        // Check mode-specific requirements
         bool isValidMode = true;
         do {
           isValidMode = true;
@@ -116,6 +123,7 @@ void Stackers::Stacks() {
           else if(wrapItUp && !transitionableMode[nextStackMode]) { isValidMode = false; }
         } while(!isValidMode);
 
+        // Check for valid transition state
         if(allowedModes[int(transitionState)][nextStackMode]) {
           moveClockwise = random8(2);
           stackMode = StackMode(nextStackMode);
@@ -204,35 +212,79 @@ void Stackers::PrepForInsert_Mirror(uint8_t numSections) {
 }
 uint8_t Stackers::WipeClean(uint8_t numSections, uint16_t offset, uint16_t progress) {
   uint16_t LEDsPerGroup = numLEDs / numSections;
-
-  uint16_t prevOffset;
-  uint16_t adjOffset = offset;
-
-  // Aim for clean transitions that don't begin in the middle of stacks
-  if(transitionState == TransitionState::Full && numSections > 2) {
-    do {
-      prevOffset = adjOffset;
-      for(uint16_t i = 0; i <= numSections; i++) {
-        if(leds_b[(adjOffset + LEDsPerGroup*i + numLEDs) % numLEDs] != 0) {
-          adjOffset++;
-          break;
-        }
-      }
-      if(adjOffset - offset >= numLEDs) {
-        THROW("Not possible to clean wipe with numSections=" + numSections)
-        adjOffset = offset;
-        break; // Just break with offset
-      }
-    } while(prevOffset != adjOffset);
-  }
   
-  for(uint16_t i = 0; i <= progress; i++) {
-    for(uint8_t j = 0; j < numSections; j++) {
-      leds_b[(adjOffset + i + j*LEDsPerGroup) % numLEDs] = 0;
+  // Calculate these values once and remember until the next animation (This can probably be included in the following if block)
+  static int16_t adjOffsets[MAX_SECTIONS] = { 0 };
+  static int16_t maxAdjustment = 0;
+  if(isFirstCycleOfNewMode) {
+    maxAdjustment = 0;
+    for(uint16_t i = 0; i < numSections; i++) {
+      adjOffsets[i] = offset;
     }
   }
 
-  return uint8_t(progress == LEDsPerGroup ? TransitionState::Empty : TransitionState::None);
+  // Aim for clean transitions that don't begin in the middle of stacks
+  if(transitionState == TransitionState::Full && numSections > 2 && stacks[0].length!=LEDsPerGroup) {
+    int16_t prevOffset;
+    int16_t adjOffset = offset;
+    while(true) {
+      prevOffset = adjOffset;
+      uint16_t i = 0;
+      for(i = 0; i <= numSections; i++) {
+        if(leds_b[(i*LEDsPerGroup + adjOffset + numLEDs) % numLEDs] != 0) {
+          adjOffset--;
+          break;
+        }
+      }
+
+      if(prevOffset == adjOffset) {
+        // Lined up right. Break from loop
+        for(uint8_t i = 0; i < numSections; i++) {
+          adjOffsets[i] = adjOffset;
+        }
+        break;
+      }
+
+      if(offset - adjOffset >= LEDsPerGroup) {
+        // Not possible to perfectly align a clean wipe. Set individual offsets
+        for(uint8_t i = 0; i < numSections; i++) {
+          adjOffsets[i] = offset;
+          while(leds_b[(i*LEDsPerGroup + adjOffsets[i] + numLEDs) % numLEDs] != 0) {
+            adjOffsets[i]--;
+          }
+          if(offset - adjOffsets[i] > maxAdjustment) { maxAdjustment = offset - adjOffsets[i]; }
+        }
+
+        // Start on the first lit pixel
+        for(uint8_t i = 0; i < numSections; i++) {
+          adjOffsets[i]++;
+        }
+        break;
+      }
+    }
+  }
+  
+  if(isFirstCycleOfNewMode) {
+    String temp = "";
+    for(int i = 0; i < numSections; i++) {
+      temp = temp + adjOffsets[i] + ", ";
+    }
+  }
+
+  for(uint16_t i = 0; i <= progress; i++) {
+    for(uint8_t j = 0; j < numSections; j++) {
+      leds_b[(i + j*LEDsPerGroup + adjOffsets[j] + numLEDs) % numLEDs] = 0;
+    }
+  }
+
+  if(progress == LEDsPerGroup + maxAdjustment) {
+    maxAdjustment = 0;
+    for(uint16_t i = 0; i < numSections; i++) {
+      adjOffsets[i] = offset;
+    }
+    return uint8_t(TransitionState::Empty);
+  }
+  return uint8_t(TransitionState::None);
 }
 
 
@@ -547,8 +599,6 @@ uint8_t Stackers::Shutters() {
 
   if(numStacks == 0) {
     CreateStacks(uint8_t(StackMode::Shutters));
-    stackLength = 0;
-    for(int i = 0; i < numStacks; i++) { stacks[i].length = 0; }
   }
 
   if(stackLength <= minStackLength) { fadeIn = true; }

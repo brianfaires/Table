@@ -10,6 +10,7 @@ class Stackers {
   private:
     #define MAX_TRANS_TIME (10*ONE_SEC)
     #define MAX_STACKS 40
+    #define MAX_SECTIONS 10 // Number of simultaneous stacking sections
     #define DEFAULT_STACK_MODE StackMode::StutterStepMinSmooth
     #define DEFAULT_MOVE_CLOCKWISE false
     #define PIXEL_BRIGHTNESS 255
