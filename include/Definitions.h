@@ -14,7 +14,7 @@ enum class TopAnimation : uint8_t { None, Glitter, Rain, Twinkle, Bounce, Comets
 
 //////////////////////////////////////////////////////////////////////////////////
 //////// Internal timers: Use microseconds (1), or use milliseconds (0) //////////
-#if 0 
+#if 1
   #define SYSTEM_TIME millis()
   #define ONE_SEC 1000
   #define IO_TIME_FACTOR 1
@@ -23,7 +23,7 @@ enum class TopAnimation : uint8_t { None, Glitter, Rain, Twinkle, Bounce, Comets
   #define ONE_SEC 1000000L
   #define IO_TIME_FACTOR 1000
 #endif
-#define ONE_MIN 60 * ONE_SEC
+#define ONE_MIN 60L * ONE_SEC
 //////////////////////////////////////////////////////////////////////////////////
 
 

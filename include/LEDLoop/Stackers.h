@@ -15,6 +15,7 @@ class Stackers {
     #define DEFAULT_MOVE_CLOCKWISE false
     #define PIXEL_BRIGHTNESS 255
     #define MIN_STACK_LENGTH 5
+    #define MIN_STACK_LENGTH_FOR_EXIT 9
     
     const bool allowedModes[int(TransitionState::Length)][int(StackMode::Length)] = { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
                                                                                       { 0, 1, 0, 0, 0, 1, 1, 1, 1, 1 },   // Empty
@@ -37,7 +38,7 @@ class Stackers {
     uint8_t maxStackLength = 0;
     
   public:
-    const uint8_t MAX_MOVE_SPEED = 80;
+    const static uint8_t MAX_MOVE_SPEED = 80;
 
     struct_stack stacks[MAX_STACKS];
     uint8_t numStacks = 0;

@@ -389,11 +389,14 @@ bool ProcessSerialInput() {
     else if(paramNum == 1 || paramNum == 2 || paramNum == 11) {
       if(value < -128 || value > 127) { THROW("OOB int8_t") return false; }
     }
-    else if((paramNum >= 3 && paramNum <= 8) || (paramNum >= 10 && paramNum <= 10)){ 
+    else if((paramNum >= 3 && paramNum <= 4)){ 
+      if(value < 0 || value > 0xFFFF) { THROW("OOB uint16_t") return false; }
+    }
+    else if((paramNum >= 5 && paramNum <= 8) || (paramNum >= 10 && paramNum <= 10)){ 
       if(value < 0 || value > 255) { THROW("OOB uint8_t") return false; }
     }
     else if((paramNum >= 12 && paramNum <= 25)) {
-      if(value < 0 || value > 4294967) { THROW("OOB uint32_t") return false; } // 4294967 is max uint32_t / 1000
+      if(value < 0 || value > 0xFFFFFFFF) { THROW("OOB uint32_t") return false; }
     }
 
     #define ASSIGN_PARAM(x) x = ((x)==0 && value==0) ? 0xFFFF : value;

@@ -252,11 +252,11 @@ void GammaManager::RunDimmingTest(CRGB* leds, uint8_t* leds_b, uint16_t numLEDs,
 				leds_b[i+length+5] = (i+1)*fadeStepSize;
 			}
 			
-			if(numLEDs >= 3*length+10) {
-				//leds[i+2*length+10].r = colCorrection >> 8;
-				//leds[i+2*length+10].b = leds[i+2*length+10].r >> 3;
-				leds[i+2*length+10] = CRGB(255,0,255);
-        leds_b[i+2*length+10] = (i+1)*fadeStepSize;
+			if(numLEDs >= 3*length+MIN_SCROLLER_LIT_PLUS_ONE) {
+				//leds[i+2*length+MIN_SCROLLER_LIT_PLUS_ONE].r = colCorrection >> 8;
+				//leds[i+2*length+MIN_SCROLLER_LIT_PLUS_ONE].b = leds[i+2*length+10].r >> 3;
+				leds[i+2*length+MIN_SCROLLER_LIT_PLUS_ONE] = CRGB(255,0,255);
+        leds_b[i+2*length+MIN_SCROLLER_LIT_PLUS_ONE] = (i+1)*fadeStepSize;
 			}
 		}
 		

@@ -395,9 +395,9 @@ void LEDLoop::ColorExplosion() {
   uint8_t overridePoint = baseParams.dimPeriod; // Hardly matters
 #else
   uint8_t nCol = scaleParam(baseParams.numColors, 2, 5);
-  uint8_t growRate = scaleParam(2*(uint8_t)abs(baseParams.colorSpeed), (uint8_t)2, (uint8_t)16);
+  uint8_t growRate = scaleParam(2*(uint8_t)abs(baseParams.colorSpeed)-1, (uint8_t)2, (uint8_t)16);
   growRate += growRate % 2;
-  uint8_t fadeRate = scaleParam(2*(uint8_t)abs(baseParams.dimSpeed), (uint8_t)2, min(6, growRate+2));
+  uint8_t fadeRate = scaleParam(2*(uint8_t)abs(baseParams.dimSpeed)-1, (uint8_t)2, min(6, growRate+2));
   fadeRate += fadeRate % 2;
   uint8_t spawnRate = 0;//scaleParam(baseParams.brightLength, 6, 120);
   uint8_t growChance = 0;//scaleParam(baseParams.transLength, 220, 250);

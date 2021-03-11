@@ -3,7 +3,7 @@
 void LEDLoop::Glitter() {
   static uint32_t lastGlitter = 0;
 
-  int8_t refreshRate = scaleParam(topParams.speed, 9, 13);
+  int8_t refreshRate = scaleParam(2*abs(topParams.speed)-1, 9, 13);
   uint16_t numLitLEDs = scaleParam(topParams.portion, 3, 16);
   
   if(timing.now - lastGlitter > FPS_TO_TIME(refreshRate)) {
@@ -20,7 +20,7 @@ void LEDLoop::Rain() {
   static uint32_t lastMove = 0;
   
   uint8_t portion = scaleParam(topParams.portion, 8, 15);
-  int8_t moveSpeed = scaleParam(abs(topParams.speed), int8_t(7), int8_t(50));
+  int8_t moveSpeed = scaleParamSigned(2*abs(topParams.speed)-1, 7, 50);
   if(topParams.speed < 0) { moveSpeed *= -1; }
   
   if(timing.now - lastMove > FPS_TO_TIME(abs(moveSpeed))) {
@@ -55,7 +55,7 @@ void LEDLoop::Rain() {
 
 void LEDLoop::Twinkle() {
   uint8_t spawnRate = scaleParam(topParams.portion, 1, 20);
-  uint8_t growRate = 2*scaleParam(topParams.speed, 1, 8);
+  uint8_t growRate = 2*scaleParam(2*abs(topParams.speed)-1, 1, 8);
 
   for(uint16_t i = 0; i < numLEDs; i++) {
     if(leds_top_b[i] % 2 == 1) {
@@ -162,7 +162,7 @@ void LEDLoop::FourComets() {
   static uint32_t lastMove = timing.now;
   
   uint8_t cometLength = scaleParam(topParams.portion, 8, 24);
-  uint8_t cometSpeed = scaleParam(topParams.speed, 8, 30);
+  uint8_t cometSpeed = scaleParam(2*abs(topParams.speed)-1, 8, 30);
 
   if(comets[0].startPos == comets[1].startPos) {
     // Init

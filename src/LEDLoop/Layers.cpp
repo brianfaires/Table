@@ -83,7 +83,7 @@ void LEDLoop::TransitionBaseAnimation() {
     #pragma region Stacks->Scroller    
     if(timing.now - timing.lastBaseTransition < layerConfig.basePauseLength) { return; }
     if(stackers.transitionState != Stackers::TransitionState::Full) { stackers.wrapItUp = true; return; }
-    if(stackers.stackLength < 9) { return; } // Below min size for dimPatterns
+    if(stackers.stackLength < MIN_STACK_LENGTH_FOR_EXIT) { return; } // Below min size for dimPatterns
     uint16_t dimPeriod = numLEDs / stackers.numStacks; //allowedDimPeriods[scaleParam(baseParams.dimPeriod, 0, NUM_ALLOWED_DIM_PERIODS-1)];
     if(stackers.stackLength > dimPeriod-3) { return; } // Above max size for dimPatterns (and a little extra to avoid overflowing scaled params)
 
@@ -92,14 +92,14 @@ void LEDLoop::TransitionBaseAnimation() {
       activeTransition = 1;
       stackers.wrapItUp = false;
       // Assume a consistent dimPattern coming from stackers;  Initialize dimPattern to match period, length, and offset
-      uint16_t maxExtraPixels = dimPeriod - 10; // 10 for the min dimPattern and spacing
-      baseParams.brightLength = (stackers.stackLength - 9) * 65536L / maxExtraPixels; // Scaled based on the number of extra pixels needed
+      uint16_t maxExtraPixels = dimPeriod - MIN_SCROLLER_LIT_PLUS_ONE;
+      baseParams.brightLength = (stackers.stackLength - MIN_SCROLLER_LIT) * 0x10000 / maxExtraPixels; // Scaled based on the number of extra pixels needed
       baseParams.transLength = baseParams.brightLength;
       baseParams.colorPeriod = 255;
-      uint8_t scaledDown = scale16((dimPeriod-10)/3 + 1, baseParams.brightLength);
-      uint8_t moarPix = stackers.stackLength - (9 + 3*scaledDown);
-      if(moarPix == 1) { baseParams.brightLength += (3 * 65536L / maxExtraPixels); }
-      else if(moarPix == 2) { baseParams.transLength += (3 * 65536L / maxExtraPixels); }
+      uint8_t scaledDown = scaleParam16(baseParams.brightLength, 0, (dimPeriod-MIN_SCROLLER_LIT_PLUS_ONE)/3);
+      uint8_t moarPix = stackers.stackLength - (MIN_SCROLLER_LIT + 3*scaledDown);
+      if(moarPix == 1) { baseParams.brightLength += (3 * 0x10000 / maxExtraPixels); }
+      else if(moarPix == 2) { baseParams.transLength += (3 * 0x10000 / maxExtraPixels); }
 
       // Find the stack/dimPeriod that contains pixel 0; ie its location is 0, or the highest value
       uint16_t maxStackStart = stackers.stacks[0].pixel;
@@ -149,7 +149,7 @@ void LEDLoop::TransitionBaseAnimation() {
         DEBUG_TRANSITIONS("Stacks->Scroller: End Phase 0/Begin Phase 1")
         baseParams.displayMode = pc.GenerateDisplayModeValue(DimPatternName::Random, ColorPatternName::Gradient); // Todo: what to default to?
         pc.BeginColorBlend();
-        pc.BeginDimBlend();
+        //pc.BeginDimBlend();
         transStartTime = timing.now;
       }
       else if(timing.now - transStartTime >= pc.getColorBlendLength()) {
@@ -217,14 +217,17 @@ void LEDLoop::TransitionBaseAnimation() {
     else if(transitionPhase == 1) {
       if(transStartTime == 0) { DEBUG_TRANSITIONS("Scroller->Stacks: Swapping to Stacks") }
       // Create stacks to match current pattern, then hard swap
-      stackers.stackLength = 9 + 2*pc.ps->transLength + pc.ps->brightLength;
+      stackers.stackLength = MIN_SCROLLER_LIT + 2*pc.ps->transLength + pc.ps->brightLength;
       stackers.numStacks = numLEDs / dimPeriod;
       stackers.moveClockwise = baseParams.dimSpeed < 0;
       uint8_t targetSpeed = abs(baseParams.dimSpeed);
+      DUMP(targetSpeed)
+      if(targetSpeed > Stackers::MAX_MOVE_SPEED) { targetSpeed = Stackers::MAX_MOVE_SPEED; }
       if(baseParams.dimSpeed >= 0) { while(stackers.GetScaledDimSpeed() < targetSpeed) { baseParams.dimSpeed++; } }
       if(baseParams.dimSpeed <= 0) { while(stackers.GetScaledDimSpeed() > targetSpeed) { baseParams.dimSpeed--; } }
 
       uint8_t* colIndexes = pc.getManualBlocks();
+      DUMP(stackers.numStacks)
       for(int i = 0; i < stackers.numStacks; i++)
       {
         stackers.stacks[i].color = colIndexes[i];
@@ -236,7 +239,7 @@ void LEDLoop::TransitionBaseAnimation() {
       activeTransition = 0;
       transitionPhase = 0;
       timing.lastBaseTransition = timing.now;
-
+TRACE()
     }
     #pragma endregion
   }

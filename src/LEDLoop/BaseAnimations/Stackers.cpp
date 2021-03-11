@@ -41,7 +41,7 @@ uint8_t Stackers::CreateStacks(uint8_t mode) {
   // Read in params and lock them in for duration of this instance
   numColors = scaleParam(params->numColors, 2, PALETTE_SIZE-1);
   dimPeriod = allowedDimPeriods[scaleParam(params->dimPeriod, 0, numAllowedDimPeriods-1)];
-  maxStackLength = scale16(dimPeriod, params->brightLength);
+  maxStackLength = MIN_STACK_LENGTH + scaleParam16(params->brightLength, 0, dimPeriod - MIN_STACK_LENGTH);
   
   // Sets up a full collection of stacks with max length
   stackMode = StackMode(mode % int(StackMode::Length));
@@ -70,6 +70,7 @@ uint8_t Stackers::CreateStacks(uint8_t mode) {
     stackLength = maxStackLength;
   }
 
+  // Draw stacks
   for(uint16_t i = 0; i < numStacks; i++) {
     stacks[i].pixel = i * dimPeriod;
     stacks[i].color = i % numColors;
@@ -83,6 +84,7 @@ uint8_t Stackers::GetScaledDimSpeed() {
   moveClockwise = speed < 0;
   if(speed == -128) { speed = -127; } 
   uint8_t absSpeed = 2 * abs(speed);
+  if(absSpeed == 254) { absSpeed = 255; }
   return scale8(MAX_MOVE_SPEED, absSpeed);
 }
 
@@ -137,6 +139,7 @@ void Stackers::Stacks() {
     }
   }
 
+if(isFirstCycleOfNewMode) { DUMP(int(stackMode)) }
   // Draw current stackMode
   if(stackMode == StackMode::Shutters)                  { transitionState = TransitionState(Shutters()); }
   else if(stackMode == StackMode::Stack3)               { transitionState = TransitionState(StackSections(3, 0)); }
@@ -269,6 +272,9 @@ uint8_t Stackers::WipeClean(uint8_t numSections, uint16_t offset, uint16_t progr
     for(int i = 0; i < numSections; i++) {
       temp = temp + adjOffsets[i] + ", ";
     }
+    DUMP(temp)
+    DUMP(numSections)
+    DUMP(progress)
   }
 
   for(uint16_t i = 0; i <= progress; i++) {
@@ -380,19 +386,19 @@ uint8_t Stackers::StackSections(uint8_t numSections, uint16_t offset) {
   static uint8_t curStep = 0;
 
   if(isFirstCycleOfNewMode) {
-    if(stackLength == 0) {
-      numStacks = 0;
-      curStep = 0; // May be transitioning from empty
-    }
-    stackLength = maxStackLength;
-
+    if(stackLength == 0) { numStacks = 0; }
+    if(numStacks == 0) { curStep = 0; }
+    
     if(numStacks*dimPeriod == numLEDs) {
       curStep = 1; // Transitioned in from full stacks
-      progress =  0;//dimPeriod * extraStacks / numSections;
+      stackLength = maxStackLength;
     }
     else {
-      progress = 0;
+      curStep = 0;
+      stackLength = MIN_STACK_LENGTH + scaleParam16(params->brightLength, 0, dimPeriod - MIN_STACK_LENGTH);
     }
+
+    progress = 0;
   }
   else if(moveThisCycle) {
     progress++;
@@ -573,13 +579,16 @@ uint8_t Stackers::StackSections_Mirror(uint8_t numSections, uint16_t offset) {
     if(numStacks == 0) { curStep = 0; }
 
     if(numStacks*dimPeriod == numLEDs) {
-      curStep = 1; // In case of transition from full screen
+      curStep = 1;
+      stackLength = maxStackLength;
+    }
+    else {
+      curStep = 0;
+      stackLength = MIN_STACK_LENGTH + scaleParam16(params->brightLength, 0, dimPeriod - MIN_STACK_LENGTH);
     }
 
-    stackLength = maxStackLength;
-
-    progress = 0;
     isFirstCycleOfNewMode = false;
+    progress = 0;
   }
   else if(moveThisCycle) {
     progress++;
@@ -592,7 +601,7 @@ uint8_t Stackers::StackSections_Mirror(uint8_t numSections, uint16_t offset) {
 }
 
 uint8_t Stackers::Shutters() {
-  const uint8_t minStackLength = 2; // Locally; diff than the globale MIN_STACK_LENGTH
+  const uint8_t minStackLength = 2; // Locally; diff than the global MIN_STACK_LENGTH
 
   // Wipe off, wipe on - Done by changing size and moving location until size is 0, then opening up again from new position
   static bool fadeIn = true;
@@ -601,7 +610,7 @@ uint8_t Stackers::Shutters() {
     CreateStacks(uint8_t(StackMode::Shutters));
   }
 
-  if(stackLength <= minStackLength) { fadeIn = true; }
+  if(stackLength <= minStackLength) { fadeIn = true; if(wrapItUp && maxStackLength < MIN_STACK_LENGTH_FOR_EXIT) { maxStackLength = MIN_STACK_LENGTH_FOR_EXIT; } }
   else if(stackLength == maxStackLength) { fadeIn = false; }
 
   if(fadeIn) {

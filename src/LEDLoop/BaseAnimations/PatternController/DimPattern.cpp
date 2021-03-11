@@ -42,26 +42,28 @@ DimPattern::DimPattern() {
 
 void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
   uint8_t i = 0;
-  uint8_t limit = 0; 
+  uint8_t limit = 0;
+
+  //if(random(40)==1) { DUMP(transLength) DUMP(brightLength) }
 
   // Yay for magic numbers! Not sure of the best way to enforce this logic as configurable
-  if(dimPeriod < 2*transLength + brightLength + 10) { THROW_DUMP("Invalid dimPeriod!", dimPeriod) DUMP(transLength) DUMP(brightLength) }
+  if(dimPeriod < 2*transLength + brightLength + MIN_SCROLLER_LIT_PLUS_ONE) { THROW_DUMP("Invalid dimPeriod!", dimPeriod) DUMP(transLength) DUMP(brightLength) }
 
   switch(pattern)
   {
     case DimPatternName::Comet_F:
     {
-      SETUP_FADES(2*transLength+9)
-      FADE_UP(2*transLength+9)
+      SETUP_FADES(2*transLength+MIN_SCROLLER_LIT)
+      FADE_UP(2*transLength+MIN_SCROLLER_LIT)
       DRAW_BRIGHT(brightLength)
       break;
     }
     case DimPatternName::Comet_R:
     {
 
-      SETUP_FADE_DOWN(2*transLength+9)
+      SETUP_FADE_DOWN(2*transLength+MIN_SCROLLER_LIT)
       DRAW_BRIGHT(brightLength)
-      FADE_DOWN(2*transLength+9)
+      FADE_DOWN(2*transLength+MIN_SCROLLER_LIT)
       break;
     }
     case DimPatternName::Two_Sided:
@@ -74,11 +76,11 @@ void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
     }
     case DimPatternName::Barbell:// Reverses trans and bright to keep the 2*trans + bright period
     {
-      uint8_t halfFade = (brightLength+9) / 2;
+      uint8_t halfFade = (brightLength+MIN_SCROLLER_LIT) / 2;
       SETUP_FADES(halfFade);
       DRAW_BRIGHT(transLength)
       FADE_DOWN(halfFade)
-      if(2*halfFade < brightLength+9) { DRAW_SINGLE(fadeStepSize) }
+      if(2*halfFade < brightLength+MIN_SCROLLER_LIT) { DRAW_SINGLE(fadeStepSize) }
       FADE_UP(halfFade)
       DRAW_BRIGHT(transLength)
       break;
@@ -179,7 +181,7 @@ void DimPattern::Draw(DimPatternName pattern, uint8_t* outputArray) {
     }
     case DimPatternName::Snake:
     {
-      DRAW_BRIGHT(brightLength + 2*transLength + 9)
+      DRAW_BRIGHT(brightLength + 2*transLength + MIN_SCROLLER_LIT)
       break;
     }
     case DimPatternName::Snake3:

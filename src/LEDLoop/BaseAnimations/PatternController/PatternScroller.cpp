@@ -42,7 +42,7 @@ uint16_t PatternScroller::getColorPeriod() { return colorPeriod; }
 
 uint32_t PatternScroller::getDimBlendLength() { return dimBlendLength; }
 void PatternScroller::setDimBlendLength(uint32_t value) {
-  if((*curTime - lastDimPatternChange > dimPauseLength) && dimBlendOn) { // Overkill because of random mode
+  if((*curTime > lastDimPatternChange + dimPauseLength) && dimBlendOn) { // Overkill because of random mode
     float blendPerc = dimBlendLength == 0 ? 0 : float(*curTime - lastDimPatternChange - dimPauseLength) / dimBlendLength;
     lastDimPatternChange = *curTime - blendPerc*value - dimPauseLength; // Preserve same blend %
   }
@@ -50,7 +50,7 @@ void PatternScroller::setDimBlendLength(uint32_t value) {
 }
 uint32_t PatternScroller::getColorBlendLength() { return colorBlendLength; }
 void PatternScroller::setColorBlendLength(uint32_t value) {
-  if((*curTime - lastColorPatternChange > colorPauseLength) && colorBlendOn) { // Overkill because of random mode
+  if((*curTime > lastColorPatternChange + colorPauseLength) && colorBlendOn) { // Overkill because of random mode
     float blendPerc = colorBlendLength == 0 ? 0 : float(*curTime - lastColorPatternChange - colorPauseLength) / colorBlendLength;
     lastColorPatternChange = *curTime - blendPerc*value - colorPauseLength; // Preserve same blend %
   }
@@ -58,14 +58,14 @@ void PatternScroller::setColorBlendLength(uint32_t value) {
 }
 uint32_t PatternScroller::getDimPauseLength() { return dimPauseLength; }
 void PatternScroller::setDimPauseLength(uint32_t value) {
-  if(*curTime - lastDimPatternChange >= dimPauseLength) { if(dimBlendOn) { lastDimPatternChange -= (value - dimPauseLength); } }// if blending already
-  else if(*curTime - lastDimPatternChange >= value) { lastDimPatternChange = *curTime - value; } // if paused and reducing pause past the start point
+  if(*curTime >= lastDimPatternChange + dimPauseLength) { if(dimBlendOn) { lastDimPatternChange -= (value - dimPauseLength); } }// if blending already
+  else if(*curTime >= lastDimPatternChange + value) { lastDimPatternChange = *curTime - value; } // if paused and reducing pause past the start point
   dimPauseLength = value;
 }
 uint32_t PatternScroller::getColorPauseLength() { return colorPauseLength; }
 void PatternScroller::setColorPauseLength(uint32_t value) {
-  if(*curTime - lastColorPatternChange >= colorPauseLength) { if(colorBlendOn) { lastColorPatternChange -= (value - colorPauseLength); } }// if blending already
-  else if(*curTime - lastColorPatternChange >= value) { lastColorPatternChange = *curTime - value; } // if paused and reducing pause past the start point
+  if(*curTime >= lastColorPatternChange + colorPauseLength) { if(colorBlendOn) { lastColorPatternChange -= (value - colorPauseLength); } }// if blending already
+  else if(*curTime >= lastColorPatternChange + value) { lastColorPatternChange = *curTime - value; } // if paused and reducing pause past the start point
   colorPauseLength = value;
 }
 int8_t PatternScroller::getDimSpeed() { return dimSpeed; }
@@ -82,20 +82,20 @@ void PatternScroller::setColorSpeed(int8_t value) {
   if(abs(value) > abs(colorSpeed)) {
     // Watch out for rapidly making multiple moves when increasing speed
     uint32_t stepSize = FPS_TO_TIME(abs(value));
-    if(*curTime - lastColorMove >= stepSize) { lastColorMove = *curTime - stepSize; }
+    if(*curTime >= lastColorMove + stepSize) { lastColorMove = *curTime - stepSize; }
   }
   colorSpeed = value;
 }
 uint8_t PatternScroller::getTargetDimPatternIndex() { return isRandomDimPattern() ? randomDimPatternIndex : targetDimPatternIndex; }
 uint8_t PatternScroller::getTargetColorPatternIndex() { return isRandomColorPattern() ? randomColorPatternIndex : targetColorPatternIndex; }
-uint8_t PatternScroller::getNumBlanks() { return dimPeriod - 9 - 2*dimPattern.transLength - dimPattern.brightLength; }
+uint8_t PatternScroller::getNumBlanks() { return dimPeriod - MIN_SCROLLER_LIT - 2*dimPattern.transLength - dimPattern.brightLength; }
 void PatternScroller::setDisplayMode(uint8_t displayMode) {
   if(displayMode >= NUM_DIM_PATTERNS * NUM_COLOR_PATTERNS) { THROW_DUMP("Invalid display mode", displayMode) }
   uint8_t dimPatternIndex = displayMode % NUM_DIM_PATTERNS;
   uint8_t colorPatternIndex = displayMode / NUM_DIM_PATTERNS;
 
   if(targetColorPatternIndex != colorPatternIndex) {
-    bool isTimeForChange = *curTime - lastColorPatternChange >= colorPauseLength;
+    bool isTimeForChange = *curTime >= lastColorPatternChange + colorPauseLength;
     if(isRandomColorPattern() && !beginColorBlend) {
       if(isTimeForChange) {
         // Currently on or blending toward randomColorPatternIndex
@@ -122,7 +122,7 @@ void PatternScroller::setDisplayMode(uint8_t displayMode) {
   beginColorBlend = false;
 
   if(targetDimPatternIndex != dimPatternIndex) {
-    bool isTimeForChange = *curTime - lastDimPatternChange >= dimPauseLength;
+    bool isTimeForChange = *curTime >= lastDimPatternChange + dimPauseLength;
     if(isRandomDimPattern() && !beginDimBlend) {
       if(isTimeForChange) {
         // Currently on or blending toward randomDimPatternIndex
@@ -166,7 +166,7 @@ bool PatternScroller::isReadyForDimMove() {
   if(dimSpeed == 0) { return false; }
   
   uint32_t stepSize = FPS_TO_TIME(abs(dimSpeed));
-  if(*curTime - lastDimMove >= stepSize) {
+  if(*curTime >= lastDimMove + stepSize) {
     dimParamWalkedThisCycle = false;
     return true;
   }
@@ -179,7 +179,7 @@ bool PatternScroller::isHalfwayToDimMove() {
   if(dimParamWalkedThisCycle) { return false; }
   
   uint32_t stepSize = FPS_TO_TIME(abs(dimSpeed));
-  if(*curTime - lastDimMove >= stepSize/2) { dimParamWalkedThisCycle = true; }
+  if(*curTime >= lastDimMove + stepSize/2) { dimParamWalkedThisCycle = true; }
   return dimParamWalkedThisCycle;
 }
 bool PatternScroller::isStartOfDimPattern() {
@@ -268,7 +268,7 @@ void PatternScroller::SkipTime(uint32_t amount) {
 //*****************************************************************
 bool PatternScroller::Update(int8_t& shiftAmount) { // Returns true if dim pattern moved
   // Color changing - params and pattern can only change after pauseLength, because they both force a fade.
-  if(*curTime - lastColorPatternChange >= colorPauseLength) {
+  if(*curTime >= colorPauseLength + lastColorPatternChange) {
     if(WalkColorParams()) {
       memcpy(oldColorPattern, curColorPattern, sizeof(CRGB)*colorPeriod);
       colorBlendOn = true;
@@ -301,7 +301,7 @@ bool PatternScroller::Update(int8_t& shiftAmount) { // Returns true if dim patte
     WriteDimPattern(oldDimPatternIndex, oldDimPattern);
   }
 
-  if(*curTime - lastDimPatternChange >= dimPauseLength) {
+  if(*curTime >= lastDimPatternChange + dimPauseLength) {
     if(dimBlendOn) {
       WriteDimPattern(getTargetDimPatternIndex(), targetDimPattern); // These need to be written again in case this was triggered by SetDisplayMode()
       WriteDimPattern(oldDimPatternIndex, oldDimPattern);
@@ -414,11 +414,11 @@ bool PatternScroller::StepDimParams(bool onDownbeat) {
     {
       if(dimPattern.brightLength < brightLength) {
         dimPattern.brightLength++;
-        dimPattern.transLength = (dimPattern.dimPeriod-10)/3 - dimPattern.brightLength;
+        dimPattern.transLength = (dimPattern.dimPeriod-MIN_SCROLLER_LIT_PLUS_ONE)/3 - dimPattern.brightLength;
       }
       else if(dimPattern.brightLength > brightLength) {
         dimPattern.brightLength--;
-        dimPattern.transLength = (dimPattern.dimPeriod-10)/3 - dimPattern.brightLength;
+        dimPattern.transLength = (dimPattern.dimPeriod-MIN_SCROLLER_LIT_PLUS_ONE)/3 - dimPattern.brightLength;
       }
       return true;
     }
@@ -442,7 +442,7 @@ bool PatternScroller::StepDimParams(bool onDownbeat) {
       }
       else if(dimPattern.brightLength > brightLength+1) {
         dimPattern.brightLength -= 2;
-        if(dimPattern.transLength < (dimPattern.dimPeriod-10)/3) { dimPattern.transLength++; }
+        if(dimPattern.transLength < (dimPattern.dimPeriod-MIN_SCROLLER_LIT_PLUS_ONE)/3) { dimPattern.transLength++; }
       }
     }
     default:
@@ -472,17 +472,18 @@ bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
   }
   else {
     if(!blendParamsOn) {
+      TRACE()
       // Lock in the changeMode at the start of the blend
       blendParamsOn = true;
       if(dimPatternChangeType != DimPatternChangeType::Preferred) { changeMode = dimPatternChangeType; }
-      else if(dimBlendOn && (*curTime - lastDimPatternChange >= dimPauseLength + dimBlendLength/2)) {
+      else if(dimBlendOn && (*curTime >= lastDimPatternChange + dimPauseLength + dimBlendLength/2)) {
         changeMode = GetPreferredDimPatternChangeType(getTargetDimPatternIndex(), delta);
       }
       else {
         changeMode = GetPreferredDimPatternChangeType(oldDimPatternIndex, delta);
       }
     }
-  
+
     switch(changeMode)
     {
       case DimPatternChangeType::Grow_F:
@@ -614,7 +615,7 @@ bool PatternScroller::ScrollPatterns() {
   if(colorSpeed == 0) {
     lastColorMove = *curTime;
   }
-  else if(*curTime - lastColorMove >= FPS_TO_TIME(abs(colorSpeed))) {
+  else if(*curTime >= lastColorMove + FPS_TO_TIME(abs(colorSpeed))) {
     if(colorSpeed > 0) {
       if(--colorIndexFirst == 0xFFFF) { colorIndexFirst = colorPeriod - 1; }
     }
@@ -703,9 +704,8 @@ void PatternScroller::BlendColorPattern() {
   }
 }
 void PatternScroller::BlendDimPattern() {
-  uint32_t transitionTime = *curTime - lastDimPatternChange - dimPauseLength;
-  if(transitionTime < dimBlendLength) {
-    float blendAmount = float(transitionTime) / dimBlendLength;
+  if(*curTime < dimBlendLength + lastDimPatternChange + dimPauseLength) {
+    float blendAmount = float(*curTime - lastDimPatternChange - dimPauseLength) / dimBlendLength;
     for(uint16_t i = 0; i < dimPeriod; i++) {
       curDimPattern[i] = (1 - blendAmount) * oldDimPattern[i] + blendAmount * targetDimPattern[i];
     }
@@ -757,7 +757,7 @@ DimPatternChangeType PatternScroller::GetPreferredDimPatternChangeType(uint8_t p
 
 void PatternScroller::WriteDimPattern(uint8_t patternIndex, uint8_t* outputArray) {
   // All patterns have a length (excluding spacing) of this
-  uint8_t brightPeriod = 2*dimPattern.transLength + dimPattern.brightLength + 9;
+  uint8_t brightPeriod = 2*dimPattern.transLength + dimPattern.brightLength + MIN_SCROLLER_LIT;
   if(brightPeriod > dimPattern.dimPeriod) { THROW_DUMP("Out of bounds dimPeriod", brightPeriod) }
   dimPattern.Draw(DimPatternName(patternIndex), outputArray);
   //for(uint8_t i =0; i < dimPeriod; i++) { Serial.println(String(i) + ": " + outputArray[i]);}

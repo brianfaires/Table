@@ -8,6 +8,10 @@ enum class DimPatternName : uint8_t { Random, Comet_F, Comet_R, Two_Sided, Barbe
 #define NUM_PATTERN_TYPES uint8_t(PatternType::COUNT)
 #define NUM_DIM_PATTERNS uint8_t(DimPatternName::COUNT)
 
+
+#define MIN_SCROLLER_LIT 9
+#define MIN_SCROLLER_LIT_PLUS_ONE 10
+
 class DimPattern {
   public:
     DimPattern();

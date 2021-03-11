@@ -223,18 +223,18 @@ void PatternController::ScaleParams(struct_base_show_params& params, struct_scro
     output.numColors = scaleParam(params.numColors, 2, PALETTE_SIZE-1);
 
     #ifdef PAD_PATTERN_PIXELS
-      uint8_t extraPixels = (output.dimPeriod-10) % 3;
-      uint8_t transUpperLimit =  (output.dimPeriod-10)/3 + (extraPixels==2 ? 1 : 0);
-      uint8_t brightUpperLimit = (output.dimPeriod-10)/3 + (extraPixels==1 ? 1 : 0);
+      uint8_t extraPixels = (output.dimPeriod-MIN_SCROLLER_LIT_PLUS_ONE) % 3;
+      uint8_t transUpperLimit =  (output.dimPeriod-MIN_SCROLLER_LIT_PLUS_ONE)/3 + (extraPixels==2 ? 1 : 0);
+      uint8_t brightUpperLimit = (output.dimPeriod-MIN_SCROLLER_LIT_PLUS_ONE)/3 + (extraPixels==1 ? 1 : 0);
     #else
-      uint8_t transUpperLimit =  (output.dimPeriod-10)/3;
-      uint8_t brightUpperLimit = (output.dimPeriod-10)/3;
+      uint8_t transUpperLimit =  (output.dimPeriod-MIN_SCROLLER_LIT_PLUS_ONE)/3;
+      uint8_t brightUpperLimit = (output.dimPeriod-MIN_SCROLLER_LIT_PLUS_ONE)/3;
     #endif
 
-    output.transLength  = scale16(transUpperLimit+1, params.transLength);
-    output.brightLength = scale16(brightUpperLimit+1, params.brightLength);
+    output.transLength  = scaleParam16(params.transLength, 0, transUpperLimit);
+    output.brightLength = scaleParam16(params.brightLength, 0, brightUpperLimit);
  
-    //DEBUG(params.brightLength+"/"+output.brightLength + ", " + params.transLength+"/"+output.transLength);
+    //if(random(40) == 1) { DEBUG(params.brightLength+"/"+output.brightLength + ", " + params.transLength+"/"+output.transLength) }
   #endif
 }
 
