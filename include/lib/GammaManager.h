@@ -1,7 +1,7 @@
 #pragma once
 #include "Arduino.h"
 #include "FastLED.h"
-#include "Config.h"
+#include "config/Config.h"
 
 class GammaManager {
   public:

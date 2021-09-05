@@ -1,4 +1,4 @@
-#include "LEDLoop/PaletteManager.h"
+#include "lib/PaletteManager.h"
 #include "config/PaletteManagerConfig.h"
 
 /// Object management

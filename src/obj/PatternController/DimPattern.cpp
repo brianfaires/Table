@@ -1,4 +1,4 @@
-#include "LEDLoop/PatternScrolling/DimPattern.h"
+#include "obj/PatternController/DimPattern.h"
 
 #define GET_FADE_STEP_SIZE(x) 255.0f / (x+1)
 #define SETUP_FADE_DOWN(x)  float fadeStepSize = GET_FADE_STEP_SIZE(x);

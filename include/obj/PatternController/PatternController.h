@@ -1,6 +1,6 @@
 #pragma once
 #include "Definitions.h"
-#include "PatternScroller.h"
+#include "obj/PatternController/PatternScroller.h"
 
 #define NUM_PATTERN_PARAMS 5
 

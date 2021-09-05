@@ -1,11 +1,11 @@
 #pragma once
 
-#include "GammaManager.h"
-#include "PaletteManager.h"
+#include "lib/GammaManager.h"
+#include "lib/PaletteManager.h"
 #include "Definitions.h"
 #include "Util.h"
-#include "PatternScrolling\PatternController.h"
-#include "Stackers.h"
+#include "obj/PatternController/PatternController.h"
+#include "obj/Stackers.h"
 
 class LEDLoop {
     public:

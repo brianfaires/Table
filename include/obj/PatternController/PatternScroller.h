@@ -1,7 +1,7 @@
 #pragma once
 #include "Definitions.h"
-#include "DimPattern.h"
-#include "ColorPattern.h"
+#include "obj/PatternController/DimPattern.h"
+#include "obj/PatternController/ColorPattern.h"
 
 #define MAX_PERIOD 420
 

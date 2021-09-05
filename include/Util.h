@@ -1,6 +1,6 @@
 #pragma once
 #include "FastLED.h"
-#include "LEDLoop/GammaManager.h"
+#include "lib/GammaManager.h"
 
 #define FPS_TO_TIME(x) uint32_t(ONE_SEC / x)
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "ArduinoTrace.h"
-#include "LEDLoop/GammaManager.h"
-#include "LEDLoop/PaletteManager.h"
+#include "lib/GammaManager.h"
+#include "lib/PaletteManager.h"
 
 enum class ColorPatternName : uint8_t { Random, Gradient, Blocks, ManualBlocks, COUNT };
 #define NUM_COLOR_PATTERNS uint8_t(ColorPatternName::COUNT)

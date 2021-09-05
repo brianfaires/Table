@@ -1,6 +1,6 @@
 #pragma once
 #include "Definitions.h"
-#include "PaletteManager.h"
+#include "lib/PaletteManager.h"
 
 class Stackers {
   public:

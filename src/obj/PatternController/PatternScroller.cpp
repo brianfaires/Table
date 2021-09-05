@@ -1,4 +1,4 @@
-#include "LEDLoop/PatternScrolling/PatternScroller.h"
+#include "obj/PatternController/PatternScroller.h"
 #include "Util.h"
 
 //todo: Speed up by only do WriteDimPattern() during blend function if possible; or also when not calling blend on an update

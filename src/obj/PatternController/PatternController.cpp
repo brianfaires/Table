@@ -1,4 +1,4 @@
-#include "LEDLoop/PatternScrolling/PatternController.h"
+#include "obj/PatternController/PatternController.h"
 #include "Util.h"
 
 uint8_t PatternController::getBrightness() { return ps1.brightness; }

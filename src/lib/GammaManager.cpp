@@ -1,4 +1,4 @@
-#include "LEDLoop/GammaManager.h"
+#include "lib/GammaManager.h"
 #include "config/GammaManagerConfig.h"
 
 // Applies gamma correction from matrices defined in the main project
