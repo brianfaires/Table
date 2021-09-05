@@ -3,12 +3,23 @@
 
 enum class PaletteIndex : uint8_t {
 	analagousRed, analagousRedOrange, analagousOrange, analagousYellow, analagousGreen, analagousSeaGreen, analagousCyan, analagousBlue, analagousPurple, analagousFusia, analagousPink, analagousPaleRed1, analagousPaleRed2, analagousPaleRed3,
-	Red, 		  Orange, 			  Green, 		   Blue,			Pink,
-	triadRed,     triadRedOrange,     triadorange,     triadyellow,     triadGreen,     triadSeaGreen,     triadCyan,     triadBlue,     triadPurple,     triadFusia,     triadPink,     triadPaleOrange,   triadPalePink, 	   Count
+	Orange, 			  Green, 		   Blue,			Pink,
+	triadRed,     triadRedOrange,     triadOrange,     triadYellow,     triadLimeGreen,    triadGreen,     triadSeaGreen,     triadCyan,     triadBlue,     triadPurple,     triadFusia,     triadPink,     triadPaleOrange,   triadPalePink, 	   Count
 };
-#define NUM_PALETTES uint8_t(PaletteIndex::Count)
+#define NUM_PALETTES 3 //uint8_t(PaletteIndex::Count)
+
 
 static const PROGMEM CHSV allPalettes[NUM_PALETTES][PALETTE_SIZE] = {
+{ CHSV(0,255,170), CHSV(0,255,170), CHSV(0,255,170), CHSV(0,255,170), CHSV(0,255,170), CHSV(0,255,170) }, // Pure Red
+//{ CHSV(14,255,255), CHSV(0,255,255), CHSV(0,255,255), CHSV(0,255,255), CHSV(0,255,255), CHSV(0,255,255) }, // Pure Orange
+//{ CHSV(48,255,255), CHSV(0,255,255), CHSV(0,255,255), CHSV(0,255,255), CHSV(0,255,255), CHSV(0,255,255) }, // Pure Yellow
+{ CHSV(99,255,150), CHSV(99,255,150), CHSV(99,255,150), CHSV(99,255,150), CHSV(99,255,150), CHSV(99,255,150) }, // Pure Green
+//{ CHSV(0,255,255), CHSV(0,255,255), CHSV(0,255,255), CHSV(0,255,255), CHSV(0,255,255), CHSV(0,255,255) }, // Pure Cyan
+{ CHSV(155,255,255), CHSV(155,255,255), CHSV(155,255,255), CHSV(155,255,255), CHSV(155,255,255), CHSV(155,255,255) } // Pure Blue
+//{ CHSV(0,255,255), CHSV(0,255,255), CHSV(0,255,255), CHSV(0,255,255), CHSV(0,255,255), CHSV(0,255,255) }, // Pure Purple
+//{ CHSV(0,255,255), CHSV(0,255,255), CHSV(0,255,255), CHSV(0,255,255), CHSV(0,255,255), CHSV(0,255,255) }, // Pure Fusia
+
+/*
 	{ CHSV(255,255,255), CHSV(  0,200,255), CHSV(246,185,255), CHSV( 45,230,255), CHSV(155,230,255), CHSV( 96, 90,255) }, // analag Red
 	{ CHSV(  7,255,255), CHSV( 26,255,255), CHSV( 16,255,255), CHSV(  1,255,255), CHSV(  7,235,255), CHSV( 50,180,255) }, // analag RedOrange
 	{ CHSV( 14,255,255), CHSV( 28,255,255), CHSV(  6,240,255), CHSV( 10,220,255), CHSV(137,220,255), CHSV(137,100,255) }, // analag Orange
@@ -25,7 +36,7 @@ static const PROGMEM CHSV allPalettes[NUM_PALETTES][PALETTE_SIZE] = {
 	{ CHSV(  0,180,255), CHSV( 40,220,255), CHSV( 20,220,255), CHSV(138,160,255), CHSV(230,180,255), CHSV(120,100,255) }, // anal PaleRed3
 	{ CHSV(  9,225,255), CHSV( 28,215,255), CHSV( 16,255,255), CHSV( 32,235,255), CHSV(  7,240,255), CHSV( 60,120,255) }, // anal Orange
 	{ CHSV( 96,190,255), CHSV( 69,210,255), CHSV(115,205,255), CHSV( 74,235,255), CHSV( 64,255,255), CHSV(  0,  0,255) }, // anal Green
-	{ CHSV(160,180,255), CHSV(132,210,255), CHSV(116,210,255), CHSV(200,170,255), CHSV(  2,150,255), CHSV(  0,  0,255) }, // anal Blue
+	{ CHSV(160,180,255), CHSV(132,210,255), CHSV(116,210,255), CHSV(200,170,255), CHSV(  2,150,255), CHSV(  0,  0,255) }  // anal Blue
 	{ CHSV(234,190,255), CHSV(196,210,255), CHSV(175,230,255), CHSV(255,200,255), CHSV( 13,190,255), CHSV(  5,100,255) }, // anal Pink
 	{ CHSV(255,255,255), CHSV(162,255,255), CHSV( 71,255,255), CHSV(255,200,255), CHSV(225,220,255), CHSV(  0,  0,255) }, // triad Red
 	{ CHSV(  8,255,255), CHSV( 87,255,255), CHSV(155,255,255), CHSV( 24,255,255), CHSV(122,240,255), CHSV(  0,  0,255) }, // triad RedOrange
@@ -41,6 +52,8 @@ static const PROGMEM CHSV allPalettes[NUM_PALETTES][PALETTE_SIZE] = {
 	{ CHSV(244,255,255), CHSV(135,255,255), CHSV( 56,255,255), CHSV(  0,235,255), CHSV(104,200,255), CHSV(  0,  0,255) }, // triad Pink
 	{ CHSV(  8,220,255), CHSV(151,255,255), CHSV( 78,230,255), CHSV(230,255,255), CHSV(100,255,255), CHSV(  0,  0,255) }, // triad PaleOrange
 	{ CHSV(240,190,255), CHSV(133,255,255), CHSV( 66,230,255), CHSV(252,230,255), CHSV(165,215,255), CHSV(  0,  0,255) }  // triad PalePink
+
+*/
 };
 
 

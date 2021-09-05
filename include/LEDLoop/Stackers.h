@@ -22,6 +22,7 @@ class Stackers {
                                                                                       { 0, 1, 1, 1, 1, 1, 1, 1, 1, 1 },   // Full -- TODO: Stacks look weird clearing.  Stack4 clear from shutters is maybe bugged? pixels deleting immediately
                                                                                       { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } }; // Messy
     const bool transitionableMode[int(StackMode::Length)] = { false, true, true, true, false, false, false, false, true, true };
+    uint8_t minStacksRequired[int(StackMode::Length)] = { 0, 2, 2, 2, 2, 3, 4, 5, 2, 4 };
     
     // Initialized values
     uint16_t numLEDs;
@@ -62,6 +63,7 @@ class Stackers {
     bool moveThisCycle;
     uint32_t lastMoveTime = 0;
 
+    void ScaleParams(bool stackLengthOnly = false);
     void DrawStack(struct_stack& s);
     void DrawAllStacks();
     void MoveStack(struct_stack& s, bool clockwise);

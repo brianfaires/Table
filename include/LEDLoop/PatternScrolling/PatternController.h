@@ -45,8 +45,6 @@ class PatternController {
     PatternScroller *ps;
 
   private:
-    uint8_t NUM_ALLOWED_DIM_PERIODS;
-    uint8_t NUM_ALLOWED_COLOR_PERIODS;
     PatternScroller ps1, ps2;
     PatternScroller *secondary;
     void ScaleParams(struct_base_show_params& params, struct_scroller_params& output, uint8_t dimPeriod = 0, uint8_t colorPeriod = 0);
@@ -61,6 +59,8 @@ class PatternController {
     int8_t colorSpeed, dimSpeed;
     bool syncScrollingSpeeds = false;
 
+    uint8_t NUM_ALLOWED_DIM_PERIODS;
+    uint8_t NUM_ALLOWED_COLOR_PERIODS;
     std::vector<uint16_t> allowedDimPeriods;
     std::vector<uint16_t> allowedColorPeriods;
 };
