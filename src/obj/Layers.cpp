@@ -1,3 +1,5 @@
+/* A component of LEDLoop; defines the logic for managing multiple animations on different layers, and the transitions between animations on a single layer.
+*/
 #include "obj/LEDLoop.h"
 
 // Counters for transitions
@@ -254,7 +256,7 @@ TRACE()
         baseTransitionProgress = 256 * transitionTime / layerConfig.baseTransOutLength;
       }
       else if(transitionTime < layerConfig.baseTransOutLength + layerConfig.baseTransInLength) {
-        baseTransitionProgress = 255 * (layerConfig.baseTransOutLength + layerConfig.baseTransInLength - transitionTime) / layerConfig.baseTransInLength;
+        baseTransitionProgress = 256 * (layerConfig.baseTransOutLength + layerConfig.baseTransInLength - transitionTime) / layerConfig.baseTransInLength;
         if(!alreadySwitched) {
           NextBaseAnimation();
           alreadySwitched = true;

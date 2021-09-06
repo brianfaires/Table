@@ -1,3 +1,5 @@
+/* Several single function Top layer animations
+*/
 #include "obj/LEDLoop.h"
 
 void LEDLoop::Glitter() {

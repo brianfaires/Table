@@ -3,6 +3,7 @@
    Includes a dev mode (RUN_GAMMA_TESTS) to facilitate the creation of config settings on new hardware.
    Blending functions can be used to blend previously-corrected colors
    Intended use is for all logic/blending to be done in linear space, and always go through gamma correction. This has some impact on CHSV choice and usage.
+   Implement one GammaManager for each stretch of LEDs needing adjustment.
 */
 #pragma once
 #include "Arduino.h"

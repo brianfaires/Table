@@ -1,3 +1,6 @@
+/* Defines a pattern of CRGBs, irrespective of their brightness, dimming pattern, or on/off status (which is part of dimming pattern)
+    For the most part it's a dumb object, but computes and writes itself to a CRGB*
+*/
 #pragma once
 #include "ArduinoTrace.h"
 #include "lib/GammaManager.h"

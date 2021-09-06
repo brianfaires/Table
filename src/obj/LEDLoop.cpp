@@ -34,6 +34,7 @@ void LEDLoop::Setup(uint8_t* pGlobalBrightness, PaletteManager* pPaletteManager)
   }
   else if(numLEDs == MAX_LEDS) {
     // 2*2*2*5*13
+    
     NUM_ALLOWED_DIM_PERIODS = 7;
     NUM_ALLOWED_COLOR_PERIODS = 9;
     allowedDimPeriods   = { 20, 26, 40, 52, 65, 104, 130 };

@@ -1,3 +1,6 @@
+/* A series of animations, all of which include some number of solid blocks of pixels.
+    Stacks animations can transition to each other seamlessly, or to/from PatternController
+*/
 #pragma once
 #include "Definitions.h"
 #include "lib/PaletteManager.h"

@@ -1,3 +1,7 @@
+/* Defines a pattern of 8-bit brightness values
+    For the most part it's a dumb object, but computes and writes itself to a uint8_t*
+    The length of the pattern is equal to 2*(transLength+3) + (brightLength+3) + 1
+*/
 #pragma once
 #include "ArduinoTrace.h"
 #include "lib/GammaManager.h"

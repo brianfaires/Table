@@ -1,3 +1,9 @@
+/*
+    Represents a solid loop of LEDs. Includes:
+        1. Storage of LED info
+        2. Links to globals (PaletteManager, global brightness)
+        3. Local GammaManager, param structs, and everything needed for drawing animations
+*/
 #pragma once
 
 #include "lib/GammaManager.h"

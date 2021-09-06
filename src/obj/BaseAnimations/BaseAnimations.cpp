@@ -1,3 +1,5 @@
+/* Several single functions for Base layer animations
+*/
 #include "obj/LEDLoop.h"
 #include "Definitions.h"
 
