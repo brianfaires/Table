@@ -1,3 +1,9 @@
+/* For PROD use, uses the scaling included in the config to Gamma Correct both color balance and brightness.
+   Uses APA102 5-bit brightness control for more colors at low brightnesses.
+   Includes a dev mode (RUN_GAMMA_TESTS) to facilitate the creation of config settings on new hardware.
+   Blending functions can be used to blend previously-corrected colors
+   Intended use is for all logic/blending to be done in linear space, and always go through gamma correction. This has some impact on CHSV choice and usage.
+*/
 #pragma once
 #include "Arduino.h"
 #include "FastLED.h"
@@ -19,7 +25,10 @@ class GammaManager {
     uint16_t numLEDs;
     uint8_t* globalBrightness;
 
+
+// Testing functions; disable when unused for smaller library size
 #ifdef RUN_GAMMA_TESTS
+  private:
 	  uint8_t INITIAL_TEST_BRIGHTNESS = 64;
     bool useLookupMatrices = true;
     float fGammaR = 1.40;//1.30;//1.9;//1.60;//1.75;//1.8;//1.65;//1.15;

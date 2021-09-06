@@ -1,3 +1,9 @@
+/* Config file for Table.h.  None of these values should appear in libraries, even if they're currently included in the project. Includes:
+      1. Debugging/testing toggles
+      2. Initial states settings
+      3. Hardware config settings
+*/
+
 #pragma once
 #include "FastLED.h"
 
@@ -8,6 +14,7 @@
 //#define SHOWCASE_MODE
 //#define USING_DEBUG_BOARD
 #define DISABLE_INTERIOR_LOOP
+//#define DISABLE_UPPER_LOOP
 #define MANUAL_PARAMS
 #define ALLOW_ZERO_SPEED // For PatternController
 //#define EXPLICIT_PARAMETERS
@@ -18,6 +25,7 @@
 //#define TIMING_ANALYSIS
 //#define DEBUG_COLOR_PATTERNS
 //#define RUN_GAMMA_TESTS // Overrides everything else
+//#define USE_MICROS_TIMER
 #define DEBUG_BTN(msg)            //DEBUG(msg)
 #define DEBUG_ANIMATION(msg)      //DEBUG(msg)
 #define DEBUG_PATTERN_SPLITS(msg) //DEBUG(msg)

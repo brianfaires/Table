@@ -1,10 +1,11 @@
 #include "Table.h"
 
 uint8_t globalBrightness = INIT_GLOBAL_BRIGHTNESS;
+uint32_t curTime;
+
 PaletteManager pm;
 LEDLoop interior;
 LEDLoop upper;
-uint32_t curTime;
 
 #ifdef CHECK_FOR_CLIPPING
     uint32_t lastClippedTime = 0;
@@ -24,11 +25,15 @@ void setup() {
   pinMode(BTN1_PIN, INPUT_PULLUP);
 
   // Initialize LED Loops
-  interior.Setup<LED_PIN_INTERIOR, CLOCK_PIN_INTERIOR, NUM_LEDS_INTERIOR>(&globalBrightness, &pm);
-  DEBUG("Interior LEDLoop initialized.");
+  #ifndef DISABLE_INTERIOR_LOOP
+    interior.Setup<LED_PIN_INTERIOR, CLOCK_PIN_INTERIOR, NUM_LEDS_INTERIOR>(&globalBrightness, &pm);
+    DEBUG("Interior LEDLoop initialized.");
+  #endif
 
-  upper.Setup<LED_PIN_UPPER, CLOCK_PIN_UPPER, NUM_LEDS_UPPER>(&globalBrightness, &pm);
-  DEBUG("Upper LEDLoop initialized.");
+  #ifndef DISABLE_UPPER_LOOP
+    upper.Setup<LED_PIN_UPPER, CLOCK_PIN_UPPER, NUM_LEDS_UPPER>(&globalBrightness, &pm);
+    DEBUG("Upper LEDLoop initialized.");
+  #endif
 
   FastLED.show();
   DEBUG("LEDs defined and initialized.");
@@ -56,8 +61,12 @@ void loop() {
   pm.Update();
 
   // Draw LED Loops
-  //needToDraw |= interior.Loop(curTime); TIMING_ANALYSIS_POINT
-  needToDraw |= upper.Loop(curTime); TIMING_ANALYSIS_POINT
+  #ifndef DISABLE_INTERIOR_LOOP
+    needToDraw |= interior.Loop(curTime); TIMING_ANALYSIS_POINT
+  #endif
+  #ifndef DISABLE_UPPER_LOOP
+    needToDraw |= upper.Loop(curTime); TIMING_ANALYSIS_POINT
+  #endif
 
   if(needToDraw) { FastLED.show(); } TIMING_ANALYSIS_POINT
 
@@ -68,8 +77,12 @@ void loop() {
 void SkipTime(uint32_t amount) {
   SkipTimeForIO(amount);
   pm.SkipTime(amount);
-  interior.SkipTime(amount);
-  upper.SkipTime(amount);
+  #ifndef DISABLE_INTERIOR_LOOP
+    interior.SkipTime(amount);
+  #endif
+  #ifndef DISABLE_UPPER_LOOP
+    upper.SkipTime(amount);
+  #endif
 }
 
 
@@ -445,7 +458,7 @@ bool ProcessSerialInput() {
 }
 
 void PrintParams() {
-  #ifndef TEST_COLOR_CORRECTION
+  #ifndef RUN_GAMMA_TESTS
     PRINTLN((interiorIsActive ? "\n-------- InteriorStrip --------" : "\n--------  Upper Strip --------"))
     PRINTLN(F("Commands: cs (ChangeStrip), np (NextPalette), nb (NextBase), nt (NextTop)\n\t  sb ### (setBrightness), rb (RandomizeBaseParams), rt (RandomizeTopParams)\n\t  tp (TargetPalette), sp # ### ### ### (SetPalette)"))
     

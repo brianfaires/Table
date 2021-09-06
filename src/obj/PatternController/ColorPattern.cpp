@@ -24,6 +24,8 @@ void ColorPattern::Draw(ColorPatternName pattern, CRGB* outputArray) {
         Gamma->Inverse(first);
         Gamma->Inverse(second);
         
+        // Blending in RGB space, which avoids HSV shortest path jumping as palette colors change.
+        // This is essentially recreating Gamma->Blend(), but will execute faster without redundant calls to Inverse()
         for(uint8_t j = 0; j < adjLength; j++) {
           uint8_t blendAmount = j * 255 / adjLength;
           uint16_t idx = segLength*i + j + extraPixels;

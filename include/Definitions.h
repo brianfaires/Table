@@ -1,3 +1,5 @@
+/* Defines structs and global object types
+*/
 #pragma once
 #include "FastLED.h"
 #include "config/Config.h"
@@ -14,7 +16,7 @@ enum class TopAnimation : uint8_t { None, Glitter, Rain, Twinkle, Bounce, Comets
 
 //////////////////////////////////////////////////////////////////////////////////
 //////// Internal timers: Use microseconds (1), or use milliseconds (0) //////////
-#if 1
+#ifndef USE_MICROS_TIMER
   #define SYSTEM_TIME millis()
   #define ONE_SEC 1000
   #define IO_TIME_FACTOR 1

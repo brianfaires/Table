@@ -1,3 +1,7 @@
+/* Uses palettes defined in PaletteManagerConfig.h.  Accepts params and handles smooth fading between them with timing according to the set params.
+   Since this is intended to be used with GammaManager.h, all colors will go through Gamma correction.
+   Blending is done in CHSV space, even though this means colors will be double Gamma Corrected, overly saturating them. Considering this preferable to blending in RGB and diluting them.
+*/
 #pragma once
 #include "Arduino.h"
 #include "FastLED.h"

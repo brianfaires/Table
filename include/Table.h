@@ -1,3 +1,6 @@
+/* Functions and objects specific to the Infinity table, with visibility on objects that may be changed via IO.
+   This handles IO and the definition of objects that exist on the table. This and the config files should be the only code that is not project-agnostic.
+*/
 #pragma once
 #include "obj/LEDLoop.h"
 

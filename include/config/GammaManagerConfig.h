@@ -1,8 +1,16 @@
+/* Defines gamma corrections explicitly for each 8-bit value. Includes:
+      1. Color correction matrices for 8-bit value.
+      2. Reverse color correction matrices for inverse calculations
+      3. Paired Dimming matrices: 5-bit and 8-bit, for APC102 brightness value and raw scaling, respectively
+      4. Matrix of 32 Color correction values (24-bit), applied based on the 5-bit value of the dimming matrix
+*/
+
 #include "FastLED.h"
+
+//#define RUN_GAMMA_TESTS // Toggles on the RunGammaTests mode; may be defined elsewhere in the project
 
 //////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Gamma correction matrices //////////////////////////
-#if 1
 const uint8_t PROGMEM gammaR[] = { // 1.4
   0,1,1,1,1,1,1,2,2,2,3,3,4,4,4,5,
   5,6,6,7,7,8,8,9,9,10,10,11,12,12,13,13,
@@ -110,8 +118,7 @@ const uint8_t PROGMEM reverseGammaB[] = {
   222,223,224,225,225,226,227,227,228,229,230,230,231,232,232,233,
   234,234,235,236,237,237,238,239,239,240,241,241,242,243,243,244,
   245,245,246,247,247,248,249,249,250,251,251,252,253,253,254,255 };
-#else
-#endif
+
 
 #if 1
 const uint8_t PROGMEM gammaDim_5bit[] = {
@@ -214,7 +221,6 @@ const uint8_t PROGMEM gammaDim[] = {
 #endif
 
 CRGB colorCorrections[] = {
-  #ifndef TEST_COLOR_CORRECTION
     0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
     0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
     0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
@@ -232,15 +238,6 @@ CRGB colorCorrections[] = {
     0xA9B1FF, 0xA9B2FF, 0xA8B2FF, 0xA8B3FF,
     0xA8B4FF, 0xA8B5FF, 0xA8B6FF, 0xA7B7FF,
     0xA7B8FF, 0xA7B9FF, 0xA7BAFF, 0xA7BBFF  */
-  #else
-    0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
-    0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
-    0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
-    0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
-    0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
-    0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
-    0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
-    0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF
   
   /*0xFF8CF8, 0xF498FF, 0xD8A0FF, 0xC8A2FF,
     0xC4A4FF, 0xC0A6FF, 0xBCA8FF, 0xB8A9FF,
@@ -250,7 +247,6 @@ CRGB colorCorrections[] = {
     0xA7B6FF, 0xA7B7FF, 0xA7B8FF, 0xA6B9FF,
     0xA6BBFF, 0xA6BCFF, 0xA5BEFF, 0xA5BFFF,
     0xA5C0FF, 0xA4C1FF, 0xA4C3FF, 0xA4C4FF  */
-  #endif
 };
 
 
@@ -259,6 +255,10 @@ void SetAllColorCorrections(uint32_t colCorrect) {
     for(uint8_t i = 0; i < 32; i++) { colorCorrections[i] = temp; }
 }
 
+
+
+
+///////////////// OLD ////////////////////
 /*
 const uint8_t PROGMEM gammaDim_5bit[] = {
    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
