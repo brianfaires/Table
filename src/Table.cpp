@@ -127,10 +127,27 @@ void PulseBaseParams() {
     curCycle = SYSTEM_TIME / pulseLength;
 
     /////// Changes to make each period ///////
+    int phase = curCycle % 12;
+    if(phase == 0) { transLow = false; brightLow = false; }
+    if(phase == 1) { transLow = true; brightLow = false; }
+    if(phase == 2) { transLow = false; brightLow = false; }
+    
+    if(phase == 3) { transLow = false; brightLow = true; }
+    if(phase == 4) { transLow = true; brightLow = true; }
+    if(phase == 5) { transLow = false; brightLow = true; }
+
+    if(phase == 6) { transLow = true; brightLow = false; }
+    if(phase == 7) { transLow = true; brightLow = true; }
+
+    if(phase == 8) { transLow = true; brightLow = false; }
+    if(phase == 9) { transLow = false; brightLow = true; }
+    if(phase ==10) { transLow = false; brightLow = false; }
+    if(phase ==11) { transLow = true; brightLow = true; }
+    
+        
+    
     //if(brightMove) { brightLow = !brightLow; }
     //if(transMove) { transLow = !transLow; }
-    transLow = !transLow;
-    brightLow = !brightLow;
     
     //brightMove = false;
     //transMove = !brightMove;
@@ -138,25 +155,24 @@ void PulseBaseParams() {
     //else if(brightLow != transLow) { transMove = random8(2); }
   }
 
-
+  interior.baseParams.transLength = transLow ? 0 : 65535;
+  interior.baseParams.brightLength = brightLow ? 0 : 65535;
+  
   //float curPulseLength = float(SYSTEM_TIME % pulseLength) / pulseLength;
   //baseParams.transLength = transLow ? 255*curPulseLength : 255*(1-curPulseLength);
   //baseParams.brightLength = brightLow ? 255*curPulseLength : 255*(1-curPulseLength);
   //baseParams.brightLength = 255 - baseParams.transLength;
-  
-/*
-  //baseParams.transLength = transLow ? 0 : 255;
-  //baseParams.brightLength = transLow ? 255 : 0;
 
-  uint8_t curPulseLength = (timing.now % pulseLength) * uint64_t(255) / pulseLength;
-  baseParams.brightLength = transLow ? curPulseLength : 255-curPulseLength;
-  if(baseParams.brightLength < 255) { baseParams.brightLength++; } // To sync up the changes in brightLength and transLength after they're scaled from 0:dimPeriod/3, (at least at default value) todo: does this work for all dimPeriods?
-  baseParams.transLength = transLow ? 255-curPulseLength : curPulseLength;
+  
+  //uint8_t curPulseLength = (timing.now % pulseLength) * uint64_t(255) / pulseLength;
+  //interior.baseParams.brightLength = transLow ? curPulseLength : 255-curPulseLength;
+  //if(interior.baseParams.brightLength < 255) { interior.baseParams.brightLength++; } // To sync up the changes in brightLength and transLength after they're scaled from 0:dimPeriod/3, (at least at default value) todo: does this work for all dimPeriods?
+  //interior.baseParams.transLength = transLow ? 255-curPulseLength : curPulseLength;
   
   
   //if(brightMove) { baseParams.brightLength = brightLow ? curPulseLength : 255 - curPulseLength; }
   //if(transMove)  { baseParams.transLength  = transLow  ? curPulseLength : 255 - curPulseLength; }
-*/
+
 }
 
 void RandomizeBaseParams(LEDLoop* loop) {

@@ -13,13 +13,13 @@
 ////////// Debugging config ////////////
 //#define SHOWCASE_MODE
 //#define USING_DEBUG_BOARD
-#define DISABLE_INTERIOR_LOOP
-//#define DISABLE_UPPER_LOOP
+//#define DISABLE_INTERIOR_LOOP
+#define DISABLE_UPPER_LOOP
 #define MANUAL_PARAMS
 #define ALLOW_ZERO_SPEED // For PatternController
 //#define EXPLICIT_PARAMETERS
 //#define CHECK_FOR_CLIPPING
-#define JUMP_DIM_PARAMS // For PatternScroller
+//#define JUMP_DIM_PARAMS // For PatternScroller
 #define PULSE_BASE_PARAMS
 //#define TEST_PALETTES
 //#define TIMING_ANALYSIS
@@ -55,14 +55,14 @@
 //////// Init PaletteManager Settings ///////
 #define INIT_PALETTE PaletteIndex(0)
 #define INIT_PM_WALK_LENGTH   5 * ONE_SEC
-#define INIT_PM_PAUSE_LENGTH  2 * ONE_SEC
+#define INIT_PM_PAUSE_LENGTH  60L * ONE_MIN //2 * ONE_SEC
 #define INIT_FADE_IN_FROM_BLACK false
 /////////////////////////////////////////////
 
 
 //////////////////////////////////////////////////
 ////////////// Init Layer Settings ///////////////
-#define INIT_BASE_PAUSE_LENGTH      20 * ONE_MIN
+#define INIT_BASE_PAUSE_LENGTH      60L * ONE_MIN
 #define INIT_BASE_TRANS_OUT_LENGTH  3 * ONE_SEC
 #define INIT_BASE_TRANS_IN_LENGTH   3 * ONE_SEC
 #define INIT_BASE_PARAM_WALK        60L * ONE_MIN
@@ -75,14 +75,14 @@
 
 ////////////////////////////////////////////////////////////////////////
 //////////////////// Init PatternController Settings ///////////////////
-#define INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH    1.5 * ONE_SEC
-#define INIT_PATTERN_CONTROLLER_DIM_BLEND_LENGTH    1.5 * ONE_SEC
+#define INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH    9 * ONE_SEC
+#define INIT_PATTERN_CONTROLLER_DIM_BLEND_LENGTH    0 * ONE_SEC
 #define INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH  30 * ONE_SEC
 #define INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH  2 * ONE_SEC
 #define INIT_PATTERN_SCROLLER_BRIGHTNESS 255
 #define INIT_DIM_PARAM_CHANGE_TYPE DimPatternChangeType::Preferred
 #define INIT_BASE_DIM_PARAM_CHANGE_TYPE BaseDimParamChangeType::Manual
-#define INIT_CHANGE_DIM_PARAMS_WITH_MOVEMENT false
+#define INIT_CHANGE_DIM_PARAMS_WITH_MOVEMENT true
 #define INIT_ENABLE_DOUBLE_BRIGHT_MOVE false
 ////////////////////////////////////////////////////////////////////////
 

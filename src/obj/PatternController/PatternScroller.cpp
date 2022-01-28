@@ -472,7 +472,6 @@ bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
   }
   else {
     if(!blendParamsOn) {
-      TRACE()
       // Lock in the changeMode at the start of the blend
       blendParamsOn = true;
       if(dimPatternChangeType != DimPatternChangeType::Preferred) { changeMode = dimPatternChangeType; }
