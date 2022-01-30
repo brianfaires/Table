@@ -498,13 +498,13 @@ bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
       case DimPatternChangeType::Grow_F:
         switch(delta) {
           case 5:
-          case 1:  if(isMovingForward()) { WALK_DIM(false,0) } else { WALK_DIM(false,-1) } break;
+          case 1:  if(isMovingForward()) { WALK_DIM(true,0) } else { WALK_DIM(true,-1) } break;
           case -5:
           case -1: if(isMovingForward()) { WALK_DIM(true,0)  } else { WALK_DIM(true,1)   } break;
-          case 2:  if(isMovingForward()) { WALK_DIM(false,0) } else { WALK_DIM(false,-2) } break;
+          case 2:  if(isMovingForward()) { WALK_DIM(true,0) } else { WALK_DIM(true,-2) } break;
           case -2: if(isMovingForward()) { WALK_DIM(true,0)  } else { WALK_DIM(true,2)   } break;
-          case 3:  if(isMovingForward()) { WALK_DIM(true,-1) } else { WALK_DIM(true,-1)  } break;
-          case -3: if(isMovingForward()) { WALK_DIM(true,2)  } else { WALK_DIM(true,1)   } break;
+          case 3:  if(isMovingForward()) { WALK_DIM(true,0) } else { WALK_DIM(true,-3)  } break;
+          case -3: if(isMovingForward()) { WALK_DIM(true,0)  } else { WALK_DIM(true,3)   } break;
           default: DUMP(delta)
         }
         break;
@@ -513,22 +513,22 @@ bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
           case 5:
           case 1:  if(isMovingForward()) { WALK_DIM(true,-1) } else { WALK_DIM(true,0)  } break;
           case -5:
-          case -1: if(isMovingForward()) { WALK_DIM(false,1) } else { WALK_DIM(false,0) } break;
+          case -1: if(isMovingForward()) { WALK_DIM(true,1) } else { WALK_DIM(true,0) } break;
           case 2:  if(isMovingForward()) { WALK_DIM(true,-2) } else { WALK_DIM(true,0)  } break;
-          case -2: if(isMovingForward()) { WALK_DIM(false,2) } else { WALK_DIM(false,0) } break;
-          case 3:  if(isMovingForward()) { WALK_DIM(true,-1) } else { WALK_DIM(true,-2) } break;
-          case -3: if(isMovingForward()) { WALK_DIM(true,2)  } else { WALK_DIM(true,2)  } break;
+          case -2: if(isMovingForward()) { WALK_DIM(true,2) } else { WALK_DIM(true,0) } break;
+          case 3:  if(isMovingForward()) { WALK_DIM(true,-3) } else { WALK_DIM(true,0) } break;
+          case -3: if(isMovingForward()) { WALK_DIM(true,3)  } else { WALK_DIM(true,0)  } break;
           default: DUMP(delta)
         }
         break;
       case DimPatternChangeType::Worm:
         switch(delta) {
           case 5:
-          case 1:  if(isMovingForward()) { WALK_DIM(false,0) } else { WALK_DIM(false,-1) } break;
+          case 1:  if(isMovingForward()) { WALK_DIM(true,0) } else { WALK_DIM(true,-1) } break;
           case -5:
-          case -1: if(isMovingForward()) { WALK_DIM(false,1) } else { WALK_DIM(false,0)  } break;
-          case 2:  if(isMovingForward()) { WALK_DIM(false,0) } else { WALK_DIM(false,-2) } break;
-          case -2: if(isMovingForward()) { WALK_DIM(false,2) } else { WALK_DIM(false,0)  } break;
+          case -1: if(isMovingForward()) { WALK_DIM(true,1) } else { WALK_DIM(true,0)  } break;
+          case 2:  if(isMovingForward()) { WALK_DIM(true,0) } else { WALK_DIM(true,-2) } break;
+          case -2: if(isMovingForward()) { WALK_DIM(true,2) } else { WALK_DIM(true,0)  } break;
           case 3:  if(isMovingForward()) { WALK_DIM(true,-1) } else { WALK_DIM(true,-2)  } break;
           case -3: if(isMovingForward()) { WALK_DIM(true,2)  } else { WALK_DIM(true,1)   } break;
           default: DUMP(delta)
@@ -550,9 +550,9 @@ bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
       case DimPatternChangeType::Center:
         switch(delta) {
           case 5:
-          case 1:  if(dimPattern.brightLength % 2 == 0) { WALK_DIM(!isMovingForward(),0) } else { WALK_DIM(isMovingForward(),-1) } break;
+          case 1:  if(dimPattern.brightLength % 2 == 0) { WALK_DIM(true,0) } else { WALK_DIM(true,-1) } break;
           case -5:
-          case -1: if(dimPattern.brightLength % 2 == 0) { WALK_DIM(!isMovingForward(),1) } else { WALK_DIM(isMovingForward(),0)  } break;
+          case -1: if(dimPattern.brightLength % 2 == 0) { WALK_DIM(true,1) } else { WALK_DIM(true,0)  } break;
           case 2:  if(isMovingForward())                { WALK_DIM(true,-1) } else { WALK_DIM(true,-1) } break;
           case -2: if(isMovingForward())                { WALK_DIM(true,1)  } else { WALK_DIM(true,1)  } break;
           case 3:  if(dimPattern.brightLength % 2 == 0) { WALK_DIM(true,-1) } else { WALK_DIM(true,-2) } break;
@@ -563,9 +563,9 @@ bool PatternScroller::WalkDimParams(int8_t& shiftAmount) {
       case DimPatternChangeType::Mix_F://worm on 1, center on 2
         switch(delta) {
           case 5:
-          case 1:  if(isMovingForward()) { WALK_DIM(false,0) } else { WALK_DIM(false,-1) } break;
+          case 1:  if(isMovingForward()) { WALK_DIM(true,0) } else { WALK_DIM(true,-1) } break;
           case -5:
-          case -1: if(isMovingForward()) { WALK_DIM(false,1) } else { WALK_DIM(false,0)  } break;
+          case -1: if(isMovingForward()) { WALK_DIM(true,1) } else { WALK_DIM(true,0)  } break;
           case 2:  if(isMovingForward()) { WALK_DIM(true,-1) } else { WALK_DIM(true,-1)  } break;
           case -2: if(isMovingForward()) { WALK_DIM(true,1)  } else { WALK_DIM(true,1)   } break;
           case 3:  if(isMovingForward()) { WALK_DIM(true,-1) } else { WALK_DIM(true,-2)  } break;
