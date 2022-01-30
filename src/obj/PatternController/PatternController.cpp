@@ -98,7 +98,7 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
 
   // Check for changes in dimPeriod and colorPeriod. If so, scaling will be off because its based on period.
   /// So correct param scaling for old periods and be ready to start splitting to bring in the new pattern.
-  if(ps->getDimPeriod() != scaledParams.dimPeriod || ps->getColorPeriod() != scaledParams.colorPeriod) {
+  if(ps->getDimPeriod() != scaledParams.dimPeriod) {
     if(!splitDisplay && dimSpeed != 0 && ps->isStartOfDimPattern() && ps->isReadyForDimMove()) {
       StartSplit(scaledParams);
     }
@@ -107,6 +107,7 @@ void PatternController::Update(struct_base_show_params& params, CRGB* target, ui
   ASSERT_EQUAL(ps->getDimSpeed(), secondary->getDimSpeed())
 
   // Update primary PatternScroller
+  ps->setColorPeriod(scaledParams.colorPeriod);
   ps->numColors = scaledParams.numColors;
   ps->brightLength = scaledParams.brightLength;
   ps->transLength = scaledParams.transLength;

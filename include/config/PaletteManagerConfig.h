@@ -4,7 +4,7 @@
 #pragma once
 #include "lib/PaletteManager.h"
 
-#define USE_DEV_PALETTES // Toggle between dev and prod palettes
+//#define USE_DEV_PALETTES // Toggle between dev and prod palettes
 
 
 #ifdef USE_DEV_PALETTES

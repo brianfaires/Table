@@ -79,11 +79,16 @@ void ColorPattern::Draw(ColorPatternName pattern, CRGB* outputArray) {
       if(numColorIndexes == 0) {
         THROW(F("ManualBlocks mode used but not initialized. Setting to monochromatic."))
         uint8_t colorIndexes[] = { 0 };
-        setManualBlocks(colorIndexes, 1, dimPeriod);
+        setManualBlocks(colorIndexes, 1, dimPeriod); // Set according to dimPeriod
       }
       
       uint16_t numDimPeriods = colorPeriod / dimPeriod;
-      if(numDimPeriods * dimPeriod != colorPeriod) { THROW_DUMP(F("colorPeriod must be a multiple of dimPeriod for ManualBlocks"), colorPeriod) }
+      if(numDimPeriods * dimPeriod != colorPeriod) {
+        THROW_DUMP(F("colorPeriod must be a multiple of dimPeriod for ManualBlocks"), colorPeriod)
+        DUMP(dimPeriod)
+        dimPeriod = colorPeriod;
+        numDimPeriods = 1;
+      }
       // Write pattern
       uint16_t pixel = 0;
       for(uint16_t i = 0; i < numDimPeriods; i++) {

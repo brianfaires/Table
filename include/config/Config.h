@@ -17,10 +17,11 @@
 #define DISABLE_UPPER_LOOP
 #define MANUAL_PARAMS
 #define ALLOW_ZERO_SPEED // For PatternController
+//#define USE_DEV_PALETTES
 //#define EXPLICIT_PARAMETERS
 //#define CHECK_FOR_CLIPPING
 //#define JUMP_DIM_PARAMS // For PatternScroller
-#define PULSE_BASE_PARAMS
+//#define PULSE_BASE_PARAMS
 //#define TEST_PALETTES
 //#define TIMING_ANALYSIS
 //#define DEBUG_COLOR_PATTERNS
@@ -28,7 +29,7 @@
 //#define USE_MICROS_TIMER
 #define DEBUG_BTN(msg)            //DEBUG(msg)
 #define DEBUG_ANIMATION(msg)      //DEBUG(msg)
-#define DEBUG_PATTERN_SPLITS(msg) //DEBUG(msg)
+#define DEBUG_PATTERN_SPLITS(msg) DEBUG(msg)
 #define DEBUG_TRANSITIONS(msg)    DEBUG(msg)
 ////////////////////////////////////////
 
@@ -40,8 +41,8 @@
 #define INIT_BASE_COLOR_SPEED 0
 #define INIT_BASE_BRIGHT_LENGTH 0xFFFF
 #define INIT_BASE_TRANS_LENGTH 0xFFFF
-#define INIT_BASE_NUM_COLORS 0
-#define INIT_BASE_DISPLAY_MODE 128 // 0 + 16*4
+#define INIT_BASE_NUM_COLORS 255
+#define INIT_BASE_DISPLAY_MODE 176 // 0 + 16*4
 #define INIT_BASE_DIM_PERIOD 120
 #define INIT_BASE_COLOR_PERIOD 255
 
@@ -75,8 +76,8 @@
 
 ////////////////////////////////////////////////////////////////////////
 //////////////////// Init PatternController Settings ///////////////////
-#define INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH    9 * ONE_SEC
-#define INIT_PATTERN_CONTROLLER_DIM_BLEND_LENGTH    0 * ONE_SEC
+#define INIT_PATTERN_CONTROLLER_DIM_PAUSE_LENGTH    1 * ONE_SEC
+#define INIT_PATTERN_CONTROLLER_DIM_BLEND_LENGTH    1 * ONE_SEC
 #define INIT_PATTERN_CONTROLLER_COLOR_PAUSE_LENGTH  30 * ONE_SEC
 #define INIT_PATTERN_CONTROLLER_COLOR_BLEND_LENGTH  2 * ONE_SEC
 #define INIT_PATTERN_SCROLLER_BRIGHTNESS 255

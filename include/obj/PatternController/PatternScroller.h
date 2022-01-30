@@ -25,6 +25,7 @@ class PatternScroller {
     // Getters/Setters
     void setDisplayMode(uint8_t displayMode);
     uint16_t getColorPeriod();
+    void setColorPeriod(uint16_t value);
     uint16_t getDimPeriod();
     uint32_t getDimBlendLength();
     void setDimBlendLength(uint32_t value);
