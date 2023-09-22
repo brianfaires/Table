@@ -664,7 +664,7 @@ uint8_t Stackers::Shutters() {
 }
 
 uint8_t Stackers::StutterStepBands(int numGroups) {
-  // Half the stacks move forward until they hit another (or overlap), then the other half moves
+  // Subset of the stacks move forward until they hit another (or overlap), then the other half moves
   static int moveMod = 0;
 
   if(stackLength == 0) { stackLength = maxStackLength; }
@@ -689,6 +689,7 @@ uint8_t Stackers::StutterStepBands(int numGroups) {
         for(int i = 0; i < numStacks; i++) {
           if(stacks[i].color == moveMod) {
             if(!fullyMoveAllStacks) {
+// TODO: Check for collision before move? What if they spawn touching each other
               MoveStack(stacks[i], moveClockwise);
               // Look for collision with any other stack
               for(int j = 0; j < numStacks; j++) {

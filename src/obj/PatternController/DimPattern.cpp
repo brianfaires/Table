@@ -13,7 +13,7 @@
 #define DRAW_SPACING(x) for(limit += x; i < limit; i++) { outputArray[i] = 0; }
 
 #define DRAW_BRIGHT(x) for(limit += x; i < limit; i++) { outputArray[i] = 255; }
-#define DRAW_DIM(x) for(limit += x; i < limit; i++) { outputArray[i] = 32; }
+#define DRAW_DIM(x) for(limit += x; i < limit; i++) { outputArray[i] = 64; }
 #define FADE_DOWN(x)  for(limit += x; i < limit; i++) { outputArray[i] = fadeStepSize * (limit - i); }
 #define FADE_DOWN2(x) for(limit += x; i < limit; i++) { outputArray[i] = fadeStepSize2 * (limit - i); }
 #define FADE_UP(x)  lastLimitMinusOne = limit - 1; for(limit += x; i < limit; i++) { outputArray[i] = fadeStepSize  * (uint8_t)(i - lastLimitMinusOne); }

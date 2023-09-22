@@ -11,12 +11,12 @@
 
 ////////////////////////////////////////
 ////////// Debugging config ////////////
-//#define SHOWCASE_MODE
+#define SHOWCASE_MODE
 //#define USING_DEBUG_BOARD
 //#define DISABLE_INTERIOR_LOOP
-#define DISABLE_UPPER_LOOP
-#define MANUAL_PARAMS
-#define ALLOW_ZERO_SPEED // For PatternController
+//#define DISABLE_UPPER_LOOP
+//#define MANUAL_PARAMS
+//#define ALLOW_ZERO_SPEED // For PatternController
 //#define USE_DEV_PALETTES
 //#define EXPLICIT_PARAMETERS
 //#define CHECK_FOR_CLIPPING
@@ -42,7 +42,7 @@
 #define INIT_BASE_BRIGHT_LENGTH 0xFFFF
 #define INIT_BASE_TRANS_LENGTH 0xFFFF
 #define INIT_BASE_NUM_COLORS 255
-#define INIT_BASE_DISPLAY_MODE 176 // 0 + 16*4
+#define INIT_BASE_DISPLAY_MODE 0 // 0 + 16*4
 #define INIT_BASE_DIM_PERIOD 120
 #define INIT_BASE_COLOR_PERIOD 255
 

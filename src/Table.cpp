@@ -313,9 +313,9 @@ void SkipTimeForIO(uint32_t amount) {
 #define NUM_PM_PARAMS 2
 
 bool ProcessSerialInput() {
-  LEDLoop* loop = interiorIsActive ? &interior : &upper;
-
   #ifdef MANUAL_PARAMS
+    LEDLoop* loop = interiorIsActive ? &interior : &upper;
+
     if(Serial.available() <= 0) { return false; }
 
     String s = Serial.readString();
